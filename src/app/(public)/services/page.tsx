@@ -33,7 +33,7 @@ export default function ServicesPage() {
               "IRS Representation & Audit Support",
               "Prior Year Amendments"
             ]}
-            icon={<User className="w-12 h-12 text-brand-navy" />}
+            icon={<User className="w-12 h-12 text-brand-black" />}
             imageSrc="/images/hero-tax-advisor.png"
           />
           
@@ -49,7 +49,7 @@ export default function ServicesPage() {
               "Expense Tracking & Categorization",
               "Cloud-Based Real-Time Access"
             ]}
-            icon={<Briefcase className="w-12 h-12 text-brand-navy" />}
+            icon={<Briefcase className="w-12 h-12 text-brand-black" />}
             imageSrc="/images/business-tax.png"
             reverse
           />
@@ -66,7 +66,7 @@ export default function ServicesPage() {
               "Local, State, & Federal Compliance",
               "Employee Self-Service Access"
             ]}
-            icon={<Users className="w-12 h-12 text-brand-navy" />}
+            icon={<Users className="w-12 h-12 text-brand-black" />}
             imageSrc="/images/support-team.png"
           />
           
@@ -82,7 +82,7 @@ export default function ServicesPage() {
               "Process Improvement & Optimization",
               "Board & Investor Reporting"
             ]}
-            icon={<BarChart3 className="w-12 h-12 text-brand-navy" />}
+            icon={<BarChart3 className="w-12 h-12 text-brand-black" />}
             imageSrc="/images/belmont-office.png"
             reverse
           />
@@ -92,9 +92,9 @@ export default function ServicesPage() {
       <section className="py-24 bg-brand-cloud">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="bg-white p-12 md:p-16 rounded-[3rem] shadow-xl border border-gray-100 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-brand-orange opacity-5 rounded-full -mr-16 -mt-16"></div>
-            <Calculator className="w-16 h-16 text-brand-orange mx-auto mb-8" />
-            <h2 className="text-3xl md:text-4xl font-heading font-bold text-brand-navy mb-6">Need a custom solution?</h2>
+            <div className="absolute top-0 right-0 w-32 h-32 bg-brand-purple opacity-5 rounded-full -mr-16 -mt-16"></div>
+            <Calculator className="w-16 h-16 text-brand-purple mx-auto mb-8" />
+            <h2 className="text-3xl md:text-4xl font-heading font-bold text-brand-black mb-6">Need a custom solution?</h2>
             <p className="text-xl text-brand-charcoal/70 mb-10 max-w-2xl mx-auto font-medium">
               Every financial situation is different. If you have a unique challenge or 
               need a specialized service not listed here, we'd love to chat.
@@ -102,11 +102,11 @@ export default function ServicesPage() {
             <div className="flex flex-col sm:flex-row justify-center gap-4">
                <Link
                  href="/contact"
-                 className="inline-block bg-brand-navy text-white px-10 py-5 rounded-xl font-bold text-xl hover:bg-blue-900 transition-all shadow-lg hover:scale-[1.02]"
+                 className="inline-block bg-brand-black text-white px-10 py-5 rounded-xl font-bold text-xl hover:bg-blue-900 transition-all shadow-lg hover:scale-[1.02]"
                >
                  Ask About Custom Services
                </Link>
-               <BookingButton className="bg-brand-orange text-white px-10 py-5 rounded-xl font-bold text-xl hover:bg-orange-600 transition-all shadow-lg hover:scale-[1.02]" />
+               <BookingButton className="bg-brand-purple text-white px-10 py-5 rounded-xl font-bold text-xl hover:bg-orange-600 transition-all shadow-lg hover:scale-[1.02]" />
             </div>
           </div>
         </div>

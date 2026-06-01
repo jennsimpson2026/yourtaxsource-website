@@ -19,8 +19,12 @@ export const Navbar = () => {
 
           <div className="hidden lg:flex items-center gap-6">
             <Link href="/services" className="text-brand-charcoal hover:text-brand-purple transition-colors font-medium">Services</Link>
+            <Link href="/who-we-help" className="text-brand-charcoal hover:text-brand-purple transition-colors font-medium">Who We Help</Link>
+            <Link href="/new-clients" className="text-brand-charcoal hover:text-brand-purple transition-colors font-medium">New Clients</Link>
             <Link href="/pricing" className="text-brand-charcoal hover:text-brand-purple transition-colors font-medium">Pricing</Link>
-            <Link href="/about" className="text-brand-charcoal hover:text-brand-purple transition-colors font-medium">About</Link>
+            <Link href="/about" className="text-brand-charcoal hover:text-brand-purple transition-colors font-medium">About Us</Link>
+            <Link href="/about-jenn" className="text-brand-charcoal hover:text-brand-purple transition-colors font-medium">Meet Jenn</Link>
+            <Link href="/testimonials" className="text-brand-charcoal hover:text-brand-purple transition-colors font-medium">Testimonials</Link>
             <Link href="/faq" className="text-brand-charcoal hover:text-brand-purple transition-colors font-medium">FAQ</Link>
             <Link href="/contact" className="text-brand-charcoal hover:text-brand-purple transition-colors font-medium">Contact</Link>
             
@@ -39,7 +43,7 @@ export const Navbar = () => {
               Start Intake
             </Link>
 
-            <Link href="/" className="ml-2 border-l border-gray-100 pl-6 hidden xl:block">
+            <Link href="/" className="ml-2 border-l border-gray-100 pl-6 hidden lg:block">
               <Image 
                 src="/images/logo-long.png" 
                 alt="Your Tax Source Logo" 

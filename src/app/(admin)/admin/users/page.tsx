@@ -63,7 +63,7 @@ export default async function UserManagementPage() {
                       const role = formData.get("role") as string;
                       await updateUserRole(userId, role);
                     }} className="flex items-center justify-end gap-2">
-                      <input type=\"hidden\" name=\"userId\" value={user.id} />
+                      <input type="hidden" name="userId" value={user.id} />
                       <select
                         name="role"
                         defaultValue={user.role}
