@@ -12,6 +12,31 @@ const helcimClient = axios.create({
   },
 });
 
+export async function initializeHelcimPay(data: {
+  amount: number;
+  currency: string;
+  orderNumber: string;
+  customerCode?: string;
+  contactName: string;
+  contactEmail: string;
+}) {
+  try {
+    const response = await helcimClient.post("helcim-pay/initialize", {
+      amount: data.amount,
+      currency: data.currency,
+      orderNumber: data.orderNumber,
+      customerCode: data.customerCode,
+      contactName: data.contactName,
+      contactEmail: data.contactEmail,
+      paymentType: "purchase",
+    });
+    return response.data;
+  } catch (error: any) {
+    console.error("Helcim Pay Initialization Error:", error.response?.data || error.message);
+    throw new Error("Failed to initialize Helcim Pay");
+  }
+}
+
 export async function createHelcimInvoice(data: {
   amount: number;
   currency: string;

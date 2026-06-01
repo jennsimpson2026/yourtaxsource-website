@@ -17,10 +17,10 @@
 ## 3. Color Palette
 | Purpose | Color Name | Hex Code | Visual |
 | :--- | :--- | :--- | :--- |
-| **Primary** | Trust Blue | `#1B365D` | Deep, professional navy |
-| **Secondary** | Growth Green | `#2D5A27` | Stable, natural green |
-| **Accent** | Sunburst Orange | `#E67E22` | Warm, energetic, calls to action |
-| **Background** | Soft Cloud | `#F9FAFB` | Clean, airy, modern |
+| **Primary** | Boutique Purple | `#6F4A8E` | Deep, professional purple |
+| **Secondary** | Midnight Black | `#1A1A1A` | Modern, high-contrast |
+| **Accent** | Lavender Mist | `#E6E6FA` | Soft, complementary |
+| **Background** | Clean White | `#FFFFFF` | Minimalist and airy |
 | **Text** | Charcoal | `#333333` | High readability |
 
 ## 4. Typography

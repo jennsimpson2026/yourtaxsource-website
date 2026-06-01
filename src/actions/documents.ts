@@ -80,11 +80,14 @@ export async function requestDocument(userId: string, documentName: string) {
 
   const user = await db.query.users.findFirst({
     where: eq(users.id, userId),
+    with: {
+      profile: true,
+    },
   });
 
   if (!user) throw new Error("User not found");
 
-  await notifyDocumentRequest(user.email, documentName);
+  await notifyDocumentRequest(user.email, user.profile?.phone || null, documentName);
 
   await db.insert(auditLogs).values({
     userId: (session.user as any).id,

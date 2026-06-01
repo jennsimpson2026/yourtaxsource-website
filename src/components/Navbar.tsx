@@ -26,9 +26,17 @@ export const Navbar = () => {
             <Link href="/about-jenn" className="text-brand-charcoal hover:text-brand-purple transition-colors font-medium">Meet Jenn</Link>
             <Link href="/testimonials" className="text-brand-charcoal hover:text-brand-purple transition-colors font-medium">Testimonials</Link>
             <Link href="/faq" className="text-brand-charcoal hover:text-brand-purple transition-colors font-medium">FAQ</Link>
+            <Link href="/resources" className="text-brand-charcoal hover:text-brand-purple transition-colors font-medium">Resources</Link>
             <Link href="/contact" className="text-brand-charcoal hover:text-brand-purple transition-colors font-medium">Contact</Link>
             
             <div className="h-6 w-px bg-gray-200 mx-2" />
+            
+            <Link 
+              href="/portal" 
+              className="bg-brand-black text-white px-5 py-2.5 rounded-lg font-bold hover:bg-brand-purple transition-all shadow-md flex items-center gap-2"
+            >
+              Client Portal
+            </Link>
             
             <Link 
               href="/auth/login" 
@@ -54,16 +62,22 @@ export const Navbar = () => {
             </Link>
           </div>
 
-          <div className="lg:hidden flex items-center gap-4">
+          <div className="lg:hidden flex items-center gap-3">
+            <Link 
+              href="/portal" 
+              className="bg-brand-black text-white px-3 py-1.5 rounded-lg font-bold text-xs"
+            >
+              Portal
+            </Link>
             <Link 
               href="/auth/login" 
-              className="text-brand-purple font-bold text-sm"
+              className="text-brand-purple font-bold text-xs"
             >
               Login
             </Link>
             <Link
               href="/auth/signup"
-              className="bg-brand-purple text-white px-4 py-2 rounded-lg font-bold text-sm"
+              className="bg-brand-purple text-white px-3 py-1.5 rounded-lg font-bold text-xs"
             >
               Intake
             </Link>

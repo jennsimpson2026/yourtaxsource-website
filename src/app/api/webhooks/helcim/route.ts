@@ -18,7 +18,11 @@ export async function POST(req: Request) {
       const invoice = await db.query.invoices.findFirst({
         where: eq(invoices.helcimInvoiceId, helcimInvoiceId),
         with: {
-            user: true,
+            user: {
+              with: {
+                profile: true
+              }
+            },
         },
       });
 
@@ -39,7 +43,11 @@ export async function POST(req: Request) {
           metadata: JSON.stringify({ amount: invoice.amount }),
         });
 
-        await notifyPaymentReceived(invoice.user.email, Number(invoice.amount));
+        await notifyPaymentReceived(
+          invoice.user.email, 
+          (invoice.user as any).profile?.phone || null, 
+          Number(invoice.amount)
+        );
       }
     }
 

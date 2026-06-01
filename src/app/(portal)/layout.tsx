@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { SignOutButton } from "@/components/SignOutButton";
 
 export default async function PortalLayout({
@@ -16,16 +17,16 @@ export default async function PortalLayout({
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-brand-cloud">
+    <div className="flex flex-col min-h-screen bg-brand-soft-gray">
       <header className="bg-white border-b border-gray-100 p-4 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-10">
             <Link href="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-brand-navy rounded flex items-center justify-center">
+              <div className="w-8 h-8 bg-brand-purple rounded flex items-center justify-center">
                  <span className="text-white font-bold">Y</span>
               </div>
-              <span className="font-heading font-bold text-lg text-brand-navy hidden sm:block">
-                Portal
+              <span className="font-heading font-bold text-lg text-brand-black hidden sm:block">
+                Secure Client Portal
               </span>
             </Link>
             
@@ -37,9 +38,18 @@ export default async function PortalLayout({
           </div>
           
           <div className="flex items-center gap-6">
+            <Link href="/" className="hidden md:block mr-4">
+              <Image 
+                src="/images/logo-long.png" 
+                alt="Your Tax Source Logo" 
+                width={120} 
+                height={32} 
+                className="h-8 w-auto object-contain"
+              />
+            </Link>
             <div className="hidden lg:flex flex-col text-right">
-              <span className="text-xs font-bold text-brand-charcoal/40 uppercase tracking-widest">Client</span>
-              <span className="text-sm font-bold text-brand-navy">{session.user?.email}</span>
+              <span className="text-xs font-bold text-brand-charcoal/40 uppercase tracking-widest leading-none mb-1">Authenticated Client</span>
+              <span className="text-sm font-bold text-brand-black">{session.user?.email}</span>
             </div>
             <SignOutButton />
           </div>
@@ -50,10 +60,17 @@ export default async function PortalLayout({
         {children}
       </main>
 
-      <footer className="py-6 border-t border-gray-200/60 text-center">
-        <p className="text-xs text-brand-charcoal/40 font-medium">
-          © 2024 Your Tax Source Secure Client Portal. All data is encrypted.
-        </p>
+      <footer className="py-8 bg-white border-t border-gray-100 text-center">
+        <div className="max-w-7xl mx-auto px-4">
+          <p className="text-xs text-brand-charcoal/40 font-medium mb-2">
+            © 2024 Your Tax Source Secure Client Portal. All data is encrypted and stored securely.
+          </p>
+          <div className="flex justify-center gap-4 text-[10px] font-bold uppercase tracking-widest text-brand-charcoal/30">
+            <span>SOC2 Compliant</span>
+            <span>256-bit Encryption</span>
+            <span>IRS Security Standards</span>
+          </div>
+        </div>
       </footer>
     </div>
   );
@@ -63,7 +80,7 @@ function NavLink({ href, label }: { href: string; label: string }) {
   return (
     <Link 
       href={href} 
-      className="text-sm font-bold text-brand-charcoal/60 hover:text-brand-orange transition-colors"
+      className="text-sm font-bold text-brand-charcoal/60 hover:text-brand-purple transition-colors"
     >
       {label}
     </Link>

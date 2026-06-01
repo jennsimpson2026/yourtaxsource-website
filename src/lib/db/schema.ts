@@ -20,6 +20,7 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   taxReturns: many(taxReturns),
   invoices: many(invoices),
   annualUpdates: many(annualUpdates),
+  posts: many(posts),
   profile: one(profiles, {
     fields: [users.id],
     references: [profiles.userId],
@@ -237,5 +238,55 @@ export const annualUpdatesRelations = relations(annualUpdates, ({ one }) => ({
   taxReturn: one(taxReturns, {
     fields: [annualUpdates.returnId],
     references: [taxReturns.id],
+  }),
+}));
+
+export const categories = sqliteTable("categories", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  name: text("name").notNull(),
+  slug: text("slug").notNull().unique(),
+});
+
+export const categoriesRelations = relations(categories, ({ many }) => ({
+  posts: many(posts),
+}));
+
+export const posts = sqliteTable("posts", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  title: text("title").notNull(),
+  slug: text("slug").notNull().unique(),
+  content: text("content").notNull(),
+  featuredImageUrl: text("featured_image_url"),
+  publishDate: integer("publish_date", { mode: "timestamp" }),
+  status: text("status").default("draft").notNull(), // 'draft', 'published', 'scheduled'
+  categoryId: text("category_id")
+    .references(() => categories.id)
+    .notNull(),
+  isFeatured: integer("is_featured", { mode: "boolean" }).default(false).notNull(),
+  authorId: text("author_id")
+    .references(() => users.id)
+    .notNull(),
+  seoTitle: text("seo_title"),
+  seoDescription: text("seo_description"),
+  // Social media syndication fields
+  socialTitle: text("social_title"),
+  socialDescription: text("social_description"),
+  socialImage: text("social_image"),
+  createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),
+}, (table) => ({
+  slugIdx: index("posts_slug_idx").on(table.slug),
+  statusIdx: index("posts_status_idx").on(table.status),
+  categoryIdIdx: index("posts_category_id_idx").on(table.categoryId),
+}));
+
+export const postsRelations = relations(posts, ({ one }) => ({
+  category: one(categories, {
+    fields: [posts.categoryId],
+    references: [categories.id],
+  }),
+  author: one(users, {
+    fields: [posts.authorId],
+    references: [users.id],
   }),
 }));
