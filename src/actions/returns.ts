@@ -1,0 +1,86 @@
+"use server";
+
+import { db } from "@/lib/db";
+import { taxReturns, auditLogs, users, profiles } from "@/lib/db/schema";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { revalidatePath } from "next/cache";
+import { eq } from "drizzle-orm";
+import { notifyStatusUpdate } from "@/lib/notifications";
+
+export async function updateReturnDetails(returnId: string, data: {
+  status?: string;
+  paymentStatus?: string;
+  notes?: string;
+}) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user || (session.user as any).role === "CLIENT") throw new Error("Unauthorized");
+
+  const updateData: any = { updatedAt: new Date() };
+  if (data.status) updateData.status = data.status;
+  if (data.paymentStatus) updateData.paymentStatus = data.paymentStatus;
+  if (data.notes !== undefined) updateData.notes = data.notes;
+
+  const [updatedReturn] = await db.update(taxReturns)
+    .set(updateData)
+    .where(eq(taxReturns.id, returnId))
+    .returning();
+
+  if (updatedReturn && data.status) {
+    const client = await db.query.users.findFirst({
+      where: eq(users.id, updatedReturn.clientId),
+      with: {
+        profile: true,
+      },
+    });
+
+    if (client) {
+      await notifyStatusUpdate(client.email, client.profile?.phone || null, data.status);
+    }
+  }
+
+  await db.insert(auditLogs).values({
+    userId: (session.user as any).id,
+    action: "UPDATE_RETURN_DETAILS",
+    targetType: "TAX_RETURN",
+    targetId: returnId,
+    metadata: JSON.stringify(data),
+  });
+
+  revalidatePath(`/admin/returns/${returnId}`);
+  revalidatePath("/admin/returns");
+}
+
+export async function updateReturnStatus(returnId: string, status: string) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user || (session.user as any).role === "CLIENT") throw new Error("Unauthorized");
+
+  const [updatedReturn] = await db.update(taxReturns)
+    .set({ status: status as any, updatedAt: new Date() })
+    .where(eq(taxReturns.id, returnId))
+    .returning();
+
+  if (updatedReturn) {
+    const client = await db.query.users.findFirst({
+      where: eq(users.id, updatedReturn.clientId),
+      with: {
+        profile: true,
+      },
+    });
+
+    if (client) {
+      await notifyStatusUpdate(client.email, client.profile?.phone || null, status);
+    }
+  }
+
+  await db.insert(auditLogs).values({
+    userId: (session.user as any).id,
+    action: "UPDATE_RETURN_STATUS",
+    targetType: "TAX_RETURN",
+    targetId: returnId,
+    metadata: JSON.stringify({ newStatus: status }),
+  });
+
+  revalidatePath(`/admin/returns/${returnId}`);
+  revalidatePath("/admin/returns");
+}

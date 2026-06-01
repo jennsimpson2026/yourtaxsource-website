@@ -1,0 +1,29 @@
+
+> your-tax-source@0.1.0 build
+> next build
+
+▲ Next.js 16.2.6 (Turbopack)
+
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+  Creating an optimized production build ...
+✓ Compiled successfully in 19.5s
+  Running TypeScript ...
+  Finished TypeScript in 7.5s ...
+  Collecting page data using 1 worker ...
+Error: Missing API key. Pass it to the constructor `new Resend("re_123")`
+    at new el (.next/server/chunks/_07k2-0w._.js:19:31234)
+    at module evaluation (.next/server/chunks/_07k2-0w._.js:19:33410)
+    at instantiateModule (.next/server/chunks/[turbopack]_runtime.js:853:9)
+    at getOrInstantiateModuleFromParent (.next/server/chunks/[turbopack]_runtime.js:877:12)
+    at Context.esmImport [as i] (.next/server/chunks/[turbopack]_runtime.js:281:20)
+    at <unknown> (.next/server/chunks/_0l-eta-._.js:18:474)
+    at Context.asyncModule [as a] (.next/server/chunks/[turbopack]_runtime.js:525:5)
+    at module evaluation (.next/server/chunks/_0l-eta-._.js:18:294)
+    at instantiateModule (.next/server/chunks/[turbopack]_runtime.js:853:9)
+    at getOrInstantiateModuleFromParent (.next/server/chunks/[turbopack]_runtime.js:877:12)
+
+> Build error occurred
+Error: Failed to collect page data for /api/cron/retention
+    at ignore-listed frames {
+  type: 'Error'
+}

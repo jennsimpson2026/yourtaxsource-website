@@ -1,0 +1,51 @@
+import { NextResponse } from "next/server";
+import { db } from "@/lib/db";
+import { invoices, taxReturns, auditLogs } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
+import { notifyPaymentReceived } from "@/lib/notifications";
+
+export async function POST(req: Request) {
+  try {
+    const payload = await req.json();
+    
+    // Helcim specific webhook handling
+    // Validate signature in production
+    const { event, data } = payload;
+
+    if (event === "invoice.paid") {
+      const helcimInvoiceId = data.invoiceId;
+      
+      const invoice = await db.query.invoices.findFirst({
+        where: eq(invoices.helcimInvoiceId, helcimInvoiceId),
+        with: {
+            user: true,
+        },
+      });
+
+      if (invoice) {
+        await db.update(invoices)
+          .set({ status: "PAID", paidAt: new Date() })
+          .where(eq(invoices.id, invoice.id));
+
+        await db.update(taxReturns)
+          .set({ paymentStatus: "PAID" })
+          .where(eq(taxReturns.id, invoice.returnId));
+
+        await db.insert(auditLogs).values({
+          userId: invoice.userId,
+          action: "PAYMENT_RECEIVED",
+          targetType: "INVOICE",
+          targetId: invoice.id,
+          metadata: JSON.stringify({ amount: invoice.amount }),
+        });
+
+        await notifyPaymentReceived(invoice.user.email, Number(invoice.amount));
+      }
+    }
+
+    return NextResponse.json({ received: true });
+  } catch (error: any) {
+    console.error("Helcim Webhook Error:", error.message);
+    return NextResponse.json({ error: "Webhook handler failed" }, { status: 500 });
+  }
+}
