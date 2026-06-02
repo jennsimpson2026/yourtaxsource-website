@@ -48,6 +48,8 @@ export default async function PortalDashboard() {
   const currentYear = new Date().getFullYear();
   const currentReturn = returns.find(r => r.year === currentYear) || returns[0];
 
+  const hasEncryption = !!process.env.ENCRYPTION_KEY;
+
   return (
     <div className="max-w-6xl mx-auto space-y-12 pb-20">
       {/* Welcome Banner */}
@@ -66,14 +68,21 @@ export default async function PortalDashboard() {
             </p>
           </div>
           <div className="flex flex-col gap-4 w-full md:w-80">
-            <Link 
-              href="/portal/annual-update"
-              className="bg-brand-purple text-white px-8 py-5 rounded-2xl font-bold text-lg hover:bg-opacity-90 transition-all shadow-lg shadow-brand-purple/20 flex items-center justify-center gap-3 group"
-            >
-              <ClipboardCheck size={24} />
-              Annual Update
-              <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
-            </Link>
+            {hasEncryption ? (
+              <Link 
+                href="/portal/annual-update"
+                className="bg-brand-purple text-white px-8 py-5 rounded-2xl font-bold text-lg hover:bg-opacity-90 transition-all shadow-lg shadow-brand-purple/20 flex items-center justify-center gap-3 group"
+              >
+                <ClipboardCheck size={24} />
+                Annual Update
+                <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+              </Link>
+            ) : (
+              <div className="bg-brand-purple/20 text-brand-lavender/50 px-8 py-5 rounded-2xl font-bold text-lg flex flex-col items-center justify-center gap-1 border border-brand-purple/30 italic">
+                <span className="flex items-center gap-2"><Lock size={18} /> Annual Update</span>
+                <span className="text-[10px] uppercase tracking-widest">Coming in Phase 2</span>
+              </div>
+            )}
             <BookingButton className="bg-white text-brand-black px-8 py-4 rounded-2xl font-bold text-base hover:bg-gray-100 transition-all flex items-center justify-center gap-2" />
           </div>
         </div>
@@ -141,14 +150,29 @@ export default async function PortalDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Step 2: Upload Docs */}
-        <DashboardCard
-          title="Step 2: Upload Documents"
-          description="Securely upload your W-2s, 1099s, and other tax-related files."
-          icon={<Upload className="text-brand-purple" size={28} />}
-          href="/portal/documents"
-          linkText="Go to Uploads"
-          accentColor="purple"
-        />
+        {process.env.AWS_S3_BUCKET ? (
+          <DashboardCard
+            title="Step 2: Upload Documents"
+            description="Securely upload your W-2s, 1099s, and other tax-related files."
+            icon={<Upload className="text-brand-purple" size={28} />}
+            href="/portal/documents"
+            linkText="Go to Uploads"
+            accentColor="purple"
+          />
+        ) : (
+          <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm flex flex-col opacity-75">
+            <div className="w-14 h-14 bg-brand-soft-gray rounded-2xl flex items-center justify-center mb-6">
+              <Upload className="text-gray-400" size={28} />
+            </div>
+            <h3 className="text-xl font-heading font-bold text-gray-500 mb-3">Step 2: Upload Docs</h3>
+            <p className="text-gray-400 text-sm mb-8 leading-relaxed">
+              Securely upload your tax files. (Coming Soon in Phase 2).
+            </p>
+            <span className="mt-auto text-brand-purple/50 font-bold text-sm flex items-center gap-2 italic">
+              <Lock size={16} /> Phase 2 Feature
+            </span>
+          </div>
+        )}
 
         {/* Step 3: Existing Portal */}
         <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all group flex flex-col">

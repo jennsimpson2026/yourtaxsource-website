@@ -4,12 +4,18 @@ import { redirect } from "next/navigation";
 import { AnnualUpdateForm } from "@/components/portal/AnnualUpdateForm";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { Phase2ComingSoon } from "@/components/portal/Phase2ComingSoon";
 
 export default async function AnnualUpdatePage() {
   const session = await getServerSession(authOptions);
 
   if (!session) {
     redirect("/auth/login");
+  }
+
+  // Phase 1 Guard: Disable PII collection until encryption is configured
+  if (!process.env.ENCRYPTION_KEY) {
+    return <Phase2ComingSoon title="Annual Update Coming Soon" />;
   }
 
   return (

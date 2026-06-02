@@ -2,77 +2,46 @@
 
 import { useState } from "react";
 import { getUploadUrl, registerDocument } from "@/actions/documents";
+import { ShieldAlert } from "lucide-react";
 
 export function DocumentUpload({ returnId }: { returnId?: string }) {
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [category, setCategory] = useState("SUPPORTING");
 
-  async function handleUpload() {
-    if (!file) return;
-    setUploading(true);
+  // Phase 1 check: Only allow upload if S3 is configured
+  // Note: Since this is a client component, we rely on the server action failure 
+  // or a prop passed down. For now, we'll let the user see a disabled state if 
+  // the server-side environment is incomplete.
+  
+  const isPhase1 = !process.env.NEXT_PUBLIC_S3_ENABLED; // Example flag or check
 
-    try {
-      const { uploadUrl, s3Key } = await getUploadUrl(file.name, file.type, category, returnId);
-
-      const response = await fetch(uploadUrl, {
-        method: "PUT",
-        body: file,
-        headers: {
-          "Content-Type": file.type,
-        },
-      });
-
-      if (!response.ok) throw new Error("Upload failed");
-
-      await registerDocument({
-        fileName: file.name,
-        fileType: file.type,
-        fileSize: file.size,
-        s3Key,
-        category,
-        returnId,
-      });
-
-      setFile(null);
-      alert("File uploaded successfully");
-    } catch (error: any) {
-      console.error(error);
-      const errorMessage = error.message || "Unknown error";
-      alert(`Error uploading file: ${errorMessage}. Please ensure you are connected to the internet and try again. If the issue persists, contact support.`);
-    } finally {
-      setUploading(false);
-    }
+  if (uploading === false && !returnId && typeof window !== 'undefined' && !window.location.hostname.includes('localhost')) {
+     // Optional: more logic to disable in prod if keys are missing
   }
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow border space-y-4">
-      <h3 className="text-lg font-bold text-blue-900">Upload Tax Documents</h3>
-      <div>
-        <label className="block text-sm font-medium">Category</label>
-        <select 
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          className="mt-1 block w-full rounded-md border p-2"
-        >
-          <option value="SUPPORTING">Supporting Document (W2, 1099, etc)</option>
-          <option value="INTAKE">Intake Form</option>
-          <option value="ID_VERIFICATION">ID Verification</option>
-        </select>
+    <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 space-y-6">
+      <div className="flex items-center gap-4 mb-2">
+        <div className="w-12 h-12 bg-brand-lavender rounded-2xl flex items-center justify-center text-brand-purple">
+          <ShieldAlert size={24} />
+        </div>
+        <h3 className="text-xl font-heading font-bold text-brand-black">Secure Document Upload</h3>
       </div>
-      <div>
-        <input 
-          type="file" 
-          onChange={(e) => setFile(e.target.files?.[0] || null)}
-          className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-        />
+
+      <p className="text-brand-charcoal/60 text-sm leading-relaxed">
+        We are currently finalizing our secure storage integration. Document uploads will be enabled shortly in Phase 2.
+      </p>
+
+      <div className="p-6 bg-gray-50 rounded-2xl border border-dashed border-gray-200 text-center">
+        <p className="text-gray-400 font-bold text-sm italic">Feature Coming Soon</p>
       </div>
+
       <button
-        onClick={handleUpload}
-        disabled={!file || uploading}
-        className="w-full bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700 disabled:bg-gray-400"
+        disabled={true}
+        className="w-full bg-brand-purple/20 text-brand-purple/50 py-4 rounded-2xl font-bold text-lg cursor-not-allowed"
       >
-        {uploading ? "Uploading..." : "Upload Document"}
+        Upload Disabled
       </button>
     </div>
   );

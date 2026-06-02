@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { CheckCircle2, Award, BookOpen, Heart } from "lucide-react";
+import { CheckCircle2, Award, BookOpen, Heart, ShieldCheck, Users, Briefcase } from "lucide-react";
 
 export default function AboutPage() {
   return (
@@ -11,7 +11,7 @@ export default function AboutPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="max-w-3xl animate-in fade-in slide-in-from-bottom duration-700">
             <h1 className="text-4xl md:text-6xl font-heading font-bold mb-8 leading-tight">
-              A Decade of Putting <span className="text-brand-lavender italic">You</span> First.
+              A Decade of Putting <span className="text-brand-lavender italic">Neighbors</span> First.
             </h1>
             <p className="text-xl text-brand-lavender leading-relaxed">
               Your trusted partner for nationwide tax preparation and advisory, 
@@ -22,50 +22,13 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Our Story Section */}
-      <section className="py-24 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
-            <div className="order-2 md:order-1 relative h-[500px] w-full rounded-3xl overflow-hidden shadow-2xl border-8 border-brand-soft-gray">
-              <Image
-                src="/images/belmont-office.png"
-                alt="Your Tax Source Office"
-                fill
-                className="object-cover"
-              />
-            </div>
-            <div className="order-1 md:order-2">
-              <h2 className="text-3xl font-heading font-bold text-brand-black mb-8 border-l-4 border-brand-purple pl-6 uppercase tracking-tight">Our Story</h2>
-              <div className="space-y-6 text-brand-charcoal/80 text-lg leading-relaxed font-medium">
-                <p>
-                  Founded in 2013, Your Tax Source was born out of a simple observation: 
-                  the tax world is unnecessarily complicated. Most people dread tax season 
-                  not because of the math, but because of the confusion.
-                </p>
-                <p>
-                  We decided to change that. While we started in the heart of Belmont, 
-                  North Carolina, we've grown into a digital-first firm that serves clients 
-                  in all 50 states. We combine big-firm expertise with a 
-                  neighborhood feel, regardless of where you're located.
-                </p>
-                <p>
-                  Our team doesn't just process numbers; we build relationships. 
-                  We're here to help you understand your financial picture so you can 
-                  make confident decisions for your future.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Jennifer Simpson Bio Section */}
-      <section className="py-24 bg-brand-soft-gray border-y border-gray-100">
+      {/* Meet Jennifer Section */}
+      <section className="py-24 bg-white border-y border-gray-100">
          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col lg:flex-row items-center gap-20">
                <div className="lg:w-2/5 relative">
                   <div className="absolute inset-0 bg-brand-purple rounded-[3rem] rotate-3 scale-95 opacity-10 blur-xl"></div>
-                  <div className="relative aspect-square w-full rounded-[3rem] overflow-hidden shadow-2xl border-4 border-white">
+                  <div className="relative aspect-[4/5] w-full rounded-[3rem] overflow-hidden shadow-2xl border-4 border-white">
                         <Image 
                           src="/images/jenns-profile-pic.jpg"
                           alt="Jennifer Simpson"
@@ -75,39 +38,44 @@ export default function AboutPage() {
                   </div>
                </div>
                <div className="lg:w-3/5">
-                  <h2 className="text-3xl md:text-4xl font-heading font-bold text-brand-black mb-2">Meet Jennifer Simpson</h2>
+                  <h2 className="text-3xl md:text-5xl font-heading font-bold text-brand-black mb-2">Meet Jennifer Simpson</h2>
                   <p className="text-brand-purple font-bold uppercase tracking-widest text-sm mb-8">Founder & Lead Advisor</p>
                   
                   <div className="space-y-6 text-brand-charcoal/80 text-lg leading-relaxed font-medium">
                      <p>
-                        Jennifer Simpson founded Your Tax Source in 2013 with a vision to bridge the gap between 
-                        complex tax laws and the real-world needs of families and small businesses. 
-                        With a deep commitment to clarity and a "plain-English" approach, she has 
-                        personally helped hundreds of clients navigate their financial journeys.
+                        Jennifer Simpson is the founder of Your Tax Source and brings more than 15 years of experience in tax preparation, accounting, bookkeeping, financial reporting, and business consulting.
                      </p>
                      <p>
-                        Her expertise spans across individual tax strategy, small business bookkeeping, 
-                        and fractional controller services. Jennifer believes that technology should 
-                        enhance the human experience, not replace it, which is why Your Tax Source 
-                        utilizes a secure, digital-first platform while maintaining personalized, 
-                        one-on-one relationships with every client.
+                        As a Controller, CFO, business owner, and tax professional, Jennifer understands taxes from both the individual and business perspective. Her experience spans individual tax returns, self-employed taxpayers, small businesses, rental property owners, bookkeeping, payroll, and financial management.
+                     </p>
+                     <p>
+                        What started as helping friends and family navigate tax season has grown into a trusted tax and accounting practice serving clients locally in Belmont, North Carolina and remotely across the United States.
+                     </p>
+                     <p>
+                        Jennifer believes taxes shouldn't be intimidating. Her approach focuses on education, communication, and helping clients understand not only what is happening on their tax return, but why.
+                     </p>
+                     <p>
+                        In addition to operating Your Tax Source, Jennifer serves as a financial executive and business consultant, bringing real-world accounting and leadership experience to every client relationship.
+                     </p>
+                     <p>
+                        When she's not helping clients, Jennifer enjoys spending time with her husband Chad, their children, traveling, supporting small businesses, and serving her local community.
                      </p>
                   </div>
 
                   <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                     <div className="flex items-center gap-3 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                     <div className="flex items-center gap-3 bg-brand-soft-gray p-4 rounded-xl shadow-sm border border-gray-100">
                         <Award className="text-brand-purple" size={20} />
-                        <span className="text-sm font-bold text-brand-black">10+ Years Expertise</span>
+                        <span className="text-sm font-bold text-brand-black">15+ Years Expertise</span>
                      </div>
-                     <div className="flex items-center gap-3 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                     <div className="flex items-center gap-3 bg-brand-soft-gray p-4 rounded-xl shadow-sm border border-gray-100">
                         <BookOpen className="text-brand-purple" size={20} />
                         <span className="text-sm font-bold text-brand-black">IRS Registered Provider</span>
                      </div>
-                     <div className="flex items-center gap-3 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                     <div className="flex items-center gap-3 bg-brand-soft-gray p-4 rounded-xl shadow-sm border border-gray-100">
                         <Heart className="text-brand-purple" size={20} />
                         <span className="text-sm font-bold text-brand-black">Belmont Community Leader</span>
                      </div>
-                     <div className="flex items-center gap-3 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                     <div className="flex items-center gap-3 bg-brand-soft-gray p-4 rounded-xl shadow-sm border border-gray-100">
                         <CheckCircle2 className="text-brand-purple" size={20} />
                         <span className="text-sm font-bold text-brand-black">Client-First Advocate</span>
                      </div>
@@ -117,24 +85,55 @@ export default function AboutPage() {
          </div>
       </section>
 
-      {/* Values Section */}
-      <section className="py-24 bg-white">
+      {/* Our Story Section */}
+      <section className="py-24 bg-brand-soft-gray">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl md:text-4xl font-heading font-bold text-brand-black mb-16">The Values That Drive Us</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <ValueCard
-              title="Clarity Over Jargon"
-              description="If we can't explain it simply, we don't understand it well enough. We're here to make things clear, not confusing."
+          <h2 className="text-3xl md:text-4xl font-heading font-bold text-brand-black mb-16">The Your Tax Source Story</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
+            <StoryCard
+              icon={<Users className="text-brand-purple" size={32} />}
+              title="Neighbors First"
+              description="While we serve clients nationwide, we maintain the warmth and personal connection of a neighborhood firm."
             />
-            <ValueCard
-              title="Absolute Security"
-              description="Your financial data is sensitive. We use bank-grade encryption and secure protocols to keep your information safe."
+            <StoryCard
+              icon={<ShieldCheck className="text-brand-purple" size={32} />}
+              title="Secure & Modern"
+              description="We use bank-grade encryption to ensure your sensitive financial data is protected at all times."
             />
-            <ValueCard
-              title="Digital-First, Human-Centered"
-              description="While we use cutting-edge technology to serve you anywhere in the country, we never lose the human touch."
+            <StoryCard
+              icon={<Briefcase className="text-brand-purple" size={32} />}
+              title="Real-World Expertise"
+              description="We bring accounting and leadership experience from the boardroom to your kitchen table."
             />
           </div>
+        </div>
+      </section>
+
+      {/* Local Connection */}
+      <section className="py-24 bg-white overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+           <div className="flex flex-col lg:flex-row items-center gap-16">
+              <div className="lg:w-1/2">
+                 <h2 className="text-3xl md:text-4xl font-heading font-bold text-brand-black mb-6">Rooted in Belmont, NC</h2>
+                 <p className="text-lg text-brand-charcoal/70 leading-relaxed mb-8">
+                    Our heart is in the Belmont community. We love serving our local neighbors face-to-face while leveraging modern technology to provide the same high level of service to our remote clients across the United States.
+                 </p>
+                 <Link
+                   href="/contact"
+                   className="inline-block bg-brand-purple text-white px-8 py-4 rounded-xl font-bold hover:bg-[#5a3a74] transition-all shadow-md"
+                 >
+                   Schedule a Consultation
+                 </Link>
+              </div>
+              <div className="lg:w-1/2 relative h-[400px] w-full rounded-3xl overflow-hidden shadow-xl border-8 border-brand-soft-gray">
+                 <Image
+                   src="/images/belmont-office.png"
+                   alt="Belmont NC"
+                   fill
+                   className="object-cover"
+                 />
+              </div>
+           </div>
         </div>
       </section>
 
@@ -159,11 +158,11 @@ export default function AboutPage() {
   );
 }
 
-function ValueCard({ title, description }: { title: string; description: string }) {
+function StoryCard({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
   return (
-    <div className="bg-brand-cloud p-10 rounded-[2.5rem] border border-gray-100 hover:shadow-xl transition-all hover:-translate-y-1 group">
-      <div className="w-12 h-1 bg-brand-orange mb-6 mx-auto group-hover:w-20 transition-all duration-500"></div>
-      <h3 className="text-brand-navy uppercase text-sm font-black tracking-widest mb-4">{title}</h3>
+    <div className="bg-white p-10 rounded-[2.5rem] border border-gray-100 hover:shadow-xl transition-all hover:-translate-y-1">
+      <div className="mb-6">{icon}</div>
+      <h3 className="text-xl font-bold text-brand-black mb-4">{title}</h3>
       <p className="text-brand-charcoal/70 leading-relaxed font-medium">{description}</p>
     </div>
   );

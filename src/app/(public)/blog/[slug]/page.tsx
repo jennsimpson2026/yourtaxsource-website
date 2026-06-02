@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, Calendar, User, Clock, Share2, Facebook, Twitter, Linkedin } from "lucide-react";
+import { ArrowLeft, Calendar, User, Clock, Share2 } from "lucide-react";
 
 export default function BlogPostPage({ params }: { params: { slug: string } }) {
   // In a real app, we would fetch the post data based on the slug
@@ -87,9 +87,6 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
               </div>
               <div className="flex items-center gap-3">
                 <span className="text-xs font-bold text-brand-charcoal/40 uppercase tracking-widest mr-2">Share</span>
-                <SocialIcon icon={<Facebook size={18} />} />
-                <SocialIcon icon={<Twitter size={18} />} />
-                <SocialIcon icon={<Linkedin size={18} />} />
                 <SocialIcon icon={<Share2 size={18} />} />
               </div>
             </div>
