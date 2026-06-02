@@ -2,7 +2,7 @@ import Link from "next/link";
 import { getBookingUrl } from "@/lib/booking";
 import { CalendarDays } from "lucide-react";
 
-export function BookingButton({ className }: { className?: string }) {
+export function BookingButton({ className, label }: { className?: string; label?: string }) {
   const bookingUrl = getBookingUrl();
   
   return (
@@ -13,7 +13,7 @@ export function BookingButton({ className }: { className?: string }) {
       className={className || "bg-brand-green text-white px-6 py-3 rounded-lg font-bold hover:bg-green-800 transition-all shadow-md flex items-center justify-center gap-2"}
     >
       <CalendarDays className="w-5 h-5" />
-      Book an Appointment
+      {label || "Book an Appointment"}
     </Link>
   );
 }
