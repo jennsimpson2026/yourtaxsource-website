@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { User, Briefcase, TrendingUp, Calculator, CheckCircle2, Users, BarChart3 } from "lucide-react";
+import { BookingButton } from "@/components/BookingButton";
 
 export default function ServicesPage() {
   return (
