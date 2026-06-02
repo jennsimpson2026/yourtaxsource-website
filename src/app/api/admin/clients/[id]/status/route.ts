@@ -12,7 +12,7 @@ export async function PATCH(
     return staffOnlyResponse();
   }
 
-  const { id: clientId } = params;
+  const { id: clientId } = await params;
   const session = await getSession();
 
   try {

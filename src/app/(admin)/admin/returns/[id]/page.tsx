@@ -21,9 +21,10 @@ import { DocumentRequestTool } from "@/components/admin/DocumentRequestTool";
 import { CommunicationLog } from "@/components/admin/CommunicationLog";
 import { DocumentDownloadButton } from "@/components/admin/DocumentDownloadButton";
 
-export default async function ReviewReturnPage({ params }: { params: { id: string } }) {
+export default async function ReviewReturnPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const ret = await db.query.taxReturns.findFirst({
-    where: eq(taxReturns.id, params.id),
+    where: eq(taxReturns.id, id),
     with: {
       client: {
         with: {
@@ -53,7 +54,7 @@ export default async function ReviewReturnPage({ params }: { params: { id: strin
     const paymentStatus = formData.get("paymentStatus") as string;
     const notes = formData.get("notes") as string;
 
-    await updateReturnDetails(params.id, {
+    await updateReturnDetails(id, {
       status,
       paymentStatus,
       notes,

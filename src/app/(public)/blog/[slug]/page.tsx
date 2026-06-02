@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { ArrowLeft, Calendar, User, Clock, Share2 } from "lucide-react";
 
-export default function BlogPostPage({ params }: { params: { slug: string } }) {
+export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
   // In a real app, we would fetch the post data based on the slug
   const post = {
     title: "5 Tax Planning Strategies for Small Business Owners in 2024",
