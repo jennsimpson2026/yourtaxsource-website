@@ -21,6 +21,8 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   invoices: many(invoices),
   annualUpdates: many(annualUpdates),
   posts: many(posts),
+  auditLogs: many(auditLogs),
+  appointments: many(appointments),
   profile: one(profiles, {
     fields: [users.id],
     references: [profiles.userId],
