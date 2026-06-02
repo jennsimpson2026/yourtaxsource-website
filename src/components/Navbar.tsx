@@ -5,15 +5,15 @@ export const Navbar = () => {
   return (
     <nav className="bg-white border-b border-gray-100 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-20 items-center">
+        <div className="flex justify-between h-20 md:h-24 items-center">
           <div className="flex items-center gap-2">
             <Link href="/" className="flex items-center gap-3 group">
               <Image 
                 src="/images/logo-long.png" 
                 alt="Your Tax Source Logo" 
-                width={180} 
-                height={48} 
-                className="h-12 w-auto object-contain"
+                width={280} 
+                height={80} 
+                className="h-14 md:h-20 w-auto object-contain transition-transform group-hover:scale-105"
                 priority
               />
               <span className="sr-only">Your Tax Source</span>

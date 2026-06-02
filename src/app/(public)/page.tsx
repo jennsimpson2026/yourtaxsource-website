@@ -53,10 +53,10 @@ export default function Home() {
               <div className="absolute inset-0 bg-brand-lavender rounded-[3rem] rotate-3 scale-95 opacity-20 blur-2xl"></div>
               <div className="relative h-full w-full rounded-[2.5rem] overflow-hidden shadow-2xl border-4 border-white/10">
                    <Image 
-                     src="/images/jenns-profile-pic.jpg"
+                     src="/images/hero-jennifer-office.png"
                      alt="Jennifer Simpson, Your Tax Source"
                      fill
-                     className="object-cover"
+                     className="object-cover object-center"
                      priority
                    />
               </div>
@@ -293,13 +293,13 @@ export default function Home() {
 
 function ServiceCard({ icon, title, description, href }: { icon: React.ReactNode; title: string; description: string, href: string }) {
   return (
-    <Link href={href} className="flex flex-col gap-4 p-8 rounded-3xl bg-white border border-gray-100 hover:border-brand-orange/30 hover:shadow-xl transition-all group hover:-translate-y-1">
-      <div className="mb-2 bg-brand-cloud w-16 h-16 rounded-2xl flex items-center justify-center group-hover:bg-brand-orange/10 transition-colors">
+    <Link href={href} className="flex flex-col gap-4 p-8 rounded-3xl bg-white border border-gray-100 hover:border-brand-purple/30 hover:shadow-xl transition-all group hover:-translate-y-1">
+      <div className="mb-2 bg-brand-soft-gray w-16 h-16 rounded-2xl flex items-center justify-center group-hover:bg-brand-purple/10 transition-colors">
         {icon}
       </div>
-      <h3 className="text-xl font-heading font-bold text-brand-navy group-hover:text-brand-orange transition-colors">{title}</h3>
+      <h3 className="text-xl font-heading font-bold text-brand-black group-hover:text-brand-purple transition-colors">{title}</h3>
       <p className="text-brand-charcoal/70 leading-relaxed text-sm font-medium">{description}</p>
-      <div className="mt-auto pt-4 flex items-center gap-2 text-brand-navy font-bold text-xs uppercase tracking-widest">
+      <div className="mt-auto pt-4 flex items-center gap-2 text-brand-purple font-bold text-xs uppercase tracking-widest">
          Learn More <Clock size={14} className="group-hover:translate-x-1 transition-transform" />
       </div>
     </Link>
@@ -308,12 +308,12 @@ function ServiceCard({ icon, title, description, href }: { icon: React.ReactNode
 
 function ServingItem({ title, description }: { title: string; description: string }) {
   return (
-    <div className="flex items-start gap-4">
+    <div className="flex items-start gap-4 p-2">
        <div className="mt-1.5 flex-shrink-0">
-          <CheckCircle2 className="text-brand-green w-5 h-5" />
+          <CheckCircle2 className="text-brand-purple w-5 h-5" />
        </div>
        <div>
-          <h4 className="font-bold text-brand-navy">{title}</h4>
+          <h4 className="font-bold text-brand-black">{title}</h4>
           <p className="text-sm text-brand-charcoal/60 font-medium">{description}</p>
        </div>
     </div>
@@ -323,12 +323,12 @@ function ServingItem({ title, description }: { title: string; description: strin
 function WhyItem({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
   return (
     <div className="flex flex-col items-center text-center gap-6 p-6">
-       <div className="w-20 h-20 bg-white/5 rounded-3xl flex items-center justify-center border border-white/10 shadow-inner">
+       <div className="w-20 h-20 bg-white/5 rounded-3xl flex items-center justify-center border border-white/10 shadow-inner group-hover:bg-white/10 transition-colors">
           {icon}
        </div>
        <div>
           <h3 className="text-2xl font-bold mb-4">{title}</h3>
-          <p className="text-blue-100/70 leading-relaxed font-medium">{description}</p>
+          <p className="text-brand-lavender/70 leading-relaxed font-medium">{description}</p>
        </div>
     </div>
   );

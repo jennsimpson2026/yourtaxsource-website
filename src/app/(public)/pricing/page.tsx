@@ -8,7 +8,7 @@ export default function PricingPage() {
         <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-10"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
           <h1 className="text-4xl md:text-6xl font-heading font-bold mb-8">Transparent <span className="text-brand-purple italic">Pricing</span>.</h1>
-          <p className="text-xl text-blue-100 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-xl text-brand-lavender/80 max-w-3xl mx-auto leading-relaxed">
             Professional tax help shouldn't be a mystery. We provide straightforward 
             pricing based on the complexity of your financial situation.
           </p>
@@ -127,7 +127,7 @@ export default function PricingPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div>
               <h2 className="text-3xl md:text-4xl font-heading font-bold mb-8">Secure & Easy Payments</h2>
-              <p className="text-xl text-blue-100 mb-10 leading-relaxed">
+              <p className="text-xl text-brand-lavender/80 mb-10 leading-relaxed">
                 We've partnered with <span className="font-bold text-white">Helcim</span> to provide 
                 bank-grade secure payment processing. No more writing checks or 
                 mailing payments.
@@ -179,7 +179,7 @@ export default function PricingPage() {
           <div className="flex flex-col sm:flex-row justify-center gap-6">
             <Link
               href="/contact"
-              className="inline-block bg-brand-black text-white px-10 py-5 rounded-xl font-bold text-xl hover:bg-blue-900 transition-all shadow-lg"
+              className="inline-block bg-brand-black text-white px-10 py-5 rounded-xl font-bold text-xl hover:bg-brand-purple transition-all shadow-lg"
             >
               Get a Personalized Quote
             </Link>
@@ -226,12 +226,12 @@ function PricingCard({
         <span className="text-6xl font-heading font-black">{price}</span>
         <span className="text-2xl font-bold opacity-60">{priceSuffix}</span>
       </div>
-      <p className={`mb-8 ${highlighted ? 'text-blue-100' : 'text-brand-charcoal/70'}`}>{description}</p>
+      <p className={`mb-8 ${highlighted ? 'text-brand-lavender/80' : 'text-brand-charcoal/70'}`}>{description}</p>
       <ul className="space-y-4 mb-10 flex-grow">
         {features.map((feature, i) => (
           <li key={i} className="flex items-start gap-3 font-medium">
-            <CheckCircle2 className={`w-5 h-5 flex-shrink-0 ${highlighted ? 'text-brand-purple' : 'text-brand-green'}`} />
-            <span className={highlighted ? 'text-blue-50' : 'text-brand-charcoal'}>{feature}</span>
+            <CheckCircle2 className={`w-5 h-5 flex-shrink-0 ${highlighted ? 'text-brand-purple' : 'text-brand-purple'}`} />
+            <span className={highlighted ? 'text-white' : 'text-brand-charcoal'}>{feature}</span>
           </li>
         ))}
       </ul>
@@ -239,8 +239,8 @@ function PricingCard({
         href={ctaLink}
         className={`block text-center py-4 rounded-xl font-bold text-lg transition-all ${
           highlighted 
-            ? 'bg-brand-purple text-white hover:bg-orange-600 shadow-lg shadow-orange-500/20' 
-            : 'bg-brand-black text-white hover:bg-blue-900 shadow-md'
+            ? 'bg-brand-purple text-white hover:bg-brand-black shadow-lg shadow-brand-purple/20' 
+            : 'bg-brand-black text-white hover:bg-brand-purple shadow-md'
         }`}
       >
         {ctaText}
@@ -255,7 +255,7 @@ function PaymentFeature({ icon, title, description }: { icon: React.ReactNode; t
       <div className="mt-1">{icon}</div>
       <div>
         <h4 className="font-bold text-lg">{title}</h4>
-        <p className="text-blue-100/70">{description}</p>
+        <p className="text-brand-lavender/70">{description}</p>
       </div>
     </div>
   );
@@ -269,7 +269,7 @@ function Step({ number, title, description }: { number: string; title: string; d
       </div>
       <div>
         <h4 className="font-bold text-xl mb-1">{title}</h4>
-        <p className="text-blue-100/70">{description}</p>
+        <p className="text-brand-lavender/70">{description}</p>
       </div>
     </div>
   );
