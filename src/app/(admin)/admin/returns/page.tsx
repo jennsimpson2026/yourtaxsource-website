@@ -2,7 +2,7 @@ import { db } from "@/lib/db";
 import { taxReturns, users } from "@/lib/db/schema";
 import { eq, desc, and } from "drizzle-orm";
 import Link from "next/link";
-import { Search, Filter, FileText, ArrowUpDown, ChevronRight, Clock } from "lucide-react";
+import { Search, Filter, FileText, ArrowUpDown, ChevronRight } from "lucide-react";
 
 export default async function ReturnsAdminPage() {
   const returns = await db.query.taxReturns.findMany({
@@ -77,7 +77,7 @@ export default async function ReturnsAdminPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center gap-1.5 text-xs text-brand-charcoal/60 font-bold">
-                      <Clock size={14} className="text-gray-300" />
+                      <FileText size={14} className="text-gray-300" />
                       {new Date(ret.updatedAt).toLocaleDateString()}
                     </div>
                   </td>
