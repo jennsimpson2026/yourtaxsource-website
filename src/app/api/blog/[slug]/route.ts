@@ -5,9 +5,9 @@ import { eq, and } from "drizzle-orm";
 
 export async function GET(
   req: Request,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
-  const { slug } = params;
+  const { slug } = await params;
 
   try {
     const post = await db.query.posts.findFirst({

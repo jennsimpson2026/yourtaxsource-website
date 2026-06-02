@@ -6,14 +6,14 @@ import { isStaff, staffOnlyResponse, getSession } from "@/lib/auth-utils";
 
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getSession();
   if (!(await isStaff())) {
     return staffOnlyResponse();
   }
 
-  const { id } = params;
+  const { id } = await params;
 
   try {
     const client = await db.query.users.findFirst({

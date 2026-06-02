@@ -6,7 +6,7 @@ import { isStaff, staffOnlyResponse, getSession } from "@/lib/auth-utils";
 
 export async function PATCH(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   if (!(await isStaff())) {
     return staffOnlyResponse();
