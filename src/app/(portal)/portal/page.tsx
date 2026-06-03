@@ -19,7 +19,8 @@ import {
   CreditCard,
   CheckCircle2,
   Circle,
-  HelpCircle
+  HelpCircle,
+  Zap
 } from "lucide-react";
 
 export default async function PortalDashboard() {
