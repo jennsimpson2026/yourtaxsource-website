@@ -47,7 +47,7 @@ export const Navbar = () => {
                 alt="Your Tax Source Logo" 
                 width={300} 
                 height={80} 
-                className="h-10 md:h-12 w-auto object-contain transition-transform group-hover:scale-105"
+                className="h-12 md:h-16 w-auto object-contain transition-transform group-hover:scale-105"
                 priority
               />
               <span className="sr-only">Your Tax Source</span>
