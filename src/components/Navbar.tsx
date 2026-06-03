@@ -38,7 +38,7 @@ export const Navbar = () => {
   return (
     <nav className="bg-white border-b border-gray-100 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-24 md:h-32 items-center">
+        <div className="flex justify-between h-56 md:h-80 items-center">
           {/* Navigation & Actions (Left/Center) */}
           <div className="flex items-center gap-2 md:gap-4 flex-1">
             {/* Mobile Menu Button (Left on Mobile) */}
@@ -48,48 +48,48 @@ export const Navbar = () => {
                 className="text-brand-black p-1 hover:text-brand-purple transition-colors"
                 aria-label="Open Menu"
               >
-                <Menu size={32} />
+                <Menu size={48} />
               </button>
             </div>
 
             {/* Desktop Links */}
-            <div className="hidden xl:flex items-center gap-6">
+            <div className="hidden xl:flex items-center gap-8">
               {navLinks.map((link) => (
                 <Link 
                   key={link.name}
                   href={link.href} 
-                  className="text-brand-charcoal hover:text-brand-purple transition-colors font-semibold text-sm uppercase tracking-wider"
+                  className="text-brand-charcoal hover:text-brand-purple transition-colors font-bold text-base uppercase tracking-wider"
                 >
                   {link.name}
                 </Link>
               ))}
             </div>
 
-            <div className="hidden xl:block h-6 w-px bg-gray-200 mx-2" />
+            <div className="hidden xl:block h-10 w-px bg-gray-200 mx-4" />
 
             {/* Actions */}
             <div className="flex items-center gap-2 md:gap-4">
               <Link 
                 href="/portal" 
-                className="bg-brand-black text-white px-3 md:px-5 py-2 md:py-2.5 rounded-xl font-bold hover:bg-brand-purple transition-all shadow-md flex items-center gap-2 text-xs md:text-sm whitespace-nowrap"
+                className="bg-brand-black text-white px-5 md:px-8 py-3 md:py-4 rounded-2xl font-black hover:bg-brand-purple transition-all shadow-lg flex items-center gap-3 text-sm md:text-lg whitespace-nowrap"
               >
-                <LayoutDashboard size={16} className="hidden sm:inline" />
+                <LayoutDashboard size={24} className="hidden sm:inline" />
                 <span className="hidden sm:inline">Client</span> Portal
               </Link>
               
-              <div className="hidden sm:flex items-center gap-4">
+              <div className="hidden sm:flex items-center gap-6">
                 <Link 
                   href="/auth/login" 
-                  className="text-brand-purple font-bold hover:text-brand-black transition-colors text-sm flex items-center gap-1"
+                  className="text-brand-purple font-black hover:text-brand-black transition-colors text-base md:text-lg flex items-center gap-2"
                 >
-                  <LogIn size={16} />
+                  <LogIn size={24} />
                   Login
                 </Link>
                 <Link
                   href="/auth/signup"
-                  className="bg-brand-purple text-white px-6 py-2.5 rounded-xl font-bold hover:bg-[#5a3a74] transition-all shadow-sm text-sm flex items-center gap-1"
+                  className="bg-brand-purple text-white px-8 py-4 rounded-2xl font-black hover:bg-[#5a3a74] transition-all shadow-xl text-base md:text-lg flex items-center gap-2"
                 >
-                  <UserPlus size={16} />
+                  <UserPlus size={24} />
                   Start Intake
                 </Link>
               </div>
@@ -97,14 +97,14 @@ export const Navbar = () => {
           </div>
 
           {/* Logo (Right on All Screens) */}
-          <div className="flex items-center justify-end ml-4">
+          <div className="flex items-center justify-end ml-8">
             <Link href="/" className="flex items-center group">
               <Image 
                 src="/images/logo-long.png" 
                 alt="Your Tax Source Logo" 
-                width={400} 
-                height={120} 
-                className="h-16 sm:h-20 md:h-24 w-auto object-contain transition-transform group-hover:scale-105"
+                width={1200} 
+                height={360} 
+                className="h-48 sm:h-60 md:h-72 w-auto object-contain transition-transform group-hover:scale-110"
                 priority
               />
               <span className="sr-only">Your Tax Source</span>
@@ -138,9 +138,9 @@ export const Navbar = () => {
             <Image 
               src="/images/logo-long.png" 
               alt="Logo" 
-              width={240} 
-              height={70} 
-              className="h-12 w-auto object-contain"
+              width={720} 
+              height={210} 
+              className="h-36 w-auto object-contain"
             />
             <button 
               onClick={() => setIsOpen(false)}

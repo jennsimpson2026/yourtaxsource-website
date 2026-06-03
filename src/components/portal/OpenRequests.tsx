@@ -32,7 +32,9 @@ export function OpenRequests({ requests }: OpenRequestsProps) {
                   <FileText size={20} />
                 </div>
                 <div>
-                  <p className="font-bold text-brand-black">{metadata.documentName || "Document Request"}</p>
+                  <p className="font-bold text-brand-black">
+                    {metadata.documentName || metadata.documentList || "Document Request"}
+                  </p>
                   <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">
                     Requested on {new Date(request.createdAt).toLocaleDateString()}
                   </p>
