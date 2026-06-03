@@ -102,6 +102,11 @@ export const authOptions: NextAuthOptions = {
   },
   events: {
     async signIn({ user }) {
+      // Update lastLoginAt
+      await db.update(users)
+        .set({ lastLoginAt: new Date() })
+        .where(eq(users.id, user.id));
+
       await db.insert(auditLogs).values({
         userId: user.id,
         action: "SIGN_IN",

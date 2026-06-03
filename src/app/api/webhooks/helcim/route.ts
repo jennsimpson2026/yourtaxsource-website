@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { invoices, taxReturns, auditLogs } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { notifyPaymentReceived, notifyAdminPaymentReceived } from "@/lib/notifications";
+import { releaseReturnDocuments } from "@/lib/returns";
 
 export async function POST(req: Request) {
   try {
@@ -34,6 +35,9 @@ export async function POST(req: Request) {
         await db.update(taxReturns)
           .set({ paymentStatus: "PAID" })
           .where(eq(taxReturns.id, invoice.returnId));
+
+        // Release documents on payment
+        await releaseReturnDocuments(invoice.returnId);
 
         await db.insert(auditLogs).values({
           userId: invoice.userId,

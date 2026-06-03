@@ -11,6 +11,7 @@ export const users = sqliteTable("users", {
   mfaSecret: text("mfa_secret"),
   emailVerified: integer("email_verified", { mode: "timestamp" }),
   image: text("image"),
+  lastLoginAt: integer("last_login_at", { mode: "timestamp" }),
   createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),
 });
@@ -62,6 +63,10 @@ export const taxReturns = sqliteTable("tax_returns", {
   status: text("status").default("NOT_STARTED").notNull(), // 'NOT_STARTED', 'IN_PROGRESS', etc.
   paymentStatus: text("payment_status").default("UNPAID").notNull(),
   assignedStaffId: text("assigned_staff_id").references(() => users.id),
+  federalResult: real("federal_result"),
+  stateResults: text("state_results"), // JSON string
+  manualRelease: integer("manual_release", { mode: "boolean" }).default(false).notNull(),
+  isComplimentary: integer("is_complimentary", { mode: "boolean" }).default(false).notNull(),
   notes: text("notes"),
   createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),
@@ -97,6 +102,7 @@ export const documents = sqliteTable("documents", {
   fileType: text("file_type").notNull(),
   fileSize: integer("file_size").notNull(),
   category: text("category").notNull(),
+  isLocked: integer("is_locked", { mode: "boolean" }).default(true).notNull(),
   uploadedAt: integer("uploaded_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),
   deletedAt: integer("deleted_at", { mode: "timestamp" }),
 }, (table) => ({

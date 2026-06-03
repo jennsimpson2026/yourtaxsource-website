@@ -246,6 +246,9 @@ export default async function PortalDashboard() {
                     <p className="text-[10px] text-brand-charcoal/40 font-bold uppercase tracking-tight text-right">
                       Credit Card (3% processing fee) or Bank Draft (eCheck)
                     </p>
+                    <Link href="#manual-payment" className="text-[10px] text-brand-purple font-bold uppercase tracking-tight hover:underline">
+                      Pay manually (No Fees)
+                    </Link>
                   </div>
                 </div>
               ))}
@@ -262,17 +265,17 @@ export default async function PortalDashboard() {
           </section>
         )}
 
-        {/* Direct Payment Links (Venmo/Cash App) */}
-        <section className="bg-white rounded-[2rem] p-8 md:p-10 border border-gray-100 shadow-sm flex flex-col">
+        {/* Manual Payment Section */}
+        <section id="manual-payment" className="bg-white rounded-[2rem] p-8 md:p-10 border border-gray-100 shadow-sm flex flex-col">
           <div className="flex items-center gap-4 mb-8">
             <div className="w-12 h-12 bg-brand-lavender rounded-2xl flex items-center justify-center text-brand-purple">
-              <ExternalLink size={24} />
+              <Zap size={24} />
             </div>
-            <h3 className="text-2xl font-heading font-bold text-brand-black">Quick Pay</h3>
+            <h3 className="text-2xl font-heading font-bold text-brand-black">Manual Payment (No Fees)</h3>
           </div>
           <p className="text-brand-charcoal/60 text-sm mb-8 leading-relaxed">
             Prefer to pay via mobile app? Scan the codes below or use the direct links to pay Jenn directly. 
-            <span className="block mt-2 font-bold text-brand-purple italic">Please include your Invoice # in the payment notes.</span>
+            <span className="block mt-2 font-bold text-brand-purple italic">Please include your Invoice # in the payment notes to ensure your payment is credited correctly.</span>
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="flex flex-col items-center gap-4 p-6 bg-gray-50 rounded-2xl border border-gray-100">
@@ -303,13 +306,13 @@ export default async function PortalDashboard() {
           </div>
         </section>
 
-        {/* Payment Methods */}
+        {/* Other Payment Methods Section */}
         <section className="bg-white rounded-[2rem] p-8 md:p-10 border border-gray-100 shadow-sm">
           <div className="flex items-center gap-4 mb-8">
             <div className="w-12 h-12 bg-brand-lavender rounded-2xl flex items-center justify-center text-brand-purple">
               <CreditCard size={24} />
             </div>
-            <h3 className="text-2xl font-heading font-bold text-brand-black">Payment Methods</h3>
+            <h3 className="text-2xl font-heading font-bold text-brand-black">Other Payment Methods</h3>
           </div>
           <p className="text-brand-charcoal/60 text-sm mb-6">
             We accept the following secure payment methods for your convenience:

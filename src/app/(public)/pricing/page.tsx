@@ -158,7 +158,7 @@ export default function PricingPage() {
                  <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-white/10"></div>
                  <Step number="1" title="Review Your Return" description="We'll notify you when your return is ready for review in the portal." />
                  <Step number="2" title="View Your Invoice" description="Your invoice will be available directly next to your completed documents." />
-                 <Step number="3" title="Pay Securely" description="Click 'Pay Now' to complete your payment using Credit Card (3% processing fee) or Bank Draft (eCheck)." />
+                 <Step number="3" title="Pay Securely" description="Pay via Credit Card (3% fee), Bank Draft, or use mobile apps like Venmo, Cash App, or Zelle for no fees." />
                  <Step number="4" title="Final Filing" description="Once payment is confirmed, we'll electronically file your return with the IRS." />
               </ol>
             </div>

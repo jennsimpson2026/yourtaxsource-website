@@ -162,6 +162,8 @@ export async function registerDocument(data: {
     fileType: data.fileType,
     fileSize: data.fileSize,
     category: data.category,
+    // Default isLocked to true if it's a Final Return or provided by Staff
+    isLocked: data.category === "Final Returns" || (session.user as any).role !== "CLIENT",
   }).returning();
 
   await db.insert(auditLogs).values({
@@ -197,6 +199,11 @@ export async function getDownloadUrl(documentId: string) {
   const isStaff = ["STAFF", "ADMIN"].includes((session.user as any).role);
 
   if (!isOwner && !isStaff) throw new Error("Forbidden");
+
+  // If client is the owner, check if the document is locked
+  if (isOwner && !isStaff && doc.isLocked) {
+    throw new Error("Document is locked until payment is received.");
+  }
 
   const command = new GetObjectCommand({
     Bucket: BUCKET_NAME,
