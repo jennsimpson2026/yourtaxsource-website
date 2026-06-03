@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { setupPassword } from "@/actions/auth";
 
-export default function SetupPage() {
+function SetupForm() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const email = searchParams.get("email") || "";
@@ -96,5 +96,17 @@ export default function SetupPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function SetupPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <div className="animate-pulse text-brand-purple font-bold">Loading...</div>
+      </div>
+    }>
+      <SetupForm />
+    </Suspense>
   );
 }
