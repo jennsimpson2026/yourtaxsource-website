@@ -99,7 +99,7 @@ export default async function PortalDashboard() {
       </div>
 
       {/* Open Requests */}
-      <OpenRequests requests={openRequests} />
+      <OpenRequests requests={openRequests} unpaidInvoices={unpaidInvoices} />
 
       {/* 7-Step Visual Timeline */}
       <section className="bg-white rounded-[2rem] p-8 md:p-12 border border-gray-100 shadow-sm">
@@ -224,7 +224,7 @@ export default async function PortalDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Unpaid Invoices */}
         {unpaidInvoices.length > 0 && (
-          <section className="bg-brand-lavender/30 rounded-[2rem] p-8 md:p-10 border border-brand-lavender shadow-sm">
+          <section id="invoices" className="bg-brand-lavender/30 rounded-[2rem] p-8 md:p-10 border border-brand-lavender shadow-sm">
             <div className="flex items-center gap-4 mb-8">
               <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-brand-purple shadow-sm">
                 <CreditCard size={24} />
@@ -241,12 +241,67 @@ export default async function PortalDashboard() {
                     <p className="text-sm font-bold text-brand-charcoal/60 uppercase tracking-wider">Invoice #{invoice.id.slice(0, 8)}</p>
                     <p className="text-3xl font-bold text-brand-black">${Number(invoice.amount).toFixed(2)}</p>
                   </div>
-                  <PayInvoiceButton invoiceId={invoice.id} />
+                  <div className="flex flex-col items-end gap-2">
+                    <PayInvoiceButton invoiceId={invoice.id} />
+                    <p className="text-[10px] text-brand-charcoal/40 font-bold uppercase tracking-tight text-right">
+                      Credit Card (3% processing fee) or Bank Draft (eCheck)
+                    </p>
+                  </div>
                 </div>
               ))}
             </div>
+
+            <div className="mt-8 pt-8 border-t border-brand-lavender/50">
+              <p className="text-sm font-bold text-brand-black mb-4">Or pay via mobile app (No Fees):</p>
+              <div className="flex flex-wrap gap-4 text-xs">
+                <div className="bg-white/50 px-3 py-1.5 rounded-full border border-brand-lavender text-brand-purple font-bold">Venmo: @Jennifer-Simpson-59</div>
+                <div className="bg-white/50 px-3 py-1.5 rounded-full border border-brand-lavender text-brand-purple font-bold">Cash App: $YTSJenn</div>
+                <div className="bg-white/50 px-3 py-1.5 rounded-full border border-brand-lavender text-brand-purple font-bold">Zelle: 803-371-5766</div>
+              </div>
+            </div>
           </section>
         )}
+
+        {/* Direct Payment Links (Venmo/Cash App) */}
+        <section className="bg-white rounded-[2rem] p-8 md:p-10 border border-gray-100 shadow-sm flex flex-col">
+          <div className="flex items-center gap-4 mb-8">
+            <div className="w-12 h-12 bg-brand-lavender rounded-2xl flex items-center justify-center text-brand-purple">
+              <ExternalLink size={24} />
+            </div>
+            <h3 className="text-2xl font-heading font-bold text-brand-black">Quick Pay</h3>
+          </div>
+          <p className="text-brand-charcoal/60 text-sm mb-8 leading-relaxed">
+            Prefer to pay via mobile app? Scan the codes below or use the direct links to pay Jenn directly. 
+            <span className="block mt-2 font-bold text-brand-purple italic">Please include your Invoice # in the payment notes.</span>
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="flex flex-col items-center gap-4 p-6 bg-gray-50 rounded-2xl border border-gray-100">
+               <div className="w-40 h-40 bg-white rounded-xl border-2 border-dashed border-gray-200 flex items-center justify-center text-gray-300 text-[10px] text-center px-4 font-bold uppercase tracking-widest">
+                 Venmo QR Code
+               </div>
+               <a href="https://venmo.com/u/Jennifer-Simpson-59" target="_blank" rel="noopener noreferrer" className="text-sm font-bold text-blue-600 hover:underline flex items-center gap-2">
+                 @Jennifer-Simpson-59 <ExternalLink size={14} />
+               </a>
+            </div>
+            <div className="flex flex-col items-center gap-4 p-6 bg-gray-50 rounded-2xl border border-gray-100">
+               <div className="w-40 h-40 bg-white rounded-xl border-2 border-dashed border-gray-200 flex items-center justify-center text-gray-300 text-[10px] text-center px-4 font-bold uppercase tracking-widest">
+                 Cash App QR Code
+               </div>
+               <a href="https://cash.app/$YTSJenn" target="_blank" rel="noopener noreferrer" className="text-sm font-bold text-green-600 hover:underline flex items-center gap-2">
+                 $YTSJenn <ExternalLink size={14} />
+               </a>
+            </div>
+            <div className="flex flex-col items-center gap-4 p-6 bg-gray-50 rounded-2xl border border-gray-100">
+               <div className="w-40 h-40 bg-white rounded-xl border-2 border-dashed border-gray-200 flex items-center justify-center text-gray-300 text-[10px] text-center px-4 font-bold uppercase tracking-widest">
+                 Zelle
+               </div>
+               <div className="text-sm font-bold text-brand-purple flex flex-col items-center gap-1">
+                 <span>803-371-5766</span>
+                 <span className="text-[10px] text-gray-400 uppercase">Jenn Simpson</span>
+               </div>
+            </div>
+          </div>
+        </section>
 
         {/* Payment Methods */}
         <section className="bg-white rounded-[2rem] p-8 md:p-10 border border-gray-100 shadow-sm">
@@ -259,24 +314,32 @@ export default async function PortalDashboard() {
           <p className="text-brand-charcoal/60 text-sm mb-6">
             We accept the following secure payment methods for your convenience:
           </p>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="p-4 rounded-xl bg-gray-50 border border-gray-100 flex items-center gap-3">
-              <div className="w-2 h-2 rounded-full bg-brand-purple"></div>
-              <span className="font-bold text-brand-black text-sm">Helcim (Credit/eCheck)</span>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-4 rounded-xl bg-gray-50 border border-gray-100 flex items-center gap-3">
+                <div className="w-2 h-2 rounded-full bg-brand-purple"></div>
+                <span className="font-bold text-brand-black text-sm">Credit Card (3% processing fee)</span>
+              </div>
+              <div className="p-4 rounded-xl bg-gray-50 border border-gray-100 flex items-center gap-3">
+                <div className="w-2 h-2 rounded-full bg-brand-purple"></div>
+                <span className="font-bold text-brand-black text-sm">Bank Draft (eCheck)</span>
+              </div>
+              <div className="p-4 rounded-xl bg-gray-50 border border-gray-100 flex items-center gap-3">
+                <div className="w-2 h-2 rounded-full bg-brand-purple"></div>
+                <span className="font-bold text-brand-black text-sm">Venmo (@Jennifer-Simpson-59)</span>
+              </div>
+              <div className="p-4 rounded-xl bg-gray-50 border border-gray-100 flex items-center gap-3">
+                <div className="w-2 h-2 rounded-full bg-brand-purple"></div>
+                <span className="font-bold text-brand-black text-sm">Cash App ($YTSJenn)</span>
+              </div>
+              <div className="p-4 rounded-xl bg-gray-50 border border-gray-100 flex items-center gap-3">
+                <div className="w-2 h-2 rounded-full bg-brand-purple"></div>
+                <span className="font-bold text-brand-black text-sm">Zelle (803-371-5766)</span>
+              </div>
+              <div className="p-4 rounded-xl bg-gray-50 border border-gray-100 flex items-center gap-3">
+                <div className="w-2 h-2 rounded-full bg-brand-purple"></div>
+                <span className="font-bold text-brand-black text-sm">Cash / Check</span>
+              </div>
             </div>
-            <div className="p-4 rounded-xl bg-gray-50 border border-gray-100 flex items-center gap-3">
-              <div className="w-2 h-2 rounded-full bg-brand-purple"></div>
-              <span className="font-bold text-brand-black text-sm">Venmo</span>
-            </div>
-            <div className="p-4 rounded-xl bg-gray-50 border border-gray-100 flex items-center gap-3">
-              <div className="w-2 h-2 rounded-full bg-brand-purple"></div>
-              <span className="font-bold text-brand-black text-sm">Zelle</span>
-            </div>
-            <div className="p-4 rounded-xl bg-gray-50 border border-gray-100 flex items-center gap-3">
-              <div className="w-2 h-2 rounded-full bg-brand-purple"></div>
-              <span className="font-bold text-brand-black text-sm">Cash / Check</span>
-            </div>
-          </div>
         </section>
 
         {/* Privacy & Security Section */}

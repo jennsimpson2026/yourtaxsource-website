@@ -1,12 +1,12 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { taxReturns, auditLogs, users, profiles } from "@/lib/db/schema";
+import { taxReturns, auditLogs, users, profiles, invoices } from "@/lib/db/schema";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
-import { eq } from "drizzle-orm";
-import { notifyStatusUpdate } from "@/lib/notifications";
+import { eq, and } from "drizzle-orm";
+import { notifyStatusUpdate, notifyAdminPaymentReceived } from "@/lib/notifications";
 
 export async function updateReturnDetails(returnId: string, data: {
   status?: string;
@@ -26,7 +26,7 @@ export async function updateReturnDetails(returnId: string, data: {
     .where(eq(taxReturns.id, returnId))
     .returning();
 
-  if (updatedReturn && data.status) {
+  if (updatedReturn) {
     const client = await db.query.users.findFirst({
       where: eq(users.id, updatedReturn.clientId),
       with: {
@@ -35,7 +35,24 @@ export async function updateReturnDetails(returnId: string, data: {
     });
 
     if (client) {
-      await notifyStatusUpdate(client.email, client.profile?.phone || null, data.status);
+      if (data.status) {
+        await notifyStatusUpdate(client.email, client.profile?.phone || null, data.status);
+      }
+
+      if (data.paymentStatus === "PAID") {
+        const unpaidInvoices = await db.query.invoices.findMany({
+          where: and(eq(invoices.returnId, returnId), eq(invoices.status, "UNPAID")),
+        });
+        
+        const totalAmount = unpaidInvoices.reduce((sum, inv) => sum + Number(inv.amount), 0);
+        
+        await notifyAdminPaymentReceived({
+          clientName: client.name || "Client",
+          amount: totalAmount,
+          method: "Manual Entry (Admin)",
+          invoiceReference: `Return ${updatedReturn.year}`,
+        });
+      }
     }
   }
 

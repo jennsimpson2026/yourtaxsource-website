@@ -123,6 +123,38 @@ export async function notifyPaymentReceived(email: string, phone: string | null,
   }
 }
 
+export async function notifyAdminPaymentReceived({
+  clientName,
+  amount,
+  method,
+  invoiceReference,
+}: {
+  clientName: string;
+  amount: number;
+  method: string;
+  invoiceReference: string;
+}) {
+  const recipient = process.env.ADMIN_EMAIL || "jsimpson@yourtaxsource.com";
+  const subject = `[Payment Received] ${clientName} - $${amount}`;
+  const now = new Date().toLocaleString("en-US", { timeZone: "America/New_York" });
+
+  const html = `
+    <h2>Payment Received</h2>
+    <p><strong>Client:</strong> ${clientName}</p>
+    <p><strong>Amount:</strong> $${amount.toFixed(2)}</p>
+    <p><strong>Method:</strong> ${method}</p>
+    <p><strong>Date/Time:</strong> ${now} (EST)</p>
+    <p><strong>Reference:</strong> ${invoiceReference}</p>
+    <p><a href="${process.env.NEXTAUTH_URL}/admin">View in Admin Dashboard</a></p>
+  `;
+
+  await sendEmail({
+    to: recipient,
+    subject,
+    html,
+  });
+}
+
 export async function notifyDocumentRequest(email: string, phone: string | null, documentList: string) {
   const subject = "Action Needed: Documents Requested for Your Tax Return";
   const body = `We need additional documentation to proceed with your tax return: ${documentList}. Please upload these to your secure client portal.`;

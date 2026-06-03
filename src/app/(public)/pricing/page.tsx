@@ -128,9 +128,8 @@ export default function PricingPage() {
             <div>
               <h2 className="text-3xl md:text-4xl font-heading font-bold mb-8">Secure & Easy Payments</h2>
               <p className="text-xl text-brand-lavender/80 mb-10 leading-relaxed">
-                We've partnered with <span className="font-bold text-white">Helcim</span> to provide 
-                bank-grade secure payment processing. No more writing checks or 
-                mailing payments.
+                We use bank-grade secure payment processing for Credit Cards and Bank Drafts. 
+                No more writing checks or mailing payments.
               </p>
               <div className="space-y-6">
                 <PaymentFeature 
@@ -146,7 +145,7 @@ export default function PricingPage() {
                 <PaymentFeature 
                   icon={<CreditCard className="w-6 h-6 text-brand-purple" />}
                   title="Multiple Options"
-                  description="We accept all major credit cards and secure ACH bank transfers."
+                  description="We accept all major credit cards (3% processing fee) and secure ACH bank drafts (eCheck)."
                 />
               </div>
             </div>
@@ -159,7 +158,7 @@ export default function PricingPage() {
                  <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-white/10"></div>
                  <Step number="1" title="Review Your Return" description="We'll notify you when your return is ready for review in the portal." />
                  <Step number="2" title="View Your Invoice" description="Your invoice will be available directly next to your completed documents." />
-                 <Step number="3" title="Pay Securely" description="Click 'Pay Now' to complete your payment through our secure Helcim portal." />
+                 <Step number="3" title="Pay Securely" description="Click 'Pay Now' to complete your payment using Credit Card (3% processing fee) or Bank Draft (eCheck)." />
                  <Step number="4" title="Final Filing" description="Once payment is confirmed, we'll electronically file your return with the IRS." />
               </ol>
             </div>

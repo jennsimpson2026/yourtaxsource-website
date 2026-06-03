@@ -25,7 +25,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
       <p>The foundation of effective tax planning is good bookkeeping. By staying organized throughout the year, you avoid the year-end scramble and ensure you don't miss out on valuable deductions like home office expenses, mileage, and professional development.</p>
     `,
     date: "June 15, 2024",
-    author: "Jennifer Simpson",
+    author: "Jenn Simpson",
     authorTitle: "Founder & Lead Advisor",
     category: "Small Business",
     readTime: "6 min read",

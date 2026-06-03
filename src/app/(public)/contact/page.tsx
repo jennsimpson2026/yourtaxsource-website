@@ -9,7 +9,7 @@ export default function ContactPage() {
         <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-10"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
           <h1 className="text-4xl md:text-6xl font-heading font-bold mb-8">Let's Talk <span className="text-brand-purple italic">Taxes</span>.</h1>
-          <p className="text-xl text-blue-100 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-xl text-brand-lavender max-w-2xl mx-auto leading-relaxed">
             Have a question or ready to get started? Reach out to our team in Belmont, NC. 
             We're here to make your financial life simpler.
           </p>
@@ -47,7 +47,7 @@ export default function ContactPage() {
               <div className="relative h-[300px] rounded-3xl overflow-hidden shadow-xl border-4 border-brand-cloud">
                 <Image 
                   src="/images/jennifer-reviewing-reports.png"
-                  alt="Jennifer Simpson"
+                  alt="Jenn Simpson"
                   fill
                   className="object-cover"
                 />
@@ -65,7 +65,7 @@ export default function ContactPage() {
             <div className="bg-brand-cloud p-1 md:p-2 rounded-[2.5rem] shadow-2xl">
               <div className="bg-white p-8 md:p-12 rounded-[2rem] h-full shadow-inner">
                 <div className="flex items-center gap-4 mb-10 bg-brand-cloud/50 p-4 rounded-2xl border border-gray-100">
-                  <div className="bg-brand-purple p-3 rounded-xl shadow-lg shadow-orange-500/20">
+                  <div className="bg-brand-purple p-3 rounded-xl shadow-lg shadow-purple-500/20">
                     <Send className="w-6 h-6 text-white" />
                   </div>
                   <div>
@@ -89,18 +89,18 @@ export default function ContactPage() {
               <h2 className="text-3xl font-heading font-bold mb-8">Office Hours</h2>
               <div className="space-y-4 max-w-md">
                 <div className="flex justify-between items-center py-4 border-b border-white/10">
-                  <span className="text-blue-100 font-medium text-lg">Monday - Friday</span>
+                  <span className="text-brand-lavender font-medium text-lg">Monday - Friday</span>
                   <span className="font-bold text-lg">9:00 AM - 5:00 PM</span>
                 </div>
                 <div className="flex justify-between items-center py-4 border-b border-white/10">
                   <div className="flex flex-col">
-                    <span className="text-blue-100 font-medium text-lg">Saturday</span>
+                    <span className="text-brand-lavender font-medium text-lg">Saturday</span>
                     <span className="text-brand-purple text-sm font-bold uppercase tracking-wider">Tax Season Only</span>
                   </div>
                   <span className="font-bold text-lg">10:00 AM - 2:00 PM</span>
                 </div>
                 <div className="flex justify-between items-center py-4">
-                  <span className="text-blue-100 font-medium text-lg">Sunday</span>
+                  <span className="text-brand-lavender font-medium text-lg">Sunday</span>
                   <span className="text-white/40 font-bold text-lg uppercase tracking-widest">Closed</span>
                 </div>
               </div>
@@ -110,7 +110,7 @@ export default function ContactPage() {
               <div className="relative z-10 text-center p-8">
                  <MapPin className="w-12 h-12 text-brand-purple mx-auto mb-4" />
                  <p className="text-xl font-bold text-white mb-2">Belmont, North Carolina</p>
-                 <p className="text-blue-100/70 italic">100 1/2 S Main Street, Belmont, NC 28012</p>
+                 <p className="text-brand-lavender/70 italic">100 1/2 S Main Street, Belmont, NC 28012</p>
               </div>
             </div>
           </div>

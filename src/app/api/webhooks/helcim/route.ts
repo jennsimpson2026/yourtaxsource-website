@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { invoices, taxReturns, auditLogs } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
-import { notifyPaymentReceived } from "@/lib/notifications";
+import { notifyPaymentReceived, notifyAdminPaymentReceived } from "@/lib/notifications";
 
 export async function POST(req: Request) {
   try {
@@ -48,6 +48,13 @@ export async function POST(req: Request) {
           (invoice.user as any).profile?.phone || null, 
           Number(invoice.amount)
         );
+
+        await notifyAdminPaymentReceived({
+          clientName: (invoice.user as any).name || "Client",
+          amount: Number(invoice.amount),
+          method: "Helcim",
+          invoiceReference: invoice.id,
+        });
       }
     }
 

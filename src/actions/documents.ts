@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { documents, auditLogs, users } from "@/lib/db/schema";
+import { documents, auditLogs, users, taxReturns } from "@/lib/db/schema";
 import { s3Client, BUCKET_NAME } from "@/lib/s3";
 import { PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
@@ -103,7 +103,32 @@ export async function getUploadUrl(fileName: string, fileType: string, category:
   if (!session?.user) throw new Error("Unauthorized");
 
   const userId = (session.user as any).id;
-  const s3Key = `uploads/${userId}/${Date.now()}-${fileName}`;
+
+  const user = await db.query.users.findFirst({
+    where: eq(users.id, userId),
+  });
+
+  if (!user) throw new Error("User not found");
+
+  let taxYear = new Date().getFullYear();
+  if (returnId) {
+    const taxReturn = await db.query.taxReturns.findFirst({
+      where: eq(taxReturns.id, returnId),
+    });
+    if (taxReturn) {
+      taxYear = taxReturn.year;
+    }
+  }
+
+  // Parse name into [LastName]_[FirstInitial]
+  const nameParts = (user.name || "User").trim().split(/\s+/);
+  const firstName = nameParts[0];
+  const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : firstName;
+  const firstInitial = firstName.charAt(0).toUpperCase();
+  const humanReadableName = `${lastName}_${firstInitial}`;
+
+  // Hierarchy: [TaxYear] / [LastName]_[FirstInitial] / [Category] / [FileName]
+  const s3Key = `${taxYear}/${humanReadableName}/${category}/${fileName}`;
 
   const command = new PutObjectCommand({
     Bucket: BUCKET_NAME,

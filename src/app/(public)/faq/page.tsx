@@ -90,15 +90,15 @@ export default function FAQPage() {
                   <div className="space-y-4">
                     <p>We offer several convenient payment options. Most clients pay securely using:</p>
                     <ul className="list-disc pl-5 space-y-1">
-                      <li>Venmo</li>
-                      <li>Cash App</li>
-                      <li>Zelle</li>
+                      <li>Venmo (@Jennifer-Simpson-59)</li>
+                      <li>Cash App ($YTSJenn)</li>
+                      <li>Zelle (803-371-5766)</li>
                       <li>Apple Pay</li>
-                      <li>eCheck (ACH Bank Transfer)</li>
-                      <li>Credit or Debit Card</li>
+                      <li>Bank Draft (eCheck)</li>
+                      <li>Credit or Debit Card (3% processing fee)</li>
                     </ul>
-                    <p>Once your return is complete, we'll send payment instructions along with your tax summary. If paying by eCheck, you'll receive an email authorization request that you'll simply review and approve online.</p>
-                    <p>Credit and debit cards are accepted; however, a 3% processing fee will be added to card payments. To avoid processing fees, many clients choose eCheck, Zelle, Venmo, Cash App, or Apple Pay.</p>
+                    <p>Once your return is complete, we'll send payment instructions along with your tax summary. If paying by Bank Draft, you'll receive an email authorization request that you'll simply review and approve online.</p>
+                    <p>Credit and debit cards are accepted; however, a 3% processing fee will be added to card payments. To avoid fees, many clients choose Bank Draft (eCheck), Zelle, Venmo, Cash App, or Apple Pay.</p>
                     <p>We strive to make the payment process simple, secure, and convenient for every client.</p>
                   </div>
                 }
@@ -134,7 +134,7 @@ export default function FAQPage() {
             <div className="flex flex-col sm:flex-row justify-center gap-6">
               <Link
                 href="/contact"
-                className="inline-block bg-brand-black text-white px-10 py-5 rounded-xl font-bold text-xl hover:bg-black transition-all shadow-lg"
+                className="inline-block bg-brand-black text-white px-10 py-5 rounded-2xl font-black text-xl hover:bg-black transition-all shadow-xl hover:scale-105 active:scale-95 uppercase tracking-wider"
               >
                 Send Us a Message
               </Link>

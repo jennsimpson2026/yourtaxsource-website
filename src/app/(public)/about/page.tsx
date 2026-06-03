@@ -22,7 +22,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Meet Jennifer Section */}
+      {/* Meet Jenn Section */}
       <section className="py-24 bg-white border-y border-gray-100">
          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col lg:flex-row items-center gap-20">
@@ -31,34 +31,34 @@ export default function AboutPage() {
                   <div className="relative aspect-[4/5] w-full rounded-[3rem] overflow-hidden shadow-2xl border-4 border-white">
                         <Image 
                           src="/images/jenns-profile-pic.jpg"
-                          alt="Jennifer Simpson"
+                          alt="Jenn Simpson"
                           fill
                           className="object-cover"
                         />
                   </div>
                </div>
                <div className="lg:w-3/5">
-                  <h2 className="text-3xl md:text-5xl font-heading font-bold text-brand-black mb-2">Meet Jennifer Simpson</h2>
+                  <h2 className="text-3xl md:text-5xl font-heading font-bold text-brand-black mb-2">Meet Jenn Simpson</h2>
                   <p className="text-brand-purple font-bold uppercase tracking-widest text-sm mb-8">Founder & Lead Advisor</p>
                   
                   <div className="space-y-6 text-brand-charcoal/80 text-lg leading-relaxed font-medium">
                      <p>
-                        Jennifer Simpson is the founder of Your Tax Source and brings more than 15 years of experience in tax preparation, accounting, bookkeeping, financial reporting, and business consulting.
+                        Jenn Simpson is the founder of Your Tax Source and brings more than 15 years of experience in tax preparation, accounting, bookkeeping, financial reporting, and business consulting.
                      </p>
                      <p>
-                        As a Controller, CFO, business owner, and tax professional, Jennifer understands taxes from both the individual and business perspective. Her experience spans individual tax returns, self-employed taxpayers, small businesses, rental property owners, bookkeeping, payroll, and financial management.
+                        As a Controller, CFO, business owner, and tax professional, Jenn understands taxes from both the individual and business perspective. Her experience spans individual tax returns, self-employed taxpayers, small businesses, rental property owners, bookkeeping, payroll, and financial management.
                      </p>
                      <p>
                         What started as helping friends and family navigate tax season has grown into a trusted tax and accounting practice serving clients locally in Belmont, North Carolina and remotely across the United States.
                      </p>
                      <p>
-                        Jennifer believes taxes shouldn't be intimidating. Her approach focuses on education, communication, and helping clients understand not only what is happening on their tax return, but why.
+                        Jenn believes taxes shouldn't be intimidating. Her approach focuses on education, communication, and helping clients understand not only what is happening on their tax return, but why.
                      </p>
                      <p>
-                        In addition to operating Your Tax Source, Jennifer serves as a financial executive and business consultant, bringing real-world accounting and leadership experience to every client relationship.
+                        In addition to operating Your Tax Source, Jenn serves as a financial executive and business consultant, bringing real-world accounting and leadership experience to every client relationship.
                      </p>
                      <p>
-                        When she's not helping clients, Jennifer enjoys spending time with her husband Chad, their children, traveling, supporting small businesses, and serving her local community.
+                        When she's not helping clients, Jenn enjoys spending time with her husband Chad, their children, traveling, supporting small businesses, and serving her local community.
                      </p>
                   </div>
 

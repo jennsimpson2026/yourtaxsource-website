@@ -107,7 +107,7 @@ export default function ServicesPage() {
                >
                  Ask About Custom Services
                </Link>
-               <BookingButton className="bg-brand-purple text-white px-10 py-5 rounded-xl font-bold text-xl hover:bg-[#5a3a74] transition-all shadow-lg hover:scale-[1.02]" />
+               <BookingButton />
             </div>
           </div>
         </div>

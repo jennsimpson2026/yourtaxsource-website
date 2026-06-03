@@ -102,7 +102,7 @@ export default function WhoWeHelpPage() {
             <ValueProp 
               icon={<ShieldCheck className="text-brand-purple" size={40} />}
               title="Expertise You Can Trust"
-              description="With over 15 years of experience and a unique background in business ownership, Jennifer Simpson brings a level of insight you won't find at a big-box firm."
+              description="With over 15 years of experience and a unique background in business ownership, Jenn Simpson brings a level of insight you won't find at a big-box firm."
             />
             <ValueProp 
               icon={<Award className="text-brand-purple" size={40} />}

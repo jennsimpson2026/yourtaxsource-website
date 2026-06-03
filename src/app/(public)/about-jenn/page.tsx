@@ -12,7 +12,7 @@ export default function AboutJennPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
            <div className="flex flex-col lg:flex-row items-center gap-12">
               <div className="lg:w-1/2">
-                <h1 className="text-4xl md:text-6xl font-heading font-bold mb-6">About Jennifer Simpson</h1>
+                <h1 className="text-4xl md:text-6xl font-heading font-bold mb-6">About Jenn Simpson</h1>
                 <p className="text-xl text-brand-lavender leading-relaxed">
                   Founder, Tax Strategist, and your partner in financial confidence. 
                   Making taxes simple and stress-free for families and businesses with more than a decade of experience.
@@ -22,7 +22,7 @@ export default function AboutJennPage() {
                  <div className="relative aspect-square w-full max-w-md mx-auto rounded-[3rem] overflow-hidden shadow-2xl border-4 border-brand-purple bg-brand-soft-gray">
                     <Image 
                       src="/images/hero-jenn-laptop.png"
-                      alt="Jennifer Simpson"
+                      alt="Jenn Simpson"
                       fill
                       className="object-cover"
                     />
@@ -112,7 +112,7 @@ export default function AboutJennPage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl md:text-5xl font-heading font-bold mb-8">Let's Work Together</h2>
           <div className="flex flex-col sm:flex-row justify-center gap-6">
-            <BookingButton className="bg-brand-purple text-white px-10 py-5 rounded-2xl font-black text-xl hover:bg-brand-purple/80 transition-all shadow-xl" />
+            <BookingButton />
             <Link
               href="/contact"
               className="bg-white text-brand-black px-10 py-5 rounded-2xl font-black text-xl hover:bg-gray-100 transition-all shadow-xl flex items-center justify-center gap-2"

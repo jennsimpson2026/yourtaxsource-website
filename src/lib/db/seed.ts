@@ -11,7 +11,7 @@ async function seed() {
   // Create Admin (Jenn)
   await db.insert(users).values({
     email: "jsimpson@yourtaxsource.com",
-    name: "Jennifer Simpson",
+    name: "Jenn Simpson",
     password: adminPassword,
     role: "ADMIN",
     mfaEnabled: false,

@@ -21,7 +21,7 @@ const INITIAL_POSTS = [
     title: "5 Tax Planning Strategies for Small Business Owners in 2024",
     status: "Published",
     date: "2024-06-15",
-    author: "Jennifer Simpson",
+    author: "Jenn Simpson",
     category: "Small Business",
     views: 1240
   },
@@ -30,7 +30,7 @@ const INITIAL_POSTS = [
     title: "Understanding the New Clean Vehicle Credit",
     status: "Published",
     date: "2024-06-10",
-    author: "Jennifer Simpson",
+    author: "Jenn Simpson",
     category: "Individual Tax",
     views: 856
   },
@@ -39,7 +39,7 @@ const INITIAL_POSTS = [
     title: "How to Keep Your Books Audit-Ready All Year Round",
     status: "Draft",
     date: "2024-06-05",
-    author: "Jennifer Simpson",
+    author: "Jenn Simpson",
     category: "Bookkeeping",
     views: 0
   }

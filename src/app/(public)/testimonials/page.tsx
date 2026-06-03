@@ -94,7 +94,7 @@ export default function TestimonialsPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <ReviewCard 
-              name="Jennifer C."
+              name="Jenn C."
               initials="JC"
               role="Small Business Owner"
               text="The fractional controller services provided by Your Tax Source have helped my business grow exponentially. Their insight is invaluable."

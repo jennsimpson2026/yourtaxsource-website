@@ -6,7 +6,7 @@ const BLOG_POSTS = [
     title: "5 Tax Planning Strategies for Small Business Owners in 2024",
     excerpt: "Maximize your deductions and prepare for the upcoming tax season with these essential tips.",
     date: "June 15, 2024",
-    author: "Jennifer Simpson",
+    author: "Jenn Simpson",
     category: "Small Business",
     slug: "tax-planning-strategies-2024",
     image: "https://images.unsplash.com/photo-1454165833767-027ffea9e7a7?q=80&w=800&auto=format&fit=crop"
@@ -15,7 +15,7 @@ const BLOG_POSTS = [
     title: "Understanding the New Clean Vehicle Credit",
     excerpt: "What you need to know about qualifying for the federal tax credit when purchasing an EV.",
     date: "June 10, 2024",
-    author: "Jennifer Simpson",
+    author: "Jenn Simpson",
     category: "Individual Tax",
     slug: "clean-vehicle-credit-guide",
     image: "https://images.unsplash.com/photo-1593941707882-a5bba14938c7?q=80&w=800&auto=format&fit=crop"
@@ -24,7 +24,7 @@ const BLOG_POSTS = [
     title: "How to Keep Your Books Audit-Ready All Year Round",
     excerpt: "Best practices for document retention and financial record-keeping for entrepreneurs.",
     date: "June 05, 2024",
-    author: "Jennifer Simpson",
+    author: "Jenn Simpson",
     category: "Bookkeeping",
     slug: "audit-ready-bookkeeping",
     image: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?q=80&w=800&auto=format&fit=crop"

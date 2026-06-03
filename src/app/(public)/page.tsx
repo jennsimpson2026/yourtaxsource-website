@@ -54,7 +54,7 @@ export default function Home() {
               <div className="relative h-full w-full rounded-[2.5rem] overflow-hidden shadow-2xl border-4 border-white/10">
                     <Image 
                       src="/images/hero-jenn-laptop.png"
-                      alt="Jennifer Simpson, Your Tax Source"
+                      alt="Jenn Simpson, Your Tax Source"
                       fill
                       className="object-cover object-center"
                       priority
@@ -122,7 +122,7 @@ export default function Home() {
                  </p>
                </div>
                <div className="mt-10">
-                 <BookingButton className="bg-brand-purple text-white px-8 py-3.5 rounded-xl font-bold hover:bg-[#5a3a74] transition-all shadow-md" />
+                <BookingButton />
                </div>
             </div>
             <div className="grid grid-cols-2 gap-6">
@@ -130,7 +130,7 @@ export default function Home() {
                   <div className="bg-brand-soft-gray h-64 rounded-3xl overflow-hidden relative shadow-lg group">
                     <Image
                       src="/images/jennifer-meeting-clients-new.png"
-                      alt="Jennifer meeting with clients"
+                      alt="Jenn meeting with clients"
                       fill
                       className="object-cover group-hover:scale-110 transition-transform duration-500"
                     />
@@ -143,7 +143,7 @@ export default function Home() {
                   <div className="bg-brand-black h-48 rounded-3xl overflow-hidden relative shadow-xl group">
                     <Image
                       src="/images/jennifer-reviewing-reports.png"
-                      alt="Jennifer reviewing reports"
+                      alt="Jenn reviewing reports"
                       fill
                       className="object-cover group-hover:scale-110 transition-transform duration-500"
                     />
@@ -151,7 +151,7 @@ export default function Home() {
                   <div className="bg-brand-soft-gray h-64 rounded-3xl overflow-hidden relative shadow-lg group">
                     <Image
                       src="/images/hero-jenn-laptop.png"
-                      alt="Jennifer working in office"
+                      alt="Jenn working in office"
                       fill
                       className="object-cover group-hover:scale-110 transition-transform duration-500"
                     />
@@ -228,7 +228,7 @@ export default function Home() {
                      <div className="flex items-center gap-4">
                         <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center font-bold text-brand-lavender">JS</div>
                         <div>
-                           <p className="font-bold">Jennifer Simpson</p>
+                           <p className="font-bold">Jenn Simpson</p>
                            <p className="text-xs text-brand-lavender font-bold uppercase tracking-widest">Founder & Lead Advisor</p>
                         </div>
                      </div>

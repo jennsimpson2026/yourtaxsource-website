@@ -150,7 +150,7 @@ export default function ResourcesPage() {
             <div className="space-y-4">
               <FaqItem 
                 question="What is the TaxSource Tracker™?" 
-                answer="It is a proprietary digital dashboard and organizational system designed by Jennifer Simpson to help clients categorize, track, and manage their tax documentation throughout the year."
+                answer="It is a proprietary digital dashboard and organizational system designed by Jenn Simpson to help clients categorize, track, and manage their tax documentation throughout the year."
               />
               <FaqItem 
                 question="How do I get access?" 
