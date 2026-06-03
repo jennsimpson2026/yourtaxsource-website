@@ -38,76 +38,71 @@ export const Navbar = () => {
   return (
     <nav className="bg-white border-b border-gray-100 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-72 md:h-[28rem] items-center">
-          {/* Navigation & Actions (Left/Center) */}
-          <div className="flex items-center gap-2 md:gap-4 flex-1">
-            {/* Mobile Menu Button (Left on Mobile) */}
-            <div className="xl:hidden">
-              <button 
-                onClick={() => setIsOpen(true)}
-                className="text-brand-black p-1 hover:text-brand-purple transition-colors"
-                aria-label="Open Menu"
-              >
-                <Menu size={48} />
-              </button>
-            </div>
-
-            {/* Desktop Links */}
-            <div className="hidden xl:flex items-center gap-8">
-              {navLinks.map((link) => (
-                <Link 
-                  key={link.name}
-                  href={link.href} 
-                  className="text-brand-charcoal hover:text-brand-purple transition-colors font-bold text-base uppercase tracking-wider"
-                >
-                  {link.name}
-                </Link>
-              ))}
-            </div>
-
-            <div className="hidden xl:block h-10 w-px bg-gray-200 mx-4" />
-
-            {/* Actions */}
-            <div className="flex items-center gap-2 md:gap-4">
-              <Link 
-                href="/portal" 
-                className="bg-brand-black text-white px-5 md:px-8 py-3 md:py-4 rounded-2xl font-black hover:bg-brand-purple transition-all shadow-lg flex items-center gap-3 text-sm md:text-lg whitespace-nowrap"
-              >
-                <LayoutDashboard size={24} className="hidden sm:inline" />
-                <span className="hidden sm:inline">Client</span> Portal
-              </Link>
-              
-              <div className="hidden sm:flex items-center gap-6">
-                <Link 
-                  href="/auth/login" 
-                  className="text-brand-purple font-black hover:text-brand-black transition-colors text-base md:text-lg flex items-center gap-2"
-                >
-                  <LogIn size={24} />
-                  Login
-                </Link>
-                <Link
-                  href="/auth/signup"
-                  className="bg-brand-purple text-white px-8 py-4 rounded-2xl font-black hover:bg-[#5a3a74] transition-all shadow-xl text-base md:text-lg flex items-center gap-2"
-                >
-                  <UserPlus size={24} />
-                  Start Intake
-                </Link>
-              </div>
-            </div>
-          </div>
-
-          {/* Logo (Right on All Screens) */}
-          <div className="flex items-center justify-end ml-8">
+        <div className="flex justify-between h-20 md:h-24 items-center">
+          {/* Logo (Left) */}
+          <div className="flex items-center">
             <Link href="/" className="flex items-center group">
               <Image 
                 src="/images/logo-long.png" 
                 alt="Your Tax Source Logo" 
-                width={1200} 
-                height={360} 
-                className="h-64 sm:h-80 md:h-96 w-auto object-contain transition-transform group-hover:scale-110"
+                width={300} 
+                height={80} 
+                className="h-10 md:h-12 w-auto object-contain transition-transform group-hover:scale-105"
                 priority
               />
               <span className="sr-only">Your Tax Source</span>
+            </Link>
+          </div>
+
+          {/* Desktop Links (Center) */}
+          <div className="hidden xl:flex items-center gap-6 absolute left-1/2 -translate-x-1/2">
+            {navLinks.map((link) => (
+              <Link 
+                key={link.name}
+                href={link.href} 
+                className="text-brand-charcoal hover:text-brand-purple transition-colors font-bold text-xs uppercase tracking-widest whitespace-nowrap"
+              >
+                {link.name}
+              </Link>
+            ))}
+          </div>
+
+          {/* Actions (Right) */}
+          <div className="flex items-center gap-3">
+            {/* Mobile Menu Button */}
+            <div className="xl:hidden">
+              <button 
+                onClick={() => setIsOpen(true)}
+                className="text-brand-black p-2 hover:text-brand-purple transition-colors"
+                aria-label="Open Menu"
+              >
+                <Menu size={24} />
+              </button>
+            </div>
+
+            <div className="hidden sm:flex items-center gap-4">
+              <Link 
+                href="/auth/login" 
+                className="text-brand-purple font-black hover:text-brand-black transition-colors text-sm flex items-center gap-1.5"
+              >
+                <LogIn size={18} />
+                Login
+              </Link>
+              <Link
+                href="/auth/signup"
+                className="bg-brand-purple text-white px-5 py-2.5 rounded-xl font-black hover:bg-[#5a3a74] transition-all shadow-lg text-sm flex items-center gap-1.5"
+              >
+                <UserPlus size={18} />
+                Start Intake
+              </Link>
+            </div>
+
+            <Link 
+              href="/portal" 
+              className="bg-brand-black text-white px-4 py-2.5 rounded-xl font-black hover:bg-brand-purple transition-all shadow-md flex items-center gap-2 text-sm whitespace-nowrap"
+            >
+              <LayoutDashboard size={18} />
+              Portal
             </Link>
           </div>
         </div>
