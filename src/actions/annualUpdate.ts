@@ -99,7 +99,7 @@ export async function submitAnnualUpdate(data: any) {
 
     // 5. Generate PDF Summary
     const buffer = await renderToBuffer(
-      React.createElement(AnnualUpdatePDF, { data, taxYear: currentYear })
+      React.createElement(AnnualUpdatePDF, { data, taxYear: currentYear }) as any
     );
 
     // 6. Upload PDF to S3
