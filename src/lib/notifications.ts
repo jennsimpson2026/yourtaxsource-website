@@ -107,7 +107,7 @@ export async function notifyStatusUpdate(email: string, phone: string | null, st
 
 export async function notifyPaymentReceived(email: string, phone: string | null, amount: number) {
   const subject = "Payment Confirmed";
-  const body = `We have received your payment of ${amount}. Thank you!`;
+  const body = `We have received your payment of $${amount}. Thank you!`;
 
   await sendEmail({
     to: email,

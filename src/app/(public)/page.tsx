@@ -49,7 +49,7 @@ export default function Home() {
               </div>
             </div>
             
-            <div className="hidden lg:block relative h-[500px] animate-in fade-in slide-in-from-right duration-700">
+            <div className="relative h-[300px] sm:h-[400px] lg:h-[500px] animate-in fade-in slide-in-from-right duration-700">
               <div className="absolute inset-0 bg-brand-lavender rounded-[3rem] rotate-3 scale-95 opacity-20 blur-2xl"></div>
               <div className="relative h-full w-full rounded-[2.5rem] overflow-hidden shadow-2xl border-4 border-white/10">
                    <Image 
@@ -66,34 +66,34 @@ export default function Home() {
       </section>
 
       {/* Trust Indicators */}
-      <section className="bg-brand-soft-gray py-12 border-b border-gray-100">
+      <section className="bg-brand-soft-gray py-16 md:py-20 border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="flex items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-               <div className="w-12 h-12 bg-brand-purple/5 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <Award className="text-brand-purple" size={24} />
+            <div className="flex items-center gap-4 bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+               <div className="w-14 h-14 bg-brand-purple/5 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Award className="text-brand-purple" size={28} />
                </div>
                <div>
-                  <h3 className="font-bold text-brand-black">IRS Authorized</h3>
-                  <p className="text-xs text-brand-charcoal/60 font-medium">Professional e-File provider since 2013.</p>
+                  <h3 className="font-bold text-brand-black text-lg">IRS Authorized</h3>
+                  <p className="text-sm text-brand-charcoal/60 font-medium">Professional e-File provider since 2013.</p>
                </div>
             </div>
-            <div className="flex items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-               <div className="w-12 h-12 bg-brand-purple/5 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <Lock className="text-brand-purple" size={24} />
+            <div className="flex items-center gap-4 bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+               <div className="w-14 h-14 bg-brand-purple/5 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Lock className="text-brand-purple" size={28} />
                </div>
                <div>
-                  <h3 className="font-bold text-brand-black">Bank-Grade Security</h3>
-                  <p className="text-xs text-brand-charcoal/60 font-medium">Your data is encrypted and protected.</p>
+                  <h3 className="font-bold text-brand-black text-lg">Bank-Grade Security</h3>
+                  <p className="text-sm text-brand-charcoal/60 font-medium">Your data is encrypted and protected.</p>
                </div>
             </div>
-            <div className="flex items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-               <div className="w-12 h-12 bg-brand-purple/5 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <TrendingUp className="text-brand-purple" size={24} />
+            <div className="flex items-center gap-4 bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+               <div className="w-14 h-14 bg-brand-purple/5 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <TrendingUp className="text-brand-purple" size={28} />
                </div>
                <div>
-                  <h3 className="font-bold text-brand-black">Established Expertise</h3>
-                  <p className="text-xs text-brand-charcoal/60 font-medium">A decade of trusted tax advisory.</p>
+                  <h3 className="font-bold text-brand-black text-lg">Established Expertise</h3>
+                  <p className="text-sm text-brand-charcoal/60 font-medium">A decade of trusted tax advisory.</p>
                </div>
             </div>
           </div>
@@ -127,19 +127,29 @@ export default function Home() {
             </div>
             <div className="grid grid-cols-2 gap-6">
                <div className="space-y-6 mt-12">
-                  <div className="bg-brand-soft-gray h-64 rounded-3xl overflow-hidden relative shadow-lg">
-                    <Image src="/images/hero-tax-advisor.png" alt="Working together" fill className="object-cover opacity-80" />
+                  <div className="bg-brand-soft-gray h-64 rounded-3xl overflow-hidden relative shadow-lg group">
+                    <Image 
+                      src="/images/jennifer-meeting-clients.png" 
+                      alt="Jennifer meeting with clients" 
+                      fill 
+                      className="object-cover group-hover:scale-110 transition-transform duration-500" 
+                    />
                   </div>
-                  <div className="bg-brand-purple/10 h-48 rounded-3xl flex items-center justify-center p-8">
-                     <p className="text-brand-purple font-bold text-center">Serving Clients in all 50 States</p>
+                  <div className="bg-brand-purple/10 h-48 rounded-3xl flex items-center justify-center p-8 border border-brand-purple/20">
+                     <p className="text-brand-purple font-bold text-center text-lg">Serving Clients in all 50 States</p>
                   </div>
                </div>
                <div className="space-y-6">
-                  <div className="bg-brand-black h-48 rounded-3xl flex items-center justify-center p-8">
-                     <p className="text-white font-bold text-center text-2xl">EST. 2013</p>
+                  <div className="bg-brand-black h-48 rounded-3xl flex items-center justify-center p-8 shadow-xl">
+                     <p className="text-white font-bold text-center text-2xl tracking-tighter">EST. 2013</p>
                   </div>
-                  <div className="bg-brand-soft-gray h-64 rounded-3xl overflow-hidden relative shadow-lg">
-                    <Image src="/images/business-tax.png" alt="Office space" fill className="object-cover opacity-80" />
+                  <div className="bg-brand-soft-gray h-64 rounded-3xl overflow-hidden relative shadow-lg group">
+                    <Image 
+                      src="/images/hero-jennifer-office.png" 
+                      alt="Jennifer working in office" 
+                      fill 
+                      className="object-cover group-hover:scale-110 transition-transform duration-500" 
+                    />
                   </div>
                </div>
             </div>

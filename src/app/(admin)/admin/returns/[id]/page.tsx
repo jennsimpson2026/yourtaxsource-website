@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { taxReturns, users, questionnaires, auditLogs } from "@/lib/db/schema";
+import { taxReturns, users, questionnaires, auditLogs, invoices } from "@/lib/db/schema";
 import { eq, desc, and } from "drizzle-orm";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
@@ -14,12 +14,14 @@ import {
   AlertCircle,
   Download,
   ExternalLink,
-  MessageSquare
+  MessageSquare,
+  CreditCard
 } from "lucide-react";
 import { updateReturnDetails } from "@/actions/returns";
 import { DocumentRequestTool } from "@/components/admin/DocumentRequestTool";
 import { CommunicationLog } from "@/components/admin/CommunicationLog";
 import { DocumentDownloadButton } from "@/components/admin/DocumentDownloadButton";
+import { InvoiceManager } from "@/components/admin/InvoiceManager";
 
 export default async function ReviewReturnPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -33,6 +35,9 @@ export default async function ReviewReturnPage({ params }: { params: Promise<{ i
       },
       documents: true,
       questionnaire: true,
+      invoices: {
+        orderBy: [desc(invoices.createdAt)],
+      },
     },
   });
 
@@ -233,6 +238,9 @@ export default async function ReviewReturnPage({ params }: { params: Promise<{ i
 
           {/* Document Request Tool */}
           <DocumentRequestTool clientId={ret.clientId} returnId={ret.id} />
+
+          {/* Invoice Manager */}
+          <InvoiceManager returnId={ret.id} existingInvoices={ret.invoices} />
 
           {/* Communication Log */}
           <CommunicationLog logs={logs as any} />

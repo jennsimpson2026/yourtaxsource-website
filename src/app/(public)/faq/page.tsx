@@ -1,4 +1,4 @@
-import { HelpCircle, ArrowRight, MessageCircle, ShieldCheck, Clock, CreditCard } from "lucide-react";
+import { HelpCircle, ArrowRight, MessageCircle, ShieldCheck, Clock, CreditCard, MapPin } from "lucide-react";
 import Link from "next/link";
 
 export default function FAQPage() {
@@ -21,7 +21,21 @@ export default function FAQPage() {
             <FAQCategory title="Getting Started">
               <FAQItem
                 question="How do I get my documents to you?"
-                answer="We use a secure, encrypted client portal. Once you sign up, you can upload your documents (photos of forms, PDFs, or spreadsheets) directly to our system from your phone or computer. No need to drop off physical papers!"
+                answer={
+                  <>
+                    We use a secure, encrypted client portal. Once you sign up, you can upload your documents (photos of forms, PDFs, or spreadsheets) directly to our system from your phone or computer. No need to drop off physical papers! But if you'd rather meet face-to-face or drop off documents in person, you're always welcome at our office at{" "}
+                    <a 
+                      href="https://www.google.com/maps/search/?api=1&query=100+1/2+S+Main+Street,+Belmont,+NC+28012"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-brand-purple hover:underline inline-flex items-center font-bold"
+                    >
+                      <MapPin className="h-4 w-4 mr-1" />
+                      100 1/2 S Main Street, Belmont, NC 28012
+                    </a>
+                    .
+                  </>
+                }
                 icon={<ShieldCheck className="w-5 h-5 text-brand-purple" />}
               />
               <FAQItem
@@ -116,7 +130,7 @@ function FAQCategory({ title, children }: { title: string; children: React.React
   );
 }
 
-function FAQItem({ question, answer, icon }: { question: string; answer: string; icon: React.ReactNode }) {
+function FAQItem({ question, answer, icon }: { question: string; answer: React.ReactNode; icon: React.ReactNode }) {
   return (
     <div className="bg-brand-cloud/30 p-8 rounded-3xl border border-transparent hover:border-brand-purple/20 hover:bg-white hover:shadow-xl transition-all group">
       <div className="flex gap-4 mb-4">
