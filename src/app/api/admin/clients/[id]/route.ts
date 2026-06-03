@@ -6,7 +6,7 @@ import { isStaff, staffOnlyResponse, getSession } from "@/lib/auth-utils";
 
 export async function GET(
   req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<any> }
 ) {
   const session = await getSession();
   if (!(await isStaff())) {

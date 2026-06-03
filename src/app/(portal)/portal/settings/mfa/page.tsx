@@ -13,15 +13,13 @@ export default function MfaSetupPage() {
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
-    // @ts-ignore
-    if (session?.user?.id) {
+    if ((session?.user as any)?.id) {
       handleGenerateQr();
     }
   }, [session]);
 
   async function handleGenerateQr() {
-    // @ts-ignore
-    const result = await generateMfaSecret(session.user.id);
+    const result = await generateMfaSecret((session?.user as any).id);
     if (result.otpauth) {
       const url = await QRCode.toDataURL(result.otpauth);
       setQrCode(url);
@@ -30,8 +28,7 @@ export default function MfaSetupPage() {
 
   async function handleVerify() {
     setError(null);
-    // @ts-ignore
-    const result = await verifyAndEnableMfa(session.user.id, code);
+    const result = await verifyAndEnableMfa((session?.user as any).id, code);
     if (result.error) {
       setError(result.error);
     } else {

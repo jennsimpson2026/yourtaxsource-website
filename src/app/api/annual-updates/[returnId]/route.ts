@@ -8,7 +8,7 @@ import { encrypt, decrypt } from "@/lib/crypto";
 
 export async function GET(
   req: Request,
-  { params }: { params: Promise<{ returnId: string }> }
+  { params }: { params: Promise<any> }
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user) {
@@ -89,7 +89,7 @@ export async function GET(
 
 export async function POST(
   req: Request,
-  { params }: { params: Promise<{ returnId: string }> }
+  { params }: { params: Promise<any> }
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user) {
