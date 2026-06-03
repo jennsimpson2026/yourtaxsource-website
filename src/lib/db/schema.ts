@@ -181,6 +181,8 @@ export const invoices = sqliteTable("invoices", {
   currency: text("currency").default("USD").notNull(),
   status: text("status").default("UNPAID").notNull(),
   paidAt: integer("paid_at", { mode: "timestamp" }),
+  createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),
 }, (table) => ({
   userIdIdx: index("invoices_user_id_idx").on(table.userId),
   returnIdIdx: index("invoices_return_id_idx").on(table.returnId),
