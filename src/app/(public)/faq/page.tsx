@@ -40,7 +40,20 @@ export default function FAQPage() {
               />
               <FAQItem
                 question="What should I prepare for my first meeting?"
-                answer="For new clients, we typically need your previous year's tax return, social security numbers for all dependents, and any income statements (W-2s, 1099s). Don't worry—our portal will give you a customized checklist based on your situation."
+                answer={
+                  <div className="space-y-4">
+                    <p>For new clients, we'll typically need:</p>
+                    <ul className="list-disc pl-5 space-y-2">
+                      <li>A copy of last year's tax return (if available)</li>
+                      <li>Photo ID for all taxpayers</li>
+                      <li>Social Security numbers and dates of birth for yourself, your spouse, and any dependents</li>
+                      <li>Income documents such as W-2s, 1099s, K-1s, SSA-1099s, retirement statements, or other tax forms</li>
+                      <li>Information related to businesses, rental properties, investments, or major life changes</li>
+                      <li>Banking information if you'd like direct deposit of your refund</li>
+                    </ul>
+                    <p>Don't worry if you're not sure what applies to you. We'll guide you through the process and provide a customized checklist based on your specific tax situation.</p>
+                  </div>
+                }
                 icon={<Clock className="w-5 h-5 text-brand-purple" />}
               />
             </FAQCategory>
