@@ -22,10 +22,10 @@ export default async function PortalLayout({
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-10">
             <Link href="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-brand-purple rounded flex items-center justify-center">
-                 <span className="text-white font-bold">Y</span>
+              <div className="w-12 h-12 bg-brand-purple rounded-xl flex items-center justify-center shadow-sm">
+                 <span className="text-white font-bold text-xl">Y</span>
               </div>
-              <span className="font-heading font-bold text-lg text-brand-black hidden sm:block">
+              <span className="font-heading font-bold text-xl text-brand-black hidden sm:block">
                 Secure Client Portal
               </span>
             </Link>
@@ -44,7 +44,7 @@ export default async function PortalLayout({
                 alt="Your Tax Source Logo" 
                 width={120} 
                 height={32} 
-                className="h-8 w-auto object-contain"
+                className="h-16 w-auto object-contain"
               />
             </Link>
             <div className="hidden lg:flex flex-col text-right">

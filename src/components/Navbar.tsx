@@ -38,7 +38,7 @@ export const Navbar = () => {
   return (
     <nav className="bg-white border-b border-gray-100 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-56 md:h-80 items-center">
+        <div className="flex justify-between h-72 md:h-[28rem] items-center">
           {/* Navigation & Actions (Left/Center) */}
           <div className="flex items-center gap-2 md:gap-4 flex-1">
             {/* Mobile Menu Button (Left on Mobile) */}
@@ -104,7 +104,7 @@ export const Navbar = () => {
                 alt="Your Tax Source Logo" 
                 width={1200} 
                 height={360} 
-                className="h-48 sm:h-60 md:h-72 w-auto object-contain transition-transform group-hover:scale-110"
+                className="h-64 sm:h-80 md:h-96 w-auto object-contain transition-transform group-hover:scale-110"
                 priority
               />
               <span className="sr-only">Your Tax Source</span>

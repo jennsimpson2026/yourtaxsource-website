@@ -129,7 +129,7 @@ export default async function PortalDashboard() {
             />
             <TimelineStep 
               number={3} 
-              label="Portal Access" 
+              label="Tax Preparation" 
               status="pending" 
               icon={<Lock size={20} />}
             />
@@ -187,12 +187,12 @@ export default async function PortalDashboard() {
           </div>
         )}
 
-        {/* Step 3: Existing Portal */}
+        {/* Step 3: Tax Preparation */}
         <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all group flex flex-col">
           <div className="w-14 h-14 bg-brand-soft-gray rounded-2xl flex items-center justify-center mb-6 group-hover:bg-brand-lavender transition-colors">
             <ExternalLink className="text-brand-purple" size={28} />
           </div>
-          <h3 className="text-xl font-heading font-bold text-brand-black mb-3">Step 3: Client Portal</h3>
+          <h3 className="text-xl font-heading font-bold text-brand-black mb-3">Step 3: Tax Preparation</h3>
           <p className="text-brand-charcoal/60 text-sm mb-8 leading-relaxed">
             Access your permanent document storage and prior year returns through our secure legacy portal.
           </p>

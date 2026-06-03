@@ -189,6 +189,39 @@ export async function notifyDocumentUpload(staffEmail: string, clientName: strin
   });
 }
 
+export async function notifyPortalInvitation({
+  email,
+  name,
+  invitationLink,
+}: {
+  email: string;
+  name: string;
+  invitationLink: string;
+}) {
+  const subject = "Welcome to Your Tax Source - Action Required";
+  const html = `
+    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+      <h2 style="color: #6d28d9;">Welcome to Your Tax Source!</h2>
+      <p>Hi ${name || "there"},</p>
+      <p>Thank you for booking your tax appointment with us. We've created a secure client portal account for you to make document sharing and communication easy and safe.</p>
+      <p>To get started, please click the button below to set up your password and access your portal:</p>
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="${invitationLink}" style="background-color: #6d28d9; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">Set Up Your Account</a>
+      </div>
+      <p>If the button doesn't work, you can copy and paste this link into your browser:</p>
+      <p style="word-break: break-all; color: #666;">${invitationLink}</p>
+      <p>We look forward to working with you!</p>
+      <p>Best regards,<br>The Your Tax Source Team</p>
+    </div>
+  `;
+
+  return await sendEmail({
+    to: email,
+    subject,
+    html,
+  });
+}
+
 export async function notifyContactFormSubmission({
   firstName,
   lastName,

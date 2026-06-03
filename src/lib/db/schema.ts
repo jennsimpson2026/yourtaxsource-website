@@ -199,6 +199,8 @@ export const appointments = sqliteTable("appointments", {
   bookingId: text("booking_id"), // Remote booking ID
   startTime: integer("start_time", { mode: "timestamp" }).notNull(),
   endTime: integer("end_time", { mode: "timestamp" }).notNull(),
+  location: text("location"),
+  notes: text("notes"),
   status: text("status").default("SCHEDULED").notNull(), // 'SCHEDULED', 'COMPLETED', 'CANCELLED'
   createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),
 }, (table) => ({

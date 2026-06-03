@@ -41,6 +41,48 @@ export async function signUp(formData: FormData) {
   }
 }
 
+export async function setupPassword(formData: FormData) {
+  const email = formData.get("email") as string;
+  const token = formData.get("token") as string;
+  const password = formData.get("password") as string;
+
+  if (!email || !token || !password) {
+    return { error: "All fields are required" };
+  }
+
+  // Simple validation for the "AUTO_GEN" token we created in onboarding
+  if (!token.startsWith("AUTO_GEN_")) {
+    return { error: "Invalid or expired setup token" };
+  }
+
+  const userId = token.replace("AUTO_GEN_", "");
+
+  const user = await db.query.users.findFirst({
+    where: (u, { and, eq }) => and(eq(u.id, userId), eq(u.email, email)),
+  });
+
+  if (!user) {
+    return { error: "User not found or email mismatch" };
+  }
+
+  if (user.password) {
+    return { error: "Account already set up. Please use login." };
+  }
+
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  try {
+    await db.update(users)
+      .set({ password: hashedPassword })
+      .where(eq(users.id, userId));
+
+    return { success: true };
+  } catch (error) {
+    console.error("Setup password error:", error);
+    return { error: "Failed to set up password" };
+  }
+}
+
 export async function generateMfaSecret(userId: string) {
   const user = await db.query.users.findFirst({
     where: eq(users.id, userId),

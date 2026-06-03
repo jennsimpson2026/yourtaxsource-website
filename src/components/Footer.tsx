@@ -7,10 +7,10 @@ export const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
           <div className="col-span-1 md:col-span-2">
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 bg-brand-purple rounded-md flex items-center justify-center">
-                 <span className="text-white font-bold text-lg">Y</span>
+              <div className="w-12 h-12 bg-brand-purple rounded-lg flex items-center justify-center shadow-sm">
+                 <span className="text-white font-bold text-xl">Y</span>
               </div>
-              <span className="font-heading font-bold text-lg text-brand-black">
+              <span className="font-heading font-bold text-xl text-brand-black">
                 Your Tax Source
               </span>
             </div>
