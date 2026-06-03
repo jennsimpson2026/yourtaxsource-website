@@ -15,7 +15,7 @@ export const Footer = () => {
               </span>
             </div>
             <p className="text-brand-charcoal/70 max-w-sm mb-6">
-              Making taxes simple and stress-free for families and businesses nationwide. Proudly rooted in Belmont, NC since 2013.
+              Making taxes simple and stress-free for families and businesses nationwide. Proudly supporting our clients with more than a decade of experience.
             </p>
             <p className="text-sm text-brand-charcoal/50">
               © 2024 Your Tax Source. All rights reserved.
@@ -42,8 +42,7 @@ export const Footer = () => {
             <ul className="space-y-2 text-brand-charcoal/70">
               <li>Serving Clients Nationwide</li>
               <li>Belmont, NC Office</li>
-              <li>(555) 123-4567</li>
-              <li>hello@yourtaxsource.com</li>
+              <li>jsimpson@yourtaxsource.com</li>
             </ul>
           </div>
         </div>

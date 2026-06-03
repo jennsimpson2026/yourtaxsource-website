@@ -15,13 +15,13 @@ export default function AboutJennPage() {
                 <h1 className="text-4xl md:text-6xl font-heading font-bold mb-6">About Jennifer Simpson</h1>
                 <p className="text-xl text-brand-lavender leading-relaxed">
                   Founder, Tax Strategist, and your partner in financial confidence. 
-                  Making taxes simple and stress-free for families and businesses since 2013.
+                  Making taxes simple and stress-free for families and businesses with more than a decade of experience.
                 </p>
               </div>
               <div className="lg:w-1/2 relative">
                  <div className="relative aspect-square w-full max-w-md mx-auto rounded-[3rem] overflow-hidden shadow-2xl border-4 border-brand-purple bg-brand-soft-gray">
                     <Image 
-                      src="/images/hero-jennifer-office.png"
+                      src="/images/hero-jenn-laptop.png"
                       alt="Jennifer Simpson"
                       fill
                       className="object-cover"
@@ -44,7 +44,7 @@ export default function AboutJennPage() {
               balancing growth, compliance, and long-term planning.
             </p>
             <p>
-              I founded Your Tax Source in 2013 with a simple goal: to provide high-level, 
+              I founded Your Tax Source more than a decade ago with a simple goal: to provide high-level, 
               strategic tax advice in a way that's approachable and easy to understand. 
               I believe that everyone deserves a "plain-English" explanation of their 
               financial situation.

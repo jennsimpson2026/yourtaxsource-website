@@ -1,11 +1,12 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { taxReturns, appointments, invoices } from "@/lib/db/schema";
+import { taxReturns, appointments, invoices, auditLogs } from "@/lib/db/schema";
 import { eq, desc, and, gte } from "drizzle-orm";
 import Link from "next/link";
 import { BookingButton } from "@/components/BookingButton";
 import { PayInvoiceButton } from "@/components/portal/PayInvoiceButton";
+import { OpenRequests } from "@/components/portal/OpenRequests";
 import { 
   FileText, 
   ClipboardCheck, 
@@ -43,6 +44,14 @@ export default async function PortalDashboard() {
       eq(invoices.userId, userId),
       eq(invoices.status, "UNPAID")
     ),
+  });
+
+  const openRequests = await db.query.auditLogs.findMany({
+    where: and(
+      eq(auditLogs.targetId, userId),
+      eq(auditLogs.action, "REQUEST_DOCUMENT")
+    ),
+    orderBy: [desc(auditLogs.createdAt)],
   });
 
   const currentYear = new Date().getFullYear();
@@ -86,10 +95,13 @@ export default async function PortalDashboard() {
             <BookingButton className="bg-white text-brand-black px-8 py-4 rounded-2xl font-bold text-base hover:bg-gray-100 transition-all flex items-center justify-center gap-2" />
           </div>
         </div>
-      </div>
+        </div>
 
-      {/* 7-Step Visual Timeline */}
-      <section className="bg-white rounded-[2rem] p-8 md:p-12 border border-gray-100 shadow-sm">
+        {/* Open Requests */}
+        <OpenRequests requests={openRequests} />
+
+        {/* 7-Step Visual Timeline */}
+
         <div className="flex flex-col md:flex-row justify-between items-center mb-12 gap-4">
           <h3 className="text-2xl font-heading font-bold text-brand-black">Your Tax Filing Journey</h3>
           <div className="text-sm font-bold text-brand-purple bg-brand-purple/5 px-4 py-2 rounded-full">

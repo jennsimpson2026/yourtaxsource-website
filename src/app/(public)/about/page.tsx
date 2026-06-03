@@ -15,7 +15,7 @@ export default function AboutPage() {
             </h1>
             <p className="text-xl text-brand-lavender leading-relaxed">
               Your trusted partner for nationwide tax preparation and advisory, 
-              proudly rooted in Belmont, NC since 2013. We're on a mission to make 
+              proudly rooted in Belmont, NC and supporting our clients for more than a decade. We're on a mission to make 
               taxes simple, transparent, and accessible for everyone.
             </p>
           </div>
@@ -127,8 +127,8 @@ export default function AboutPage() {
               </div>
               <div className="lg:w-1/2 relative h-[400px] w-full rounded-3xl overflow-hidden shadow-xl border-8 border-brand-soft-gray">
                  <Image
-                   src="/images/belmont-office.png"
-                   alt="Belmont NC"
+                   src="/images/modern-accounting-office.png"
+                   alt="Our Office"
                    fill
                    className="object-cover"
                  />

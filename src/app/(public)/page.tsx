@@ -52,13 +52,13 @@ export default function Home() {
             <div className="relative h-[300px] sm:h-[400px] lg:h-[500px] animate-in fade-in slide-in-from-right duration-700">
               <div className="absolute inset-0 bg-brand-lavender rounded-[3rem] rotate-3 scale-95 opacity-20 blur-2xl"></div>
               <div className="relative h-full w-full rounded-[2.5rem] overflow-hidden shadow-2xl border-4 border-white/10">
-                   <Image 
-                     src="/images/hero-jennifer-office.png"
-                     alt="Jennifer Simpson, Your Tax Source"
-                     fill
-                     className="object-cover object-center"
-                     priority
-                   />
+                    <Image 
+                      src="/images/hero-jenn-laptop.png"
+                      alt="Jennifer Simpson, Your Tax Source"
+                      fill
+                      className="object-cover object-center"
+                      priority
+                    />
               </div>
             </div>
           </div>
@@ -75,26 +75,26 @@ export default function Home() {
                </div>
                <div>
                   <h3 className="font-bold text-brand-black text-lg">IRS Authorized</h3>
-                  <p className="text-sm text-brand-charcoal/60 font-medium">Professional e-File provider since 2013.</p>
-               </div>
-            </div>
-            <div className="flex items-center gap-4 bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-               <div className="w-14 h-14 bg-brand-purple/5 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <p className="text-sm text-brand-charcoal/60 font-medium">Professional e-File provider for more than a decade.</p>
+                  </div>
+                  </div>
+                  <div className="flex items-center gap-4 bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                  <div className="w-14 h-14 bg-brand-purple/5 rounded-xl flex items-center justify-center flex-shrink-0">
                   <Lock className="text-brand-purple" size={28} />
-               </div>
-               <div>
+                  </div>
+                  <div>
                   <h3 className="font-bold text-brand-black text-lg">Bank-Grade Security</h3>
                   <p className="text-sm text-brand-charcoal/60 font-medium">Your data is encrypted and protected.</p>
-               </div>
-            </div>
-            <div className="flex items-center gap-4 bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-               <div className="w-14 h-14 bg-brand-purple/5 rounded-xl flex items-center justify-center flex-shrink-0">
+                  </div>
+                  </div>
+                  <div className="flex items-center gap-4 bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                  <div className="w-14 h-14 bg-brand-purple/5 rounded-xl flex items-center justify-center flex-shrink-0">
                   <TrendingUp className="text-brand-purple" size={28} />
-               </div>
-               <div>
+                  </div>
+                  <div>
                   <h3 className="font-bold text-brand-black text-lg">Established Expertise</h3>
-                  <p className="text-sm text-brand-charcoal/60 font-medium">A decade of trusted tax advisory.</p>
-               </div>
+                  <p className="text-sm text-brand-charcoal/60 font-medium">More than a decade of trusted tax advisory.</p>
+                  </div>
             </div>
           </div>
         </div>
@@ -128,27 +128,32 @@ export default function Home() {
             <div className="grid grid-cols-2 gap-6">
                <div className="space-y-6 mt-12">
                   <div className="bg-brand-soft-gray h-64 rounded-3xl overflow-hidden relative shadow-lg group">
-                    <Image 
-                      src="/images/jennifer-meeting-clients.png" 
-                      alt="Jennifer meeting with clients" 
-                      fill 
-                      className="object-cover group-hover:scale-110 transition-transform duration-500" 
+                    <Image
+                      src="/images/jennifer-meeting-clients-new.png"
+                      alt="Jennifer meeting with clients"
+                      fill
+                      className="object-cover group-hover:scale-110 transition-transform duration-500"
                     />
                   </div>
                   <div className="bg-brand-purple/10 h-48 rounded-3xl flex items-center justify-center p-8 border border-brand-purple/20">
-                     <p className="text-brand-purple font-bold text-center text-lg">Serving Clients in all 50 States</p>
+                     <p className="text-brand-purple font-bold text-center text-lg">Supporting Individuals and Businesses Coast to Coast</p>
                   </div>
                </div>
                <div className="space-y-6">
-                  <div className="bg-brand-black h-48 rounded-3xl flex items-center justify-center p-8 shadow-xl">
-                     <p className="text-white font-bold text-center text-2xl tracking-tighter">EST. 2013</p>
+                  <div className="bg-brand-black h-48 rounded-3xl overflow-hidden relative shadow-xl group">
+                    <Image
+                      src="/images/jennifer-reviewing-reports.png"
+                      alt="Jennifer reviewing reports"
+                      fill
+                      className="object-cover group-hover:scale-110 transition-transform duration-500"
+                    />
                   </div>
                   <div className="bg-brand-soft-gray h-64 rounded-3xl overflow-hidden relative shadow-lg group">
-                    <Image 
-                      src="/images/hero-jennifer-office.png" 
-                      alt="Jennifer working in office" 
-                      fill 
-                      className="object-cover group-hover:scale-110 transition-transform duration-500" 
+                    <Image
+                      src="/images/hero-jenn-laptop.png"
+                      alt="Jennifer working in office"
+                      fill
+                      className="object-cover group-hover:scale-110 transition-transform duration-500"
                     />
                   </div>
                </div>

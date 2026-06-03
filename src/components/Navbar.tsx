@@ -38,7 +38,7 @@ export const Navbar = () => {
   return (
     <nav className="bg-white border-b border-gray-100 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-20 md:h-24 items-center">
+        <div className="flex justify-between h-24 md:h-32 items-center">
           {/* Navigation & Actions (Left/Center) */}
           <div className="flex items-center gap-2 md:gap-4 flex-1">
             {/* Mobile Menu Button (Left on Mobile) */}
@@ -102,9 +102,9 @@ export const Navbar = () => {
               <Image 
                 src="/images/logo-long.png" 
                 alt="Your Tax Source Logo" 
-                width={280} 
-                height={80} 
-                className="h-12 sm:h-14 md:h-20 w-auto object-contain transition-transform group-hover:scale-105"
+                width={400} 
+                height={120} 
+                className="h-16 sm:h-20 md:h-24 w-auto object-contain transition-transform group-hover:scale-105"
                 priority
               />
               <span className="sr-only">Your Tax Source</span>
@@ -138,9 +138,9 @@ export const Navbar = () => {
             <Image 
               src="/images/logo-long.png" 
               alt="Logo" 
-              width={180} 
-              height={50} 
-              className="h-10 w-auto object-contain"
+              width={240} 
+              height={70} 
+              className="h-12 w-auto object-contain"
             />
             <button 
               onClick={() => setIsOpen(false)}

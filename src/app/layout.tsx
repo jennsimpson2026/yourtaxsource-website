@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Your Tax Source | Professional & Modern Tax Solutions",
-  description: "Nationwide tax preparation and advisory since 2013. Secure digital portal, plain-English advice, and personalized service.",
+  description: "Nationwide tax preparation and advisory for more than a decade. Secure digital portal, plain-English advice, and personalized service.",
 };
 
 import { Providers } from "@/components/Providers";

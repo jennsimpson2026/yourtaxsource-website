@@ -35,7 +35,7 @@ export default function ServicesPage() {
               "Prior Year Amendments"
             ]}
             icon={<User className="w-12 h-12 text-brand-black" />}
-            imageSrc="/images/hero-tax-advisor.png"
+            imageSrc="/images/jennifer-reviewing-reports.png"
           />
           
           <ServiceDetail
@@ -51,7 +51,7 @@ export default function ServicesPage() {
               "Cloud-Based Real-Time Access"
             ]}
             icon={<Briefcase className="w-12 h-12 text-brand-black" />}
-            imageSrc="/images/business-tax.png"
+            imageSrc="/images/jennifer-meeting-clients-new.png"
             reverse
           />
 
@@ -68,7 +68,7 @@ export default function ServicesPage() {
               "Employee Self-Service Access"
             ]}
             icon={<Users className="w-12 h-12 text-brand-black" />}
-            imageSrc="/images/support-team.png"
+            imageSrc="/images/professional-payroll.png"
           />
           
           <ServiceDetail
@@ -84,7 +84,7 @@ export default function ServicesPage() {
               "Board & Investor Reporting"
             ]}
             icon={<BarChart3 className="w-12 h-12 text-brand-black" />}
-            imageSrc="/images/belmont-office.png"
+            imageSrc="/images/modern-accounting-office.png"
             reverse
           />
         </div>
@@ -103,11 +103,11 @@ export default function ServicesPage() {
             <div className="flex flex-col sm:flex-row justify-center gap-4">
                <Link
                  href="/contact"
-                 className="inline-block bg-brand-black text-white px-10 py-5 rounded-xl font-bold text-xl hover:bg-blue-900 transition-all shadow-lg hover:scale-[1.02]"
+                 className="inline-block bg-brand-black text-white px-10 py-5 rounded-xl font-bold text-xl hover:bg-black transition-all shadow-lg hover:scale-[1.02]"
                >
                  Ask About Custom Services
                </Link>
-               <BookingButton className="bg-brand-purple text-white px-10 py-5 rounded-xl font-bold text-xl hover:bg-orange-600 transition-all shadow-lg hover:scale-[1.02]" />
+               <BookingButton className="bg-brand-purple text-white px-10 py-5 rounded-xl font-bold text-xl hover:bg-[#5a3a74] transition-all shadow-lg hover:scale-[1.02]" />
             </div>
           </div>
         </div>

@@ -74,12 +74,34 @@ export default function FAQPage() {
             <FAQCategory title="Fees & Payments">
               <FAQItem
                 question="What are your fees?"
-                answer="Our fees depend on the complexity of your return. Simple individual returns start at $150. For business returns and advisory, we'll provide a transparent quote after our initial consultation. We never charge hidden fees."
+                answer={
+                  <div className="space-y-4">
+                    <p>Our tax preparation fees vary based on the complexity of your return, the forms required, the number of states involved, and whether you have business, rental, investment, or self-employment activity.</p>
+                    <p>Individual tax returns typically start at $125 for a basic/simple return. More involved individual returns, including dependents, credits, itemized deductions, multi-state filing, investments, rental property, or self-employment activity, are priced based on the work required. Most individual returns generally range from $125 to $550.</p>
+                    <p>Business returns, bookkeeping, payroll, fractional controller services, and advisory work are quoted separately based on your specific needs.</p>
+                    <p>You can view the <Link href="/pricing" className="text-brand-purple hover:underline font-bold">Pricing page</Link> for a more detailed breakdown of common service levels. We believe in transparent pricing and will discuss fees upfront before any work begins.</p>
+                  </div>
+                }
                 icon={<CreditCard className="w-5 h-5 text-brand-purple" />}
               />
               <FAQItem
                 question="How do I pay for your services?"
-                answer="We make payments easy through Helcim. You can pay your invoice securely online via credit card or bank transfer directly through our client portal once your return is ready for review."
+                answer={
+                  <div className="space-y-4">
+                    <p>We offer several convenient payment options. Most clients pay securely using:</p>
+                    <ul className="list-disc pl-5 space-y-1">
+                      <li>Venmo</li>
+                      <li>Cash App</li>
+                      <li>Zelle</li>
+                      <li>Apple Pay</li>
+                      <li>eCheck (ACH Bank Transfer)</li>
+                      <li>Credit or Debit Card</li>
+                    </ul>
+                    <p>Once your return is complete, we'll send payment instructions along with your tax summary. If paying by eCheck, you'll receive an email authorization request that you'll simply review and approve online.</p>
+                    <p>Credit and debit cards are accepted; however, a 3% processing fee will be added to card payments. To avoid processing fees, many clients choose eCheck, Zelle, Venmo, Cash App, or Apple Pay.</p>
+                    <p>We strive to make the payment process simple, secure, and convenient for every client.</p>
+                  </div>
+                }
                 icon={<CreditCard className="w-5 h-5 text-brand-purple" />}
               />
             </FAQCategory>
@@ -112,15 +134,9 @@ export default function FAQPage() {
             <div className="flex flex-col sm:flex-row justify-center gap-6">
               <Link
                 href="/contact"
-                className="inline-block bg-brand-black text-white px-10 py-5 rounded-xl font-bold text-xl hover:bg-blue-900 transition-all shadow-lg"
+                className="inline-block bg-brand-black text-white px-10 py-5 rounded-xl font-bold text-xl hover:bg-black transition-all shadow-lg"
               >
                 Send Us a Message
-              </Link>
-              <Link
-                href="tel:5551234567"
-                className="inline-block bg-transparent border-2 border-brand-black text-brand-black px-10 py-5 rounded-xl font-bold text-xl hover:bg-brand-cloud transition-all flex items-center justify-center gap-2"
-              >
-                (555) 123-4567
               </Link>
             </div>
           </div>
