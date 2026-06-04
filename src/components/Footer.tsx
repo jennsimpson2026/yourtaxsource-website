@@ -16,7 +16,7 @@ export const Footer = () => {
                   alt="Your Tax Source" 
                   width={720} 
                   height={240} 
-                  className="h-30 md:h-48 w-auto object-contain transition-transform group-hover:scale-105"
+                  className="h-24 md:h-38 w-auto object-contain transition-transform group-hover:scale-105"
                 />
               </Link>
             </div>
