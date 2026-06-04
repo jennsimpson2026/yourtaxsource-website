@@ -39,16 +39,16 @@ export const Navbar = () => {
   return (
     <nav className="bg-white border-b border-gray-100 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-28 md:h-40 items-center">
+        <div className="flex justify-between h-36 md:h-56 items-center">
           {/* Logo (Left) */}
           <div className="flex items-center flex-shrink-0">
             <Link href="/" className="flex items-center group">
               <Image 
                 src="/images/logo-long.png" 
                 alt="Your Tax Source Logo" 
-                width={480} 
-                height={160} 
-                className="h-20 md:h-32 w-auto object-contain transition-transform group-hover:scale-105"
+                width={720} 
+                height={240} 
+                className="h-30 md:h-48 w-auto object-contain transition-transform group-hover:scale-105"
                 priority
               />
               <span className="sr-only">Your Tax Source</span>

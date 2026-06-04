@@ -14,9 +14,9 @@ export const Footer = () => {
                 <Image 
                   src="/images/logo-long.png" 
                   alt="Your Tax Source" 
-                  width={240} 
-                  height={60} 
-                  className="h-12 w-auto object-contain transition-transform group-hover:scale-105"
+                  width={720} 
+                  height={240} 
+                  className="h-30 md:h-48 w-auto object-contain transition-transform group-hover:scale-105"
                 />
               </Link>
             </div>
