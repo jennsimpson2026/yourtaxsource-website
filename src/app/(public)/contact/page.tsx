@@ -51,8 +51,8 @@ export default function ContactPage() {
               </div>
 
               <div className="relative h-[300px] rounded-3xl overflow-hidden shadow-xl border-4 border-brand-cloud">
-                <Image 
-                  src="/images/jennifer-reviewing-reports.png"
+                <Image
+                  src="/images/jenn-profile.png"
                   alt="Jenn Simpson"
                   fill
                   className="object-cover"

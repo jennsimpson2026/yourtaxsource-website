@@ -29,8 +29,8 @@ export default function AboutPage() {
                <div className="lg:w-2/5 relative">
                   <div className="absolute inset-0 bg-brand-purple rounded-[3rem] rotate-3 scale-95 opacity-10 blur-xl"></div>
                   <div className="relative aspect-[4/5] w-full rounded-[3rem] overflow-hidden shadow-2xl border-4 border-white">
-                        <Image 
-                          src="/images/jenns-profile-pic.jpg"
+                        <Image
+                          src="/images/jenn-profile.png"
                           alt="Jenn Simpson"
                           fill
                           className="object-cover"
@@ -127,8 +127,8 @@ export default function AboutPage() {
               </div>
               <div className="lg:w-1/2 relative h-[400px] w-full rounded-3xl overflow-hidden shadow-xl border-8 border-brand-soft-gray">
                  <Image
-                   src="/images/modern-accounting-office.png"
-                   alt="Our Office"
+                   src="/images/boutique-office.png"
+                   alt="Our Boutique Office"
                    fill
                    className="object-cover"
                  />

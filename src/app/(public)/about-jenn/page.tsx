@@ -20,8 +20,8 @@ export default function AboutJennPage() {
               </div>
               <div className="lg:w-1/2 relative">
                  <div className="relative aspect-square w-full max-w-md mx-auto rounded-[3rem] overflow-hidden shadow-2xl border-4 border-brand-purple bg-brand-soft-gray">
-                    <Image 
-                      src="/images/hero-jenn-laptop.png"
+                    <Image
+                      src="/images/jenn-profile.png"
                       alt="Jenn Simpson"
                       fill
                       className="object-cover"

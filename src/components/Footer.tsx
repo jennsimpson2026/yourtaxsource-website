@@ -11,12 +11,12 @@ export const Footer = () => {
           <div className="col-span-1 md:col-span-2">
             <div className="flex items-center gap-2 mb-6">
               <Link href="/" className="group">
-                <Image 
-                  src="/images/logo-long.png" 
-                  alt="Your Tax Source" 
-                  width={720} 
-                  height={240} 
-                  className="h-24 md:h-38 w-auto object-contain transition-transform group-hover:scale-105"
+                <Image
+                  src="/images/logo-long.png"
+                  alt="Your Tax Source"
+                  width={720}
+                  height={240}
+                  className="h-32 md:h-48 w-auto object-contain transition-transform group-hover:scale-105"
                 />
               </Link>
             </div>

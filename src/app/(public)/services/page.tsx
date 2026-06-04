@@ -35,10 +35,10 @@ export default function ServicesPage() {
               "Prior Year Amendments"
             ]}
             icon={<User className="w-12 h-12 text-brand-black" />}
-            imageSrc="/images/jennifer-reviewing-reports.png"
-          />
-          
-          <ServiceDetail
+            imageSrc="/images/jenn-hero.png"
+            />
+
+            <ServiceDetail
             id="bookkeeping"
             title="Bookkeeping & Financials"
             subtitle="Clear visibility into your business health."
@@ -51,11 +51,11 @@ export default function ServicesPage() {
               "Cloud-Based Real-Time Access"
             ]}
             icon={<Briefcase className="w-12 h-12 text-brand-black" />}
-            imageSrc="/images/jennifer-meeting-clients-new.png"
+            imageSrc="/images/jenn-consultation.png"
             reverse
-          />
+            />
 
-          <ServiceDetail
+            <ServiceDetail
             id="payroll"
             title="Payroll Services"
             subtitle="Reliable, compliant, and effort-free."
@@ -68,10 +68,10 @@ export default function ServicesPage() {
               "Employee Self-Service Access"
             ]}
             icon={<Users className="w-12 h-12 text-brand-black" />}
-            imageSrc="/images/professional-payroll.png"
-          />
-          
-          <ServiceDetail
+            imageSrc="/images/jenn-working-laptop.png"
+            />
+
+            <ServiceDetail
             id="advisory"
             title="Fractional Controller"
             subtitle="Strategy for the road ahead."
@@ -84,9 +84,9 @@ export default function ServicesPage() {
               "Board & Investor Reporting"
             ]}
             icon={<BarChart3 className="w-12 h-12 text-brand-black" />}
-            imageSrc="/images/modern-accounting-office.png"
+            imageSrc="/images/jenn-leading-discussion.png"
             reverse
-          />
+            />
         </div>
       </section>
 

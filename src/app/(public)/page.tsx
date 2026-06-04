@@ -52,8 +52,8 @@ export default function Home() {
             <div className="relative h-[300px] sm:h-[400px] lg:h-[500px] animate-in fade-in slide-in-from-right duration-700">
               <div className="absolute inset-0 bg-brand-lavender rounded-[3rem] rotate-3 scale-95 opacity-20 blur-2xl"></div>
               <div className="relative h-full w-full rounded-[2.5rem] overflow-hidden shadow-2xl border-4 border-white/10">
-                    <Image 
-                      src="/images/hero-jenn-laptop.png"
+                    <Image
+                      src="/images/jenn-hero.png"
                       alt="Jenn Simpson, Your Tax Source"
                       fill
                       className="object-cover object-center"
@@ -129,7 +129,7 @@ export default function Home() {
                <div className="space-y-6 mt-12">
                   <div className="bg-brand-soft-gray h-64 rounded-3xl overflow-hidden relative shadow-lg group">
                     <Image
-                      src="/images/jennifer-meeting-clients-new.png"
+                      src="/images/jenn-meeting-clients.png"
                       alt="Jenn meeting with clients"
                       fill
                       className="object-cover group-hover:scale-110 transition-transform duration-500"
@@ -142,7 +142,7 @@ export default function Home() {
                <div className="space-y-6">
                   <div className="bg-brand-black h-48 rounded-3xl overflow-hidden relative shadow-xl group">
                     <Image
-                      src="/images/jennifer-reviewing-reports.png"
+                      src="/images/jenn-working-laptop.png"
                       alt="Jenn reviewing reports"
                       fill
                       className="object-cover group-hover:scale-110 transition-transform duration-500"
@@ -150,7 +150,7 @@ export default function Home() {
                   </div>
                   <div className="bg-brand-soft-gray h-64 rounded-3xl overflow-hidden relative shadow-lg group">
                     <Image
-                      src="/images/hero-jenn-laptop.png"
+                      src="/images/jenn-consultation.png"
                       alt="Jenn working in office"
                       fill
                       className="object-cover group-hover:scale-110 transition-transform duration-500"
