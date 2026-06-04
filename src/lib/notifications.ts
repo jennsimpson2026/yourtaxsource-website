@@ -204,6 +204,13 @@ export async function notifyPortalInvitation({
       <h2 style="color: #6d28d9;">Welcome to Your Tax Source!</h2>
       <p>Hi ${name || "there"},</p>
       <p>Thank you for booking your tax appointment with us. We've created a secure client portal account for you to make document sharing and communication easy and safe.</p>
+      
+      <div style="background-color: #f9fafb; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #e5e7eb;">
+        <h3 style="margin-top: 0; color: #111827;">Appointment Instructions</h3>
+        <p style="margin-bottom: 5px;"><strong>In-Person:</strong> We look forward to seeing you at 100 1/2 S Main St, Belmont, NC 28012.</p>
+        <p style="margin-bottom: 0;"><strong>Remote:</strong> You will receive a meeting link via email. Please ensure all tax documents are uploaded to your portal at least 24 hours before our scheduled time.</p>
+      </div>
+
       <p>To get started, please click the button below to set up your password and access your portal:</p>
       <div style="text-align: center; margin: 30px 0;">
         <a href="${invitationLink}" style="background-color: #6d28d9; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">Set Up Your Account</a>
@@ -211,6 +218,55 @@ export async function notifyPortalInvitation({
       <p>If the button doesn't work, you can copy and paste this link into your browser:</p>
       <p style="word-break: break-all; color: #666;">${invitationLink}</p>
       <p>We look forward to working with you!</p>
+      <p>Best regards,<br>The Your Tax Source Team</p>
+    </div>
+  `;
+
+  return await sendEmail({
+    to: email,
+    subject,
+    html,
+  });
+}
+
+export async function notifyAppointmentScheduled({
+  email,
+  name,
+  startTime,
+  location,
+}: {
+  email: string;
+  name: string;
+  startTime: Date;
+  location: string;
+}) {
+  const subject = "Appointment Confirmation - Your Tax Source";
+  const dateStr = startTime.toLocaleString("en-US", { 
+    weekday: 'long', 
+    month: 'long', 
+    day: 'numeric', 
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZoneName: 'short'
+  });
+
+  const html = `
+    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+      <h2 style="color: #6d28d9;">Appointment Confirmed</h2>
+      <p>Hi ${name || "there"},</p>
+      <p>Your appointment with Your Tax Source has been scheduled successfully.</p>
+      
+      <div style="background-color: #f9fafb; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #e5e7eb;">
+        <p style="margin-top: 0;"><strong>Time:</strong> ${dateStr}</p>
+        <p><strong>Location:</strong> ${location}</p>
+        <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;" />
+        <h3 style="margin-top: 0; color: #111827;">Instructions</h3>
+        <p style="margin-bottom: 5px;"><strong>In-Person:</strong> 100 1/2 S Main St, Belmont, NC 28012.</p>
+        <p style="margin-bottom: 0;"><strong>Remote:</strong> You will receive a meeting link via email. Please ensure all tax documents are uploaded to your portal at least 24 hours before our scheduled time.</p>
+      </div>
+
+      <p><a href="${process.env.NEXTAUTH_URL}/portal" style="color: #6d28d9; font-weight: bold;">Log in to your portal</a> to manage documents and view status.</p>
       <p>Best regards,<br>The Your Tax Source Team</p>
     </div>
   `;

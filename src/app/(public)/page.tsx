@@ -19,7 +19,7 @@ export default function Home() {
   return (
     <div className="flex flex-col">
       {/* Hero Section */}
-      <section className="relative bg-brand-purple py-20 md:py-32 overflow-hidden text-white">
+      <section className="relative bg-brand-purple pt-8 pb-16 md:pt-12 md:pb-32 overflow-hidden text-white">
         <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-10"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">

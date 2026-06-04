@@ -3,7 +3,8 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
-import { Menu, X, ChevronRight, LogIn, UserPlus, LayoutDashboard } from "lucide-react";
+import { Menu, X, ChevronRight, LogIn, UserPlus, LayoutDashboard, CalendarDays } from "lucide-react";
+import { BookingButton } from "@/components/BookingButton";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -38,16 +39,16 @@ export const Navbar = () => {
   return (
     <nav className="bg-white border-b border-gray-100 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-20 md:h-24 items-center">
+        <div className="flex justify-between h-28 md:h-40 items-center">
           {/* Logo (Left) */}
-          <div className="flex items-center">
+          <div className="flex items-center flex-shrink-0">
             <Link href="/" className="flex items-center group">
               <Image 
                 src="/images/logo-long.png" 
                 alt="Your Tax Source Logo" 
-                width={300} 
-                height={80} 
-                className="h-12 md:h-16 w-auto object-contain transition-transform group-hover:scale-105"
+                width={480} 
+                height={160} 
+                className="h-20 md:h-32 w-auto object-contain transition-transform group-hover:scale-105"
                 priority
               />
               <span className="sr-only">Your Tax Source</span>
@@ -55,12 +56,12 @@ export const Navbar = () => {
           </div>
 
           {/* Desktop Links (Center) */}
-          <div className="hidden xl:flex items-center gap-6 absolute left-1/2 -translate-x-1/2">
+          <div className="hidden xl:flex items-center gap-8 absolute left-1/2 -translate-x-1/2">
             {navLinks.map((link) => (
               <Link 
                 key={link.name}
                 href={link.href} 
-                className="text-brand-charcoal hover:text-brand-purple transition-colors font-bold text-xs uppercase tracking-widest whitespace-nowrap"
+                className="text-brand-charcoal hover:text-brand-purple transition-colors font-bold text-[11px] uppercase tracking-[0.2em] whitespace-nowrap"
               >
                 {link.name}
               </Link>
@@ -68,7 +69,7 @@ export const Navbar = () => {
           </div>
 
           {/* Actions (Right) */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 md:gap-3">
             {/* Mobile Menu Button */}
             <div className="xl:hidden">
               <button 
@@ -80,28 +81,23 @@ export const Navbar = () => {
               </button>
             </div>
 
-            <div className="hidden sm:flex items-center gap-4">
+            <div className="hidden sm:flex items-center gap-3 md:gap-4">
               <Link 
                 href="/auth/login" 
-                className="text-brand-purple font-black hover:text-brand-black transition-colors text-sm flex items-center gap-1.5"
+                className="text-brand-purple font-black hover:text-brand-black transition-colors text-[10px] uppercase tracking-widest flex items-center gap-1.5"
               >
-                <LogIn size={18} />
                 Login
               </Link>
-              <Link
-                href="/auth/signup"
-                className="bg-brand-purple text-white px-5 py-2.5 rounded-xl font-black hover:bg-[#5a3a74] transition-all shadow-lg text-sm flex items-center gap-1.5"
-              >
-                <UserPlus size={18} />
-                Start Intake
-              </Link>
+              <BookingButton 
+                label="Book"
+                className="bg-brand-purple text-white px-4 py-2 rounded-lg font-black hover:bg-[#5a3a74] transition-all shadow-md text-[10px] uppercase tracking-widest flex items-center gap-1.5"
+              />
             </div>
 
             <Link 
               href="/portal" 
-              className="bg-brand-black text-white px-4 py-2.5 rounded-xl font-black hover:bg-brand-purple transition-all shadow-md flex items-center gap-2 text-sm whitespace-nowrap"
+              className="bg-brand-black text-white px-4 py-2 rounded-lg font-black hover:bg-brand-purple transition-all shadow-md flex items-center gap-2 text-[10px] uppercase tracking-widest whitespace-nowrap"
             >
-              <LayoutDashboard size={18} />
               Portal
             </Link>
           </div>
@@ -133,16 +129,16 @@ export const Navbar = () => {
             <Image 
               src="/images/logo-long.png" 
               alt="Logo" 
-              width={720} 
-              height={210} 
-              className="h-36 w-auto object-contain"
+              width={240} 
+              height={60} 
+              className="h-10 w-auto object-contain"
             />
             <button 
               onClick={() => setIsOpen(false)}
               className="text-brand-charcoal hover:text-brand-purple p-2 rounded-full hover:bg-brand-soft-gray transition-all"
               aria-label="Close Menu"
             >
-              <X size={28} />
+              <X size={24} />
             </button>
           </div>
 
@@ -197,7 +193,7 @@ export const Navbar = () => {
           {/* Footer */}
           <div className="p-8 border-t border-gray-100 bg-brand-soft-gray/50">
             <p className="text-sm text-brand-charcoal/60 font-medium">Serving Clients Nationwide</p>
-            <p className="text-xs text-brand-charcoal/40 mt-1">© 2024 Your Tax Source</p>
+            <p className="text-xs text-brand-charcoal/40 mt-1">© {new Date().getFullYear()} Your Tax Source</p>
           </div>
         </div>
       </div>

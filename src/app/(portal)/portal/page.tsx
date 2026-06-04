@@ -260,7 +260,7 @@ export default async function PortalDashboard() {
               <div className="flex flex-wrap gap-4 text-xs">
                 <div className="bg-white/50 px-3 py-1.5 rounded-full border border-brand-lavender text-brand-purple font-bold">Venmo: @Jennifer-Simpson-59</div>
                 <div className="bg-white/50 px-3 py-1.5 rounded-full border border-brand-lavender text-brand-purple font-bold">Cash App: $YTSJenn</div>
-                <div className="bg-white/50 px-3 py-1.5 rounded-full border border-brand-lavender text-brand-purple font-bold">Zelle: 803-371-5766</div>
+                <div className="bg-white/50 px-3 py-1.5 rounded-full border border-brand-lavender text-brand-purple font-bold">Zelle: (980) 285-1495</div>
               </div>
             </div>
           </section>
@@ -300,7 +300,7 @@ export default async function PortalDashboard() {
                  Zelle
                </div>
                <div className="text-sm font-bold text-brand-purple flex flex-col items-center gap-1">
-                 <span>803-371-5766</span>
+                 <span>(980) 285-1495</span>
                  <span className="text-[10px] text-gray-400 uppercase">Jenn Simpson</span>
                </div>
             </div>
@@ -337,7 +337,7 @@ export default async function PortalDashboard() {
               </div>
               <div className="p-4 rounded-xl bg-gray-50 border border-gray-100 flex items-center gap-3">
                 <div className="w-2 h-2 rounded-full bg-brand-purple"></div>
-                <span className="font-bold text-brand-black text-sm">Zelle (803-371-5766)</span>
+                <span className="font-bold text-brand-black text-sm">Zelle ((980) 285-1495)</span>
               </div>
               <div className="p-4 rounded-xl bg-gray-50 border border-gray-100 flex items-center gap-3">
                 <div className="w-2 h-2 rounded-full bg-brand-purple"></div>

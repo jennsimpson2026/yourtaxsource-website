@@ -25,13 +25,13 @@ export default function FAQPage() {
                   <>
                     We use a secure, encrypted client portal. Once you sign up, you can upload your documents (photos of forms, PDFs, or spreadsheets) directly to our system from your phone or computer. No need to drop off physical papers! But if you'd rather meet face-to-face or drop off documents in person, you're always welcome at our office at{" "}
                     <a 
-                      href="https://www.google.com/maps/search/?api=1&query=100+1/2+S+Main+Street,+Belmont,+NC+28012"
+                      href="https://www.google.com/maps/search/?api=1&query=100+1/2+S+Main+St,+Belmont,+NC+28012"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-brand-purple hover:underline inline-flex items-center font-bold"
                     >
                       <MapPin className="h-4 w-4 mr-1" />
-                      100 1/2 S Main Street, Belmont, NC 28012
+                      100 1/2 S Main St, Belmont, NC 28012
                     </a>
                     .
                   </>
@@ -92,7 +92,7 @@ export default function FAQPage() {
                     <ul className="list-disc pl-5 space-y-1">
                       <li>Venmo (@Jennifer-Simpson-59)</li>
                       <li>Cash App ($YTSJenn)</li>
-                      <li>Zelle (803-371-5766)</li>
+                      <li>Zelle ((980) 285-1495)</li>
                       <li>Apple Pay</li>
                       <li>Bank Draft (eCheck)</li>
                       <li>Credit or Debit Card (3% processing fee)</li>
@@ -138,6 +138,12 @@ export default function FAQPage() {
               >
                 Send Us a Message
               </Link>
+              <a
+                href="tel:9802851495"
+                className="inline-block bg-white text-brand-purple px-10 py-5 rounded-2xl font-black text-xl hover:bg-brand-lavender transition-all shadow-xl hover:scale-105 active:scale-95 uppercase tracking-wider"
+              >
+                (980) 285-1495
+              </a>
             </div>
           </div>
         </div>

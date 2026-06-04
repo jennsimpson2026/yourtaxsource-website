@@ -31,6 +31,12 @@ export default function ContactPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-8">
                 <ContactInfoItem
+                  icon={<Phone className="w-6 h-6 text-brand-purple" />}
+                  title="Call or Text"
+                  value="(980) 285-1495"
+                  description="Primary business number."
+                />
+                <ContactInfoItem
                   icon={<Mail className="w-6 h-6 text-brand-purple" />}
                   title="Email Us"
                   value="jsimpson@yourtaxsource.com"
@@ -39,7 +45,7 @@ export default function ContactPage() {
                 <ContactInfoItem
                   icon={<MapPin className="w-6 h-6 text-brand-purple" />}
                   title="Visit Our Office"
-                  value="100 1/2 S Main Street, Belmont, NC 28012"
+                  value="100 1/2 S Main St, Belmont, NC 28012"
                   description="Right in the heart of downtown."
                 />
               </div>
@@ -110,7 +116,7 @@ export default function ContactPage() {
               <div className="relative z-10 text-center p-8">
                  <MapPin className="w-12 h-12 text-brand-purple mx-auto mb-4" />
                  <p className="text-xl font-bold text-white mb-2">Belmont, North Carolina</p>
-                 <p className="text-brand-lavender/70 italic">100 1/2 S Main Street, Belmont, NC 28012</p>
+                 <p className="text-brand-lavender/70 italic">100 1/2 S Main St, Belmont, NC 28012</p>
               </div>
             </div>
           </div>
