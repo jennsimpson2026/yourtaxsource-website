@@ -35,7 +35,7 @@ export default function ServicesPage() {
               "Prior Year Amendments"
             ]}
             icon={<User className="w-12 h-12 text-brand-black" />}
-            imageSrc="/images/jenn-hero.png"
+            imageSrc="/images/jenn-hero-desk.png"
             />
 
             <ServiceDetail
@@ -158,7 +158,7 @@ function ServiceDetail({
           src={imageSrc}
           alt={title}
           fill
-          className="object-cover transition-transform duration-700 group-hover:scale-105"
+          className="object-cover object-top transition-transform duration-700 group-hover:scale-105"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-brand-black/60 via-transparent to-transparent opacity-60"></div>
       </div>

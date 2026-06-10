@@ -52,7 +52,7 @@ export default function ContactPage() {
 
               <div className="relative h-[300px] rounded-3xl overflow-hidden shadow-xl border-4 border-brand-cloud">
                 <Image
-                  src="/images/jenn-profile.png"
+                  src="/images/jenn-consultation-office.png"
                   alt="Jenn Simpson"
                   fill
                   className="object-cover"

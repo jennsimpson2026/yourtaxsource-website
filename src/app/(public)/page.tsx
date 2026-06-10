@@ -53,10 +53,10 @@ export default function Home() {
               <div className="absolute inset-0 bg-brand-lavender rounded-[3rem] rotate-3 scale-95 opacity-20 blur-2xl"></div>
               <div className="relative h-full w-full rounded-[2.5rem] overflow-hidden shadow-2xl border-4 border-white/10">
                     <Image
-                      src="/images/jenn-hero.png"
+                      src="/images/jenn-hero-desk.png"
                       alt="Jenn Simpson, Your Tax Source"
                       fill
-                      className="object-cover object-center"
+                      className="object-cover object-top"
                       priority
                     />
               </div>
