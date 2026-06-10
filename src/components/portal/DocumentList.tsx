@@ -1,22 +1,30 @@
 "use client";
 
 import { getDownloadUrl, softDeleteDocument } from "@/actions/documents";
+import { FileText, Lock, Download, Trash2, Clock, Loader2 } from "lucide-react";
+import { useState } from "react";
 
 interface Document {
   id: string;
   fileName: string;
   category: string;
   uploadedAt: Date;
+  isLocked: boolean;
 }
 
 export function DocumentList({ documents }: { documents: Document[] }) {
+  const [downloading, setDownloading] = useState<string | null>(null);
+
   async function handleDownload(docId: string) {
+    setDownloading(docId);
     try {
       const url = await getDownloadUrl(docId);
       window.open(url, "_blank");
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      alert("Error downloading document");
+      alert(error.message || "Error downloading document");
+    } finally {
+      setDownloading(null);
     }
   }
 
@@ -33,49 +41,95 @@ export function DocumentList({ documents }: { documents: Document[] }) {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow border overflow-hidden">
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
-          <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">File Name</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
-          </tr>
-        </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
-          {documents.map((doc) => (
-            <tr key={doc.id}>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{doc.fileName}</td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{doc.category}</td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {new Date(doc.uploadedAt).toLocaleDateString()}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
-                <button
-                  onClick={() => handleDownload(doc.id)}
-                  className="text-blue-600 hover:text-blue-900"
-                >
-                  Download
-                </button>
-                <button
-                  onClick={() => handleDelete(doc.id)}
-                  className="text-red-600 hover:text-red-900"
-                >
-                  Delete
-                </button>
-              </td>
-            </tr>
-          ))}
-          {documents.length === 0 && (
+    <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-100">
+          <thead className="bg-gray-50/50">
             <tr>
-              <td colSpan={4} className="px-6 py-10 text-center text-sm text-gray-500">
-                No documents found.
-              </td>
+              <th className="px-6 py-4 text-left text-xs font-bold text-brand-charcoal/40 uppercase tracking-wider">Document</th>
+              <th className="px-6 py-4 text-left text-xs font-bold text-brand-charcoal/40 uppercase tracking-wider">Category</th>
+              <th className="px-6 py-4 text-left text-xs font-bold text-brand-charcoal/40 uppercase tracking-wider">Date</th>
+              <th className="px-6 py-4 text-right text-xs font-bold text-brand-charcoal/40 uppercase tracking-wider">Actions</th>
             </tr>
-          )}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-50">
+            {documents.map((doc) => (
+              <tr key={doc.id} className="hover:bg-brand-cloud/50 transition-colors">
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-brand-soft-gray rounded-xl flex items-center justify-center text-brand-charcoal/40">
+                      <FileText size={20} />
+                    </div>
+                    <span className="text-sm font-bold text-brand-black">{doc.fileName}</span>
+                    {doc.isLocked && (
+                      <div className="flex items-center gap-1 px-2 py-0.5 bg-amber-50 text-amber-600 rounded-full text-[10px] font-black uppercase ml-2">
+                        <Lock size={10} />
+                        Locked
+                      </div>
+                    )}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <span className="text-xs font-medium px-3 py-1 bg-gray-100 text-gray-600 rounded-full">
+                    {doc.category}
+                  </span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-brand-charcoal/60">
+                  <div className="flex items-center gap-2">
+                    <Clock size={14} />
+                    {new Date(doc.uploadedAt).toLocaleDateString()}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <div className="flex justify-end gap-2">
+                    {doc.isLocked ? (
+                      <button
+                        onClick={() => alert("This final return is locked until the invoice is paid. Please visit the Payments tab.")}
+                        className="p-2 text-amber-500 hover:bg-amber-50 rounded-lg transition-colors"
+                        title="Locked - Payment Required"
+                      >
+                        <Lock size={18} />
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleDownload(doc.id)}
+                        disabled={downloading === doc.id}
+                        className="p-2 text-brand-purple hover:bg-brand-lavender rounded-lg transition-colors disabled:opacity-50"
+                        title="Download"
+                      >
+                        {downloading === doc.id ? (
+                          <Loader2 size={18} className="animate-spin" />
+                        ) : (
+                          <Download size={18} />
+                        )}
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleDelete(doc.id)}
+                      className="p-2 text-red-400 hover:bg-red-50 rounded-lg transition-colors"
+                      title="Delete"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+            {documents.length === 0 && (
+              <tr>
+                <td colSpan={4} className="px-6 py-12 text-center">
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center text-gray-300">
+                      <FileText size={32} />
+                    </div>
+                    <p className="text-brand-charcoal/40 text-sm font-medium">No documents found.</p>
+                  </div>
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
