@@ -35,7 +35,7 @@ export default function ServicesPage() {
               "Prior Year Amendments"
             ]}
             icon={<User className="w-12 h-12 text-brand-black" />}
-            imageSrc="/images/jenn-hero-desk.png"
+            imageSrc="/images/jenn-prof-woman.png"
             />
 
             <ServiceDetail
@@ -51,7 +51,7 @@ export default function ServicesPage() {
               "Cloud-Based Real-Time Access"
             ]}
             icon={<Briefcase className="w-12 h-12 text-brand-black" />}
-            imageSrc="/images/jenn-consultation.png"
+            imageSrc="/images/jenn-consultation-authentic.png"
             reverse
             />
 
@@ -68,7 +68,7 @@ export default function ServicesPage() {
               "Employee Self-Service Access"
             ]}
             icon={<Users className="w-12 h-12 text-brand-black" />}
-            imageSrc="/images/jenn-working-laptop.png"
+            imageSrc="/images/jenn-hero-authentic.png"
             />
 
             <ServiceDetail
@@ -84,7 +84,7 @@ export default function ServicesPage() {
               "Board & Investor Reporting"
             ]}
             icon={<BarChart3 className="w-12 h-12 text-brand-black" />}
-            imageSrc="/images/jenn-leading-discussion.png"
+            imageSrc="/images/jenn-conf-presenter.png"
             reverse
             />
         </div>

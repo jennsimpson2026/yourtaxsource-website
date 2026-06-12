@@ -127,7 +127,7 @@ export default function AboutPage() {
               </div>
               <div className="lg:w-1/2 relative aspect-[4/3] w-full rounded-3xl overflow-hidden shadow-xl border-8 border-brand-soft-gray bg-brand-soft-gray">
                  <Image
-                   src="/images/jenn-office-desk.png"
+                   src="/images/jenn-focused-office.png"
                    alt="Jenn at her desk in our office"
                    fill
                    className="object-contain"
