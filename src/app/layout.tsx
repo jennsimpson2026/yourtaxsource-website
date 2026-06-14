@@ -36,3 +36,4 @@ export default function RootLayout({
     </html>
   );
 }
+// Final authentic deployment trigger - Jun 14 2026

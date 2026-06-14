@@ -1,0 +1,374 @@
+[
+  {
+    "id": "ee998a8f-8592-426e-9ad1-89c39a0d7326",
+    "title": "System Architecture and Tech Stack Selection",
+    "status": "done",
+    "assigned_to": "agent-lead-engineer"
+  },
+  {
+    "id": "7c49b0b9-d41c-43d7-9941-eba1d7e843c8",
+    "title": "Brand Identity and Wireframes",
+    "status": "done",
+    "assigned_to": "agent-designer"
+  },
+  {
+    "id": "db6287f8-d658-40a3-93dd-8f859cc5ff94",
+    "title": "Authentication and MFA Implementation",
+    "status": "done",
+    "assigned_to": "agent-lead-engineer"
+  },
+  {
+    "id": "1517c4e6-09ea-4d95-8f7a-4daa9e0cb589",
+    "title": "High-Fidelity Mockups and Component Library Design",
+    "status": "done",
+    "assigned_to": "agent-designer"
+  },
+  {
+    "id": "f130b5a1-3478-445f-9b7a-6811749908e2",
+    "title": "Public Website Implementation",
+    "status": "done",
+    "assigned_to": "agent-designer"
+  },
+  {
+    "id": "e7a379c1-5009-4d9a-97e9-1759e6792860",
+    "title": "Portal Core: Documents and Questionnaires",
+    "status": "done",
+    "assigned_to": "agent-lead-engineer"
+  },
+  {
+    "id": "b8a9cca9-5ba9-4a2c-a8eb-e34996440e24",
+    "title": "Payments and Notifications Implementation",
+    "status": "done",
+    "assigned_to": "agent-lead-engineer"
+  },
+  {
+    "id": "6228a941-cc61-4875-afbe-79ffebb20dfd",
+    "title": "Calendar Booking Integration",
+    "status": "done",
+    "assigned_to": "agent-lead-engineer"
+  },
+  {
+    "id": "4268542f-4dda-4bc3-96bb-72cca9722ed0",
+    "title": "Final Admin Tools and Staging Deployment",
+    "status": "done",
+    "assigned_to": "agent-lead-engineer"
+  },
+  {
+    "id": "0f114b19-35a8-454f-b8a4-540269a9e71e",
+    "title": "Emergency Re-deployment and URL Verification",
+    "status": "done",
+    "assigned_to": "agent-lead-engineer"
+  },
+  {
+    "id": "05552a87-eec0-458f-8c66-8222023a6f7c",
+    "title": "Final Launch Review and Handover",
+    "status": "done",
+    "assigned_to": "agent-lead-engineer"
+  },
+  {
+    "id": "b564a81f-359c-4cbf-b316-68e5d8b75a10",
+    "title": "Emergency Fix: Portal Functionality & Contact Form",
+    "status": "done",
+    "assigned_to": "agent-lead-engineer"
+  },
+  {
+    "id": "97a38a1e-ec1f-49a2-a396-525e20fcf0e1",
+    "title": "Design Overhaul & Content Accuracy Fix",
+    "status": "done",
+    "assigned_to": "agent-designer"
+  },
+  {
+    "id": "9b28893a-779d-4794-8c5b-2e76d77db0a0",
+    "title": "Pivot to Digital-First Copy & Brand Personalization",
+    "status": "done",
+    "assigned_to": "agent-designer"
+  },
+  {
+    "id": "ef4ddb07-9a11-4174-8f2a-3b791c7b9267",
+    "title": "Production Readiness & Security Hardening",
+    "status": "done",
+    "assigned_to": "agent-lead-engineer"
+  },
+  {
+    "id": "aed36daf-1625-4d2e-a3b8-14cad3437e03",
+    "title": "Staff Portal / Admin Dashboard UI Design",
+    "status": "done",
+    "assigned_to": "agent-designer"
+  },
+  {
+    "id": "7aeb22f7-cff6-4a22-bf2e-345655d63e16",
+    "title": "Admin Dashboard Backend API Implementation",
+    "status": "done",
+    "assigned_to": "agent-lead-engineer"
+  },
+  {
+    "id": "3a659122-d92b-4c51-b4b3-a12935bba4cf",
+    "title": "Homepage Content & Layout Revision",
+    "status": "done",
+    "assigned_to": "agent-designer"
+  },
+  {
+    "id": "a95d6512-4048-4939-a5f5-dc5232bba16a",
+    "title": "Correction: Use Exact Owner Copy on Homepage",
+    "status": "done",
+    "assigned_to": "agent-designer"
+  },
+  {
+    "id": "313e09c4-1878-4c0d-9ead-63d343ed12c3",
+    "title": "Services & Pricing Page Full Revision",
+    "status": "done",
+    "assigned_to": "agent-designer"
+  },
+  {
+    "id": "3a361cda-3638-4099-a6fb-b2b596ed1492",
+    "title": "About Jenn Page Full Implementation",
+    "status": "done",
+    "assigned_to": "agent-designer"
+  },
+  {
+    "id": "3aef45bc-8de3-4e8b-bc2f-14df6e0cc870",
+    "title": "Who We Help Page Full Implementation",
+    "status": "done",
+    "assigned_to": "agent-designer"
+  },
+  {
+    "id": "5525dfdf-ce3b-4143-9dae-18899cb1c7f3",
+    "title": "FAQ Page Full Implementation & Real Asset Integration",
+    "status": "done",
+    "assigned_to": "agent-designer"
+  },
+  {
+    "id": "7c5f5229-2b64-4332-946b-8bd0c87c0ed9",
+    "title": "Integrate 'LOGO LONG' into Navbar (Top Right)",
+    "status": "done",
+    "assigned_to": "agent-designer"
+  },
+  {
+    "id": "a03b7d12-544b-46a3-9b5f-2dd907598886",
+    "title": "Create Testimonials & Reviews Page",
+    "status": "done",
+    "assigned_to": "agent-designer"
+  },
+  {
+    "id": "6ce85337-0629-4b29-8a73-427805f448ef",
+    "title": "Create 'New Clients' Onboarding Page",
+    "status": "done",
+    "assigned_to": "agent-designer"
+  },
+  {
+    "id": "94b3cd8b-1666-47a2-9f09-071c67c9f832",
+    "title": "Client Database & Backend API Development",
+    "status": "done",
+    "assigned_to": "agent-lead-engineer"
+  },
+  {
+    "id": "52da6f2b-3306-455a-9752-1b202ec2ad6c",
+    "title": "Create Client Portal UI & Annual Update Form",
+    "status": "done",
+    "assigned_to": "agent-designer"
+  },
+  {
+    "id": "4892c873-25e6-47bf-b9d8-2593d649cdc7",
+    "title": "Link Repository to Vercel & Setup Deployment",
+    "status": "done",
+    "assigned_to": "agent-lead-engineer"
+  },
+  {
+    "id": "444cf527-6b43-4438-94b0-dc0b466a7280",
+    "title": "Create Resources Knowledge Center Page",
+    "status": "done",
+    "assigned_to": "agent-designer"
+  },
+  {
+    "id": "4cf870cf-8ba6-4fce-b86c-2048801f5458",
+    "title": "Blog / Tax Tips Frontend & CMS UI Implementation",
+    "status": "done",
+    "assigned_to": "agent-designer"
+  },
+  {
+    "id": "947d81f1-bff7-4353-98b5-860841558a20",
+    "title": "Blog / Tax Tips Database Schema & API implementation",
+    "status": "done",
+    "assigned_to": "agent-lead-engineer"
+  },
+  {
+    "id": "9df3d3e1-12b0-48f7-9bb8-aad39058b83b",
+    "title": "Integrate Helcim Payment Processing",
+    "status": "done",
+    "assigned_to": "agent-lead-engineer"
+  },
+  {
+    "id": "93d3a40b-7cb4-40db-9672-a156d82c2f5d",
+    "title": "Implement Email & SMS Notification System",
+    "status": "done",
+    "assigned_to": "agent-lead-engineer"
+  },
+  {
+    "id": "7af1432c-9e22-4e48-8e11-047de331a8ae",
+    "title": "Final QA & Branding Sweep",
+    "status": "done",
+    "assigned_to": "agent-designer"
+  },
+  {
+    "id": "7ceeef23-55c1-4242-8433-9292091e1e91",
+    "title": "Implement Mobile Navigation Menu",
+    "status": "done",
+    "assigned_to": "agent-designer"
+  },
+  {
+    "id": "4e7af96a-d08d-4d00-b32f-59f2ca54be33",
+    "title": "Homepage & Branding Refinements",
+    "status": "done",
+    "assigned_to": "agent-designer"
+  },
+  {
+    "id": "b5638104-a072-486e-b090-4bc721dc4c3a",
+    "title": "Implement 'Action Needed' Section in Client Portal",
+    "status": "done",
+    "assigned_to": "agent-lead-engineer"
+  },
+  {
+    "id": "5b2a0e7d-7259-4acb-95db-c5eb0b11b434",
+    "title": "Portal UI/UX & Branding Refinements",
+    "status": "done",
+    "assigned_to": "agent-designer"
+  },
+  {
+    "id": "c6edd484-d6a3-4407-8054-7ea3f3d4e34b",
+    "title": "Payment Notifications & Backend Branding Refinements",
+    "status": "done",
+    "assigned_to": "agent-lead-engineer-2"
+  },
+  {
+    "id": "bcb695b7-a528-4962-9c58-3fe93e0c26bd",
+    "title": "Refactor S3 Storage Hierarchy",
+    "status": "done",
+    "assigned_to": "agent-lead-engineer"
+  },
+  {
+    "id": "4226da83-424d-4142-95a6-cdfcc95aed0b",
+    "title": "Annual Update PDF Summary Generator",
+    "status": "done",
+    "assigned_to": "agent-designer"
+  },
+  {
+    "id": "d24e3943-1a05-4032-8035-d0948c47a89a",
+    "title": "UI: Replace Booking buttons with 'Request Appointment' (Temp)",
+    "status": "done",
+    "assigned_to": "agent-designer"
+  },
+  {
+    "id": "7d12f047-782e-4a5c-a54e-223847d0b79d",
+    "title": "Backend: Microsoft Bookings Integration & Onboarding Automation",
+    "status": "done",
+    "assigned_to": "agent-lead-engineer-2"
+  },
+  {
+    "id": "71ee6287-be81-4291-8ad9-9bb733d6690e",
+    "title": "Database: Schema Expansion & Return Release Logic",
+    "status": "done",
+    "assigned_to": "agent-lead-engineer-2"
+  },
+  {
+    "id": "73b619cc-bb67-4bfa-97f9-80b8fbce7dec",
+    "title": "UI: Tax Workflow Management Dashboard Design",
+    "status": "done",
+    "assigned_to": "agent-designer"
+  },
+  {
+    "id": "43d9c389-495c-45c1-8db2-b78ce90ff495",
+    "title": "UI: Logo Size & Visibility Priority Audit",
+    "status": "done",
+    "assigned_to": "agent-designer"
+  },
+  {
+    "id": "6e14108c-cb48-45c8-9995-1ea571218cc3",
+    "title": "Branding Consistency & Homepage Content Refresh",
+    "status": "done",
+    "assigned_to": "agent-designer"
+  },
+  {
+    "id": "416f5887-6aff-4dbc-9d80-c8de3cd955e9",
+    "title": "UI: Comprehensive Resources Page Overhaul",
+    "status": "done",
+    "assigned_to": "agent-designer"
+  },
+  {
+    "id": "220cb02f-5dec-4965-982b-2f1c0345aec5",
+    "title": "UI: Integrate Production Payment Handles",
+    "status": "done",
+    "assigned_to": "agent-lead-engineer-2"
+  },
+  {
+    "id": "003e6a3c-e8ba-4d35-a292-dc1ce14ffff0",
+    "title": "Fix Missing Build Dependencies",
+    "status": "done",
+    "assigned_to": "agent-lead-engineer-2"
+  },
+  {
+    "id": "b667828d-39f6-4112-af6d-d26857d2b6a6",
+    "title": "Branding Overhaul: Image Placement & Logo Scaling",
+    "status": "done",
+    "assigned_to": "agent-designer"
+  },
+  {
+    "id": "53e0a160-d5c4-4619-9e05-80bb7c2adad1",
+    "title": "Final Implementation of Authentic Branding Photography",
+    "status": "done",
+    "assigned_to": "agent-designer"
+  },
+  {
+    "id": "6d41b33e-be7c-41e5-bca7-66061115c6a2",
+    "title": "Fix Production Image Deployment",
+    "status": "in-progress",
+    "assigned_to": "agent-lead-engineer"
+  },
+  {
+    "id": "2ae3c980-8531-446d-a216-c6d10a4b13c9",
+    "title": "Fix Production Image Deployment (Urgent)",
+    "status": "in-progress",
+    "assigned_to": "agent-lead-engineer-2"
+  },
+  {
+    "id": "ab7b9ce3-09d6-4979-8e16-391efb1076a1",
+    "title": "Integrate Authentic Images from Google Drive (Urgent)",
+    "status": "done",
+    "assigned_to": "agent-designer"
+  },
+  {
+    "id": "56ab1417-a272-4b39-ba92-76f5bfdeffb3",
+    "title": "Phase 2: Client Portal Architecture & Plan",
+    "status": "done",
+    "assigned_to": "agent-lead-engineer-2"
+  },
+  {
+    "id": "ffb4fe9b-00e0-4a30-853f-9db51b7a4e60",
+    "title": "Update Website Images and Fix Cropping",
+    "status": "done",
+    "assigned_to": "agent-designer"
+  },
+  {
+    "id": "47464113-4b16-423d-b901-9bab553ca26a",
+    "title": "Phase 2: Database Schema Updates",
+    "status": "done",
+    "assigned_to": "agent-lead-engineer-2"
+  },
+  {
+    "id": "836c7a32-1b8d-4cf9-848a-4d5b9313cf31",
+    "title": "Phase 2: Portal Frontend Components",
+    "status": "done",
+    "assigned_to": "agent-lead-engineer-2"
+  },
+  {
+    "id": "6ed541e6-85a0-499a-85d0-61d93a76793b",
+    "title": "EMERGENCY: Fix About Page Portrait",
+    "status": "done",
+    "assigned_to": "agent-lead-engineer-2"
+  },
+  {
+    "id": "e63ee438-afce-4ec4-8445-ece23bb06fd6",
+    "title": "EMERGENCY: Fix Homepage AI Images",
+    "status": "in-progress",
+    "assigned_to": "80198a45-9188-4db0-86e1-a79c1ae0326a"
+  }
+]
