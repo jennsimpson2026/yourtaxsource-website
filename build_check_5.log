@@ -1,0 +1,24 @@
+
+> your-tax-source@0.1.0 build
+> next build
+
+▲ Next.js 16.2.6 (Turbopack)
+- Environments: .env.local, .env.production
+
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+  Creating an optimized production build ...
+✓ Compiled successfully in 34.9s
+  Running TypeScript ...
+Failed to type check.
+
+./src/app/api/admin/workflows/trigger-sync/route.ts:27:47
+Type error: No value exists in scope for the shorthand property 'workflowInstanceId'. Either declare one or provide an initializer.
+
+  [90m25 |[0m     });
+  [90m26 |[0m
+[31m[1m>[0m [90m27 |[0m     [36mreturn[0m [33mNextResponse[0m.json({ success: [36mtrue[0m, workflowInstanceId });
+  [90m   |[0m                                               [31m[1m^[0m
+  [90m28 |[0m   } [36mcatch[0m (error: any) {
+  [90m29 |[0m     console.error([32m"Bulk sync trigger error:"[0m, error);
+  [90m30 |[0m     [36mreturn[0m [33mNextResponse[0m.json({ error: error.message }, { status: [35m500[0m });
+Next.js build worker exited with code: 1 and signal: null

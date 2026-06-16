@@ -1,0 +1,24 @@
+
+> your-tax-source@0.1.0 build
+> next build
+
+▲ Next.js 16.2.6 (Turbopack)
+- Environments: .env.local, .env.production
+
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+  Creating an optimized production build ...
+✓ Compiled successfully in 33.4s
+  Running TypeScript ...
+Failed to type check.
+
+./src/app/api/admin/workflows/trigger-sync/route.ts:15:13
+Type error: Property 'workflowInstanceId' does not exist on type '{ workflowRunId: string; }'.
+
+  [90m13 |[0m
+  [90m14 |[0m   [36mtry[0m {
+[31m[1m>[0m [90m15 |[0m     [36mconst[0m { workflowInstanceId } = [36mawait[0m workflowClient.trigger({
+  [90m   |[0m             [31m[1m^[0m
+  [90m16 |[0m       url: [32m`[0m${process.env.[33mNEXTAUTH_URL[0m[32m}/api/workflow/qbo-sync`[0m,
+  [90m17 |[0m       body: {}, [90m// Sync all[0m
+  [90m18 |[0m     });
+Next.js build worker exited with code: 1 and signal: null
