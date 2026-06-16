@@ -1,4 +1,4 @@
-import { NextAuthOptions } from "next-auth";
+import { NextAuthOptions, getServerSession } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { db } from "./db";
@@ -129,3 +129,5 @@ export const authOptions: NextAuthOptions = {
     signIn: "/auth/login",
   },
 };
+
+export const auth = () => getServerSession(authOptions);

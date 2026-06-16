@@ -25,7 +25,6 @@
     "axios": "^1.16.1",
     "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",
-    "date-fns": "^4.4.0",
     "drizzle-orm": "^0.45.2",
     "isomorphic-fetch": "^3.0.0",
     "lucide-react": "^1.14.0",

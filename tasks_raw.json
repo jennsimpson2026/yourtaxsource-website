@@ -1,8 +1,0 @@
-[
-  {
-    "id": "6ae13c5b-22b0-4e56-855b-4136c2411121",
-    "title": "Secure Client-Staff Messaging Module",
-    "description": "Implement a Secure Client-Staff Messaging Module in the Portal.\n1. Create a `messages` table in the database to store messages between clients and staff. Fields: `id`, `senderId`, `recipientId`, `content`, `taxReturnId` (optional context), `isRead`, `createdAt`.\n2. Implement a \"Messages\" tab in the Client Portal.\n3. Allow clients to send questions or updates regarding their tax return.\n4. Implement a staff view to see and respond to client messages.\n5. Add email/SMS notifications for new messages (using the existing `src/lib/notifications.ts` logic).\n6. Ensure all messages are encrypted at rest if they contain PII (use the project's existing encryption utility).",
-    "status": "in-progress"
-  }
-]

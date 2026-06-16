@@ -1,4 +1,4 @@
-# Your Tax Source (Fixed Images) - Client Portal
+# Your Tax Source - Client Portal
 Last deployment trigger: 2026-06-02 20:25 UTC
 
 Modern website and secure client portal for Your Tax Source, tax preparation and advisory services in Belmont, NC.

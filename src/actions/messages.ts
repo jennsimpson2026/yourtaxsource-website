@@ -3,8 +3,7 @@
 import { db } from "@/lib/db";
 import { messages, users } from "@/lib/db/schema";
 import { eq, and, or, desc } from "drizzle-orm";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { notifyNewMessage } from "@/lib/notifications";
 import { encrypt, decrypt } from "@/lib/crypto";
@@ -18,7 +17,7 @@ export async function sendMessage({
   content: string;
   taxReturnId?: string;
 }) {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session || !session.user) {
     throw new Error("Unauthorized");
   }
@@ -57,7 +56,7 @@ export async function sendMessage({
 }
 
 export async function getConversation(otherUserId: string) {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session || !session.user) {
     throw new Error("Unauthorized");
   }
@@ -83,7 +82,7 @@ export async function getConversation(otherUserId: string) {
 }
 
 export async function getRecentConversations() {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session || !session.user) {
     throw new Error("Unauthorized");
   }
@@ -120,7 +119,7 @@ export async function getRecentConversations() {
 }
 
 export async function markConversationAsRead(otherUserId: string) {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session || !session.user) {
       throw new Error("Unauthorized");
     }

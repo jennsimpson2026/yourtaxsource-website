@@ -1,0 +1,105 @@
+
+> your-tax-source@0.1.0 build
+> next build
+
+▲ Next.js 16.2.6 (Turbopack)
+- Environments: .env.local, .env.production
+
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+  Creating an optimized production build ...
+
+> Build error occurred
+Error: Turbopack build failed with 5 errors:
+./src/app/(portal)/portal/page.tsx:83:9
+the name `currentReturn` is defined multiple times
+  [90m81 |[0m
+  [90m82 |[0m   [36mconst[0m currentYear = [36mnew[0m [33mDate[0m().getFullYear();
+[31m[1m>[0m [90m83 |[0m   [36mconst[0m currentReturn = returns.find(r => r.year === currentYear) || returns[[35m0[0m];
+  [90m   |[0m         [31m[1m^^^^^^^^^^^^^[0m
+  [90m84 |[0m
+  [90m85 |[0m   [36mconst[0m hasEncryption = !!process.env.[33mENCRYPTION_KEY[0m;
+  [90m86 |[0m
+
+Ecmascript file had an error
+
+
+./src/app/(portal)/portal/page.tsx:82:9
+the name `currentYear` is defined multiple times
+  [90m80 |[0m   });
+  [90m81 |[0m
+[31m[1m>[0m [90m82 |[0m   [36mconst[0m currentYear = [36mnew[0m [33mDate[0m().getFullYear();
+  [90m   |[0m         [31m[1m^^^^^^^^^^^[0m
+  [90m83 |[0m   [36mconst[0m currentReturn = returns.find(r => r.year === currentYear) || returns[[35m0[0m];
+  [90m84 |[0m
+  [90m85 |[0m   [36mconst[0m hasEncryption = !!process.env.[33mENCRYPTION_KEY[0m;
+
+Ecmascript file had an error
+
+
+./src/components/admin/DocumentReviewQueue.tsx:6:1
+Module not found: Can't resolve 'date-fns'
+  [90m4 |[0m [36mimport[0m { reviewDocument } [36mfrom[0m [32m"@/actions/documents"[0m;
+  [90m5 |[0m [36mimport[0m { [33mCheck[0m, [33mX[0m, [33mHelpCircle[0m, [33mLoader2[0m } [36mfrom[0m [32m"lucide-react"[0m;
+[31m[1m>[0m [90m6 |[0m [36mimport[0m { format } [36mfrom[0m [32m"date-fns"[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m7 |[0m
+  [90m8 |[0m [36minterface[0m [33mDocument[0m {
+  [90m9 |[0m   id: string;
+
+
+
+Import trace:
+  Server Component:
+    ./src/components/admin/DocumentReviewQueue.tsx
+    ./src/app/(admin)/admin/page.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./src/components/admin/WorkflowStatus.tsx:5:1
+Module not found: Can't resolve 'date-fns'
+  [90m3 |[0m [36mimport[0m { useState, useEffect } [36mfrom[0m [32m"react"[0m;
+  [90m4 |[0m [36mimport[0m { [33mClock[0m, [33mCheckCircle2[0m, [33mXCircle[0m, [33mLoader2[0m, [33mRefreshCw[0m } [36mfrom[0m [32m"lucide-react"[0m;
+[31m[1m>[0m [90m5 |[0m [36mimport[0m { format } [36mfrom[0m [32m"date-fns"[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m6 |[0m
+  [90m7 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mWorkflowStatus[0m() {
+  [90m8 |[0m   [36mconst[0m [workflows, setWorkflows] = useState<any[]>([]);
+
+
+
+Import trace:
+  Server Component:
+    ./src/components/admin/WorkflowStatus.tsx
+    ./src/app/(admin)/admin/page.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./src/actions/messages.ts:6:1
+Export auth doesn't exist in target module
+  [90m4 |[0m [36mimport[0m { messages, users } [36mfrom[0m [32m"@/lib/db/schema"[0m;
+  [90m5 |[0m [36mimport[0m { eq, and, or, desc } [36mfrom[0m [32m"drizzle-orm"[0m;
+[31m[1m>[0m [90m6 |[0m [36mimport[0m { auth } [36mfrom[0m [32m"@/lib/auth"[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m7 |[0m [36mimport[0m { revalidatePath } [36mfrom[0m [32m"next/cache"[0m;
+  [90m8 |[0m [36mimport[0m { notifyNewMessage } [36mfrom[0m [32m"@/lib/notifications"[0m;
+  [90m9 |[0m [36mimport[0m { encrypt, decrypt } [36mfrom[0m [32m"@/lib/crypto"[0m;
+
+The export auth was not found in module [project]/src/lib/auth.ts [app-rsc] (ecmascript).
+Did you mean to import authOptions?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import trace:
+  Server Component:
+    ./src/actions/messages.ts
+    ./src/app/(admin)/admin/messages/layout.tsx
+
+
+    at <unknown> (./src/app/(portal)/portal/page.tsx:83:9)
+    at <unknown> (./src/app/(portal)/portal/page.tsx:82:9)
+    at <unknown> (./src/components/admin/DocumentReviewQueue.tsx:6:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./src/components/admin/WorkflowStatus.tsx:5:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./src/actions/messages.ts:6:1)
