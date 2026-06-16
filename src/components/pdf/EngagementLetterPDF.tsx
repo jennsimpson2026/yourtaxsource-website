@@ -68,7 +68,7 @@ export const EngagementLetterPDF = ({
       </View>
 
       <View style={styles.section}>
-        <Text style={{ whiteSpace: 'pre-wrap' }}>{content}</Text>
+        <Text>{content}</Text>
       </View>
 
       <View style={styles.signatureBox}>
