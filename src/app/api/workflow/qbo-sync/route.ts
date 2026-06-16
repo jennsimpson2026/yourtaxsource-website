@@ -47,6 +47,6 @@ export const { POST } = serve<{
         result: JSON.stringify({ synced: results.length, details: results }),
         updatedAt: new Date(),
       })
-      .where(eq(workflows.id, context.workflowInstanceId));
+      .where(eq(workflows.id, context.workflowRunId));
   });
 });
