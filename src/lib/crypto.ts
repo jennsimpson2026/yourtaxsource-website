@@ -6,7 +6,10 @@ const IV_LENGTH = 16; // For AES, this is always 16
 
 export function encrypt(text: string): string {
   if (!ENCRYPTION_KEY || ENCRYPTION_KEY.length !== 32) {
-    throw new Error("Encryption key must be 32 characters long");
+    if (process.env.NODE_ENV === "production" && process.env.NEXT_PHASE !== "phase-production-build") {
+      throw new Error("Encryption key must be 32 characters long");
+    }
+    return text; // Return unencrypted for build/dev if key is invalid
   }
 
   const iv = crypto.randomBytes(IV_LENGTH);
@@ -20,7 +23,10 @@ export function encrypt(text: string): string {
 
 export function decrypt(text: string): string {
   if (!ENCRYPTION_KEY || ENCRYPTION_KEY.length !== 32) {
-    throw new Error("Encryption key must be 32 characters long");
+    if (process.env.NODE_ENV === "production" && process.env.NEXT_PHASE !== "phase-production-build") {
+      throw new Error("Encryption key must be 32 characters long");
+    }
+    return text; // Return as-is for build/dev if key is invalid
   }
 
   const textParts = text.split(":");
