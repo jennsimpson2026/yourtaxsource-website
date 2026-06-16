@@ -71,6 +71,6 @@ export const { POST } = serve<{
         status: "successful",
         updatedAt: new Date(),
       })
-      .where(eq(workflows.id, context.workflowInstanceId));
+      .where(eq(workflows.id, context.workflowRunId));
   });
 });
