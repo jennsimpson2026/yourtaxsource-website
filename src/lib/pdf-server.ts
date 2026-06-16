@@ -9,5 +9,5 @@ export async function generateEngagementLetterPDF(props: {
   content: string;
   year: number;
 }) {
-  return await renderToBuffer(React.createElement(EngagementLetterPDF, props));
+  return await renderToBuffer(React.createElement(EngagementLetterPDF, props) as any);
 }
