@@ -48,7 +48,7 @@ export async function signEngagementLetter(letterId: string, signatureData: stri
     });
 
     // Trigger Upstash Workflow
-    const { workflowInstanceId } = await workflowClient.trigger({
+    const { workflowRunId } = await workflowClient.trigger({
       url: `${process.env.NEXTAUTH_URL}/api/workflow/engagement-letter`,
       body: {
         letterId,
@@ -65,9 +65,9 @@ export async function signEngagementLetter(letterId: string, signatureData: stri
 
     // Update workflow entry with real Upstash ID if needed, 
     // or just use the one we created.
-    // Actually, trigger() returns workflowInstanceId.
+    // Actually, trigger() returns workflowRunId.
     await db.update(workflows)
-      .set({ id: workflowInstanceId })
+      .set({ id: workflowRunId })
       .where(eq(workflows.id, workflowId));
 
     // Update letter status to "PROCESSING" or similar?

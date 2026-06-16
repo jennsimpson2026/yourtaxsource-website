@@ -1,0 +1,24 @@
+
+> your-tax-source@0.1.0 build
+> next build
+
+▲ Next.js 16.2.6 (Turbopack)
+- Environments: .env.local, .env.production
+
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+  Creating an optimized production build ...
+✓ Compiled successfully in 31.9s
+  Running TypeScript ...
+Failed to type check.
+
+./src/actions/engagement.ts:51:13
+Type error: Property 'workflowInstanceId' does not exist on type '{ workflowRunId: string; }'.
+
+  [90m49 |[0m
+  [90m50 |[0m     [90m// Trigger Upstash Workflow[0m
+[31m[1m>[0m [90m51 |[0m     [36mconst[0m { workflowInstanceId } = [36mawait[0m workflowClient.trigger({
+  [90m   |[0m             [31m[1m^[0m
+  [90m52 |[0m       url: [32m`[0m${process.env.[33mNEXTAUTH_URL[0m[32m}/api/workflow/engagement-letter`[0m,
+  [90m53 |[0m       body: {
+  [90m54 |[0m         letterId,
+Next.js build worker exited with code: 1 and signal: null

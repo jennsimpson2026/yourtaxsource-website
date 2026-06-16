@@ -2,8 +2,7 @@
 
 import { db } from "@/lib/db";
 import { taxReturns, auditLogs, users, profiles, invoices } from "@/lib/db/schema";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { eq, and } from "drizzle-orm";
 import { notifyStatusUpdate, notifyAdminPaymentReceived } from "@/lib/notifications";
@@ -18,7 +17,7 @@ export async function updateReturnDetails(returnId: string, data: {
   manualRelease?: boolean;
   isComplimentary?: boolean;
 }) {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session?.user || (session.user as any).role === "CLIENT") throw new Error("Unauthorized");
 
   const updateData: any = { updatedAt: new Date() };
@@ -90,7 +89,7 @@ export async function updateReturnDetails(returnId: string, data: {
 }
 
 export async function updateReturnStatus(returnId: string, status: string) {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session?.user || (session.user as any).role === "CLIENT") throw new Error("Unauthorized");
 
   const [updatedReturn] = await db.update(taxReturns)
@@ -124,7 +123,7 @@ export async function updateReturnStatus(returnId: string, status: string) {
 }
 
 export async function manualReleaseReturn(returnId: string) {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session?.user || (session.user as any).role === "CLIENT") throw new Error("Unauthorized");
 
   await db.update(taxReturns)
@@ -139,7 +138,7 @@ export async function manualReleaseReturn(returnId: string) {
 }
 
 export async function markReturnAsComplimentary(returnId: string) {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session?.user || (session.user as any).role === "CLIENT") throw new Error("Unauthorized");
 
   await db.update(taxReturns)
@@ -154,7 +153,7 @@ export async function markReturnAsComplimentary(returnId: string) {
 }
 
 export async function setReturnFee(returnId: string, amount: number) {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session?.user || (session.user as any).role === "CLIENT") throw new Error("Unauthorized");
 
   // Find existing invoice or create new one
