@@ -64,6 +64,11 @@ export default function LoginPage() {
                   className="mt-1 block w-full rounded-md border p-2"
                 />
               </div>
+              <div className="flex items-center justify-end">
+                <Link href="/auth/forgot-password" className="text-sm text-blue-600 hover:underline">
+                  Forgot password?
+                </Link>
+              </div>
             </>
           ) : (
             <div>

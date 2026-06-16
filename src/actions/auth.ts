@@ -1,11 +1,13 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { users, auditLogs } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { users, auditLogs, verificationTokens } from "@/lib/db/schema";
+import { eq, and } from "drizzle-orm";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import { authenticator } from "@/lib/otplib";
 import { revalidatePath } from "next/cache";
+import { sendEmail } from "@/lib/notifications";
 
 export async function signUp(formData: FormData) {
   const email = formData.get("email") as string;
@@ -50,19 +52,21 @@ export async function setupPassword(formData: FormData) {
     return { error: "All fields are required" };
   }
 
-  // Simple validation for the "AUTO_GEN" token we created in onboarding
-  if (!token.startsWith("AUTO_GEN_")) {
+  // Validate the token from verification_tokens table
+  const verificationToken = await db.query.verificationTokens.findFirst({
+    where: (vt, { and, eq }) => and(eq(vt.identifier, email), eq(vt.token, token)),
+  });
+
+  if (!verificationToken || verificationToken.expires < new Date()) {
     return { error: "Invalid or expired setup token" };
   }
 
-  const userId = token.replace("AUTO_GEN_", "");
-
   const user = await db.query.users.findFirst({
-    where: (u, { and, eq }) => and(eq(u.id, userId), eq(u.email, email)),
+    where: eq(users.email, email),
   });
 
   if (!user) {
-    return { error: "User not found or email mismatch" };
+    return { error: "User not found" };
   }
 
   if (user.password) {
@@ -72,9 +76,21 @@ export async function setupPassword(formData: FormData) {
   const hashedPassword = await bcrypt.hash(password, 10);
 
   try {
-    await db.update(users)
-      .set({ password: hashedPassword })
-      .where(eq(users.id, userId));
+    await db.transaction(async (tx) => {
+      await tx.update(users)
+        .set({ password: hashedPassword, emailVerified: new Date() })
+        .where(eq(users.id, user.id));
+
+      await tx.delete(verificationTokens)
+        .where(and(eq(verificationTokens.identifier, email), eq(verificationTokens.token, token)));
+
+      await tx.insert(auditLogs).values({
+        userId: user.id,
+        action: "SETUP_PASSWORD",
+        targetType: "USER",
+        targetId: user.id,
+      });
+    });
 
     return { success: true };
   } catch (error) {
@@ -126,4 +142,75 @@ export async function verifyAndEnableMfa(userId: string, token: string) {
 
   revalidatePath("/");
   return { success: true };
+}
+
+export async function forgotPassword(formData: FormData) {
+  const email = formData.get("email") as string;
+  if (!email) return { error: "Email is required" };
+
+  const user = await db.query.users.findFirst({
+    where: eq(users.email, email.toLowerCase()),
+  });
+
+  // Security best practice: don't reveal if user exists
+  if (!user) return { success: true };
+
+  const token = crypto.randomUUID();
+  const expires = new Date(Date.now() + 1 * 60 * 60 * 1000); // 1 hour
+
+  await db.insert(verificationTokens).values({
+    identifier: email.toLowerCase(),
+    token,
+    expires,
+  });
+
+  const resetLink = `${process.env.NEXTAUTH_URL}/auth/reset-password?email=${encodeURIComponent(email)}&token=${token}`;
+
+  await sendEmail({
+    to: email,
+    subject: "Reset your password - Your Tax Source",
+    html: `<p>Click <a href="${resetLink}">here</a> to reset your password. This link expires in 1 hour.</p>`
+  });
+
+  return { success: true };
+}
+
+export async function resetPassword(formData: FormData) {
+  const email = formData.get("email") as string;
+  const token = formData.get("token") as string;
+  const password = formData.get("password") as string;
+
+  if (!email || !token || !password) return { error: "All fields are required" };
+
+  const verificationToken = await db.query.verificationTokens.findFirst({
+    where: (vt, { and, eq }) => and(eq(vt.identifier, email.toLowerCase()), eq(vt.token, token)),
+  });
+
+  if (!verificationToken || verificationToken.expires < new Date()) {
+    return { error: "Invalid or expired reset token" };
+  }
+
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  try {
+    await db.transaction(async (tx) => {
+      await tx.update(users).set({ password: hashedPassword }).where(eq(users.email, email.toLowerCase()));
+      await tx.delete(verificationTokens).where(and(eq(verificationTokens.identifier, email.toLowerCase()), eq(verificationTokens.token, token)));
+      
+      const user = await tx.query.users.findFirst({ where: eq(users.email, email.toLowerCase()) });
+      if (user) {
+        await tx.insert(auditLogs).values({
+          userId: user.id,
+          action: "RESET_PASSWORD",
+          targetType: "USER",
+          targetId: user.id,
+        });
+      }
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("Reset password error:", error);
+    return { error: "Failed to reset password" };
+  }
 }

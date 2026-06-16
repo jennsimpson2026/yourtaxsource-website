@@ -32,6 +32,18 @@ const envSchema = z.object({
   HELCIM_ACCOUNT_ID: z.string().optional(),
   HELCIM_API_TOKEN: z.string().optional(),
 
+  // QuickBooks Online
+  QBO_CLIENT_ID: z.string().optional(),
+  QBO_CLIENT_SECRET: z.string().optional(),
+  QBO_REDIRECT_URI: z.string().optional(),
+  QBO_ENVIRONMENT: z.enum(["sandbox", "production"]).default("sandbox"),
+
+  // Upstash Workflow / QStash
+  QSTASH_TOKEN: z.string().optional(),
+  QSTASH_CURRENT_SIGNING_KEY: z.string().optional(),
+  QSTASH_NEXT_SIGNING_KEY: z.string().optional(),
+  UPSTASH_WORKFLOW_URL: z.string().optional(),
+
   // Admin/Misc
   ADMIN_EMAIL: z.string().email(),
   CONTACT_FORM_RECIPIENT: z.string().email(),

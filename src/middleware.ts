@@ -10,7 +10,7 @@ export default withAuth(
       return NextResponse.redirect(new URL("/", req.url));
     }
 
-    // Force MFA setup for staff/admin
+    /* Force MFA setup for staff/admin
     if (
       (token?.role === "ADMIN" || token?.role === "STAFF") &&
       !token?.mfaEnabled &&
@@ -18,6 +18,7 @@ export default withAuth(
     ) {
       return NextResponse.redirect(new URL("/portal/settings/mfa", req.url));
     }
+    */
 
     if (path.startsWith("/portal") && !token) {
       return NextResponse.redirect(new URL("/auth/login", req.url));

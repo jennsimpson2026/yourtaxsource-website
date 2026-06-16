@@ -1,15 +1,16 @@
 "use client";
 
-import { AlertCircle, FileText, ArrowRight, CreditCard } from "lucide-react";
+import { AlertCircle, FileText, ArrowRight, CreditCard, PenTool } from "lucide-react";
 import Link from "next/link";
 
 interface OpenRequestsProps {
   requests: any[];
   unpaidInvoices?: any[];
+  pendingLetters?: any[];
 }
 
-export function OpenRequests({ requests, unpaidInvoices = [] }: OpenRequestsProps) {
-  if (requests.length === 0 && unpaidInvoices.length === 0) return null;
+export function OpenRequests({ requests, unpaidInvoices = [], pendingLetters = [] }: OpenRequestsProps) {
+  if (requests.length === 0 && unpaidInvoices.length === 0 && pendingLetters.length === 0) return null;
 
   return (
     <section className="bg-brand-orange/10 rounded-[2rem] p-8 md:p-10 border border-brand-orange/20 shadow-sm">
@@ -24,6 +25,31 @@ export function OpenRequests({ requests, unpaidInvoices = [] }: OpenRequestsProp
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Pending Engagement Letters */}
+        {pendingLetters.map((letter) => (
+          <div key={letter.id} className="bg-white p-6 rounded-2xl shadow-sm border border-brand-orange/10 flex items-center justify-between group">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 bg-brand-soft-gray rounded-xl flex items-center justify-center text-brand-orange">
+                <PenTool size={20} />
+              </div>
+              <div>
+                <p className="font-bold text-brand-black">
+                  Sign Engagement Letter
+                </p>
+                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">
+                  Required for {letter.year || 'Current'} Tax Year
+                </p>
+              </div>
+            </div>
+            <Link 
+              href={`/portal/engagement-letter?id=${letter.id}`}
+              className="text-brand-orange hover:translate-x-1 transition-transform"
+            >
+              <ArrowRight size={20} />
+            </Link>
+          </div>
+        ))}
+
         {/* Unpaid Invoices */}
         {unpaidInvoices.map((invoice) => (
           <div key={invoice.id} className="bg-white p-6 rounded-2xl shadow-sm border border-brand-orange/10 flex items-center justify-between group">

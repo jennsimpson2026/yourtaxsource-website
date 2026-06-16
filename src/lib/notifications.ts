@@ -105,6 +105,41 @@ export async function notifyStatusUpdate(email: string, phone: string | null, st
   }
 }
 
+export async function notifyDocumentStatusUpdate(email: string, phone: string | null, fileName: string, status: string, feedback?: string) {
+  const subject = `Document ${status.charAt(0).toUpperCase() + status.slice(1).toLowerCase()} - Your Tax Source`;
+  let body = `Your document "${fileName}" has been ${status.toLowerCase().replace("_", " ")}.`;
+  if (feedback) {
+    body += `\n\nFeedback: ${feedback}`;
+  }
+  body += `\n\nLog in to your portal to view more details.`;
+
+  await sendEmail({
+    to: email,
+    subject,
+    html: `<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+      <h2 style="color: #6d28d9;">Document Status Updated</h2>
+      <p>Hi there,</p>
+      <p>The status of your uploaded document has been updated:</p>
+      <div style="background-color: #f9fafb; padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px solid #e5e7eb;">
+        <strong>Document:</strong> ${fileName}<br>
+        <strong>Status:</strong> ${status.toLowerCase().replace("_", " ")}
+        ${feedback ? `<br><strong>Feedback:</strong> ${feedback}` : ""}
+      </div>
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="${process.env.NEXTAUTH_URL}/portal/documents" style="background-color: #6d28d9; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">View in Portal</a>
+      </div>
+      <p>Thank you!</p>
+    </div>`,
+  });
+
+  if (phone) {
+    await sendSMS({
+      to: phone,
+      body,
+    });
+  }
+}
+
 export async function notifyPaymentReceived(email: string, phone: string | null, amount: number) {
   const subject = "Payment Confirmed";
   const body = `We have received your payment of $${amount}. Thank you!`;
@@ -278,6 +313,121 @@ export async function notifyAppointmentScheduled({
   });
 }
 
+export async function notifyUpcomingAppointmentReminder({
+  email,
+  phone,
+  name,
+  startTime,
+}: {
+  email: string;
+  phone: string | null;
+  name: string;
+  startTime: Date;
+}) {
+  const dateStr = startTime.toLocaleString("en-US", { 
+    weekday: 'long', 
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZoneName: 'short'
+  });
+  const subject = "Reminder: Your Tax Appointment is Tomorrow";
+  const body = "Hi " + (name || "there") + ", this is a reminder that you have an appointment with Your Tax Source scheduled for tomorrow at " + dateStr + ". Please ensure all requested documents are uploaded to your portal.";
+
+  await sendEmail({
+    to: email,
+    subject,
+    html: `<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+      <h2 style="color: #6d28d9;">Upcoming Appointment Reminder</h2>
+      <p>Hi ${name || "there"},</p>
+      <p>This is a friendly reminder of your upcoming tax appointment:</p>
+      <div style="background-color: #f9fafb; padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px solid #e5e7eb;">
+        <strong>Time:</strong> ${dateStr}
+      </div>
+      <p>Please ensure you have uploaded all necessary tax documents to your portal at least 24 hours before our meeting.</p>
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="${process.env.NEXTAUTH_URL}/portal" style="background-color: #6d28d9; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">Access Your Portal</a>
+      </div>
+      <p>We look forward to seeing you!</p>
+    </div>`,
+  });
+
+  if (phone) {
+    await sendSMS({ to: phone, body });
+  }
+}
+
+export async function notifyUnpaidInvoiceReminder({
+  email,
+  phone,
+  name,
+  amount,
+  invoiceId,
+}: {
+  email: string;
+  phone: string | null;
+  name: string;
+  amount: number;
+  invoiceId: string;
+}) {
+  const subject = "Reminder: Unpaid Invoice from Your Tax Source";
+  const body = "Hi " + (name || "there") + ", this is a reminder regarding your unpaid invoice for $" + amount.toFixed(2) + ". You can pay securely through your client portal.";
+
+  await sendEmail({
+    to: email,
+    subject,
+    html: `<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+      <h2 style="color: #6d28d9;">Payment Reminder</h2>
+      <p>Hi ${name || "there"},</p>
+      <p>This is a friendly reminder that you have an outstanding invoice for your tax services:</p>
+      <div style="background-color: #f9fafb; padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px solid #e5e7eb;">
+        <strong>Invoice:</strong> #${invoiceId.slice(0, 8)}<br>
+        <strong>Amount Due:</strong> &#36;${amount.toFixed(2)}
+      </div>
+      <p>You can view and pay your invoice securely by clicking the button below:</p>
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="${process.env.NEXTAUTH_URL}/portal#invoices" style="background-color: #6d28d9; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">Pay Invoice</a>
+      </div>
+      <p>Thank you for your business!</p>
+    </div>`,
+  });
+
+  if (phone) {
+    await sendSMS({ to: phone, body });
+  }
+}
+
+export async function notifyActionNeededReminder({
+  email,
+  phone,
+  name,
+}: {
+  email: string;
+  phone: string | null;
+  name: string;
+}) {
+  const subject = "Action Required: Your Tax Return Status";
+  const body = "Hi " + (name || "there") + ", your tax return is currently on hold awaiting your action (missing documents or info). Please log in to your portal to see what's needed.";
+
+  await sendEmail({
+    to: email,
+    subject,
+    html: `<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+      <h2 style="color: #6d28d9;">Action Needed</h2>
+      <p>Hi ${name || "there"},</p>
+      <p>We are currently working on your tax return, but we need some additional information or documents from you to proceed.</p>
+      <p>Please log in to your secure portal to view the open requests and upload any missing items.</p>
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="${process.env.NEXTAUTH_URL}/portal" style="background-color: #6d28d9; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">Go to Portal</a>
+      </div>
+      <p>Thank you!</p>
+    </div>`,
+  });
+
+  if (phone) {
+    await sendSMS({ to: phone, body });
+  }
+}
+
 export async function notifyContactFormSubmission({
   firstName,
   lastName,
@@ -311,5 +461,46 @@ export async function notifyContactFormSubmission({
 
   if (!result && process.env.RESEND_API_KEY) {
     throw new Error("Failed to send email notification");
+  }
+}
+
+export async function notifyNewMessage({
+  toEmail,
+  toPhone,
+  senderName,
+  content,
+  isToStaff = false,
+}: {
+  toEmail: string;
+  toPhone: string | null;
+  senderName: string;
+  content: string;
+  isToStaff?: boolean;
+}) {
+  const subject = `[Portal] New Message from ${senderName}`;
+  const portalUrl = isToStaff ? `${process.env.NEXTAUTH_URL}/admin` : `${process.env.NEXTAUTH_URL}/portal/messages`;
+  const body = `You have a new message from ${senderName}. Log in to the portal to view and respond.`;
+
+  await sendEmail({
+    to: toEmail,
+    subject,
+    html: `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+        <h2 style="color: #6d28d9;">New Message</h2>
+        <p>Hi,</p>
+        <p>You have received a new message in the Your Tax Source portal:</p>
+        <div style="background-color: #f9fafb; padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px solid #e5e7eb; font-style: italic;">
+          "${content.length > 100 ? content.substring(0, 100) + "..." : content}"
+        </div>
+        <p>Log in to view the full message and respond:</p>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${portalUrl}" style="background-color: #6d28d9; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">View Message</a>
+        </div>
+      </div>
+    `,
+  });
+
+  if (toPhone && !isToStaff) {
+    await sendSMS({ to: toPhone, body });
   }
 }

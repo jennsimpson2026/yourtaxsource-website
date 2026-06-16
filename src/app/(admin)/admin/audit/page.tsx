@@ -1,16 +1,30 @@
 import { db } from "@/lib/db";
 import { auditLogs, users } from "@/lib/db/schema";
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, sql } from "drizzle-orm";
 import { Clock, Shield, User as UserIcon, Activity } from "lucide-react";
+import Link from "next/link";
 
-export default async function AuditLogPage() {
+export default async function AuditLogPage({
+  searchParams,
+}: {
+  searchParams: { page?: string };
+}) {
+  const page = searchParams.page ? parseInt(searchParams.page) : 1;
+  const limit = 50;
+  const offset = (page - 1) * limit;
+
   const logs = await db.query.auditLogs.findMany({
     with: {
       user: true,
     },
     orderBy: [desc(auditLogs.createdAt)],
-    limit: 100,
+    limit,
+    offset,
   });
+
+  const totalLogsResult = await db.select({ count: sql<number>`count(*)` }).from(auditLogs);
+  const totalLogs = totalLogsResult[0].count;
+  const totalPages = Math.ceil(totalLogs / limit);
 
   return (
     <div className="space-y-8">
@@ -79,6 +93,31 @@ export default async function AuditLogPage() {
           </div>
         )}
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex justify-center gap-2">
+          {page > 1 && (
+            <Link
+              href={`/admin/audit?page=${page - 1}`}
+              className="px-4 py-2 bg-white border border-gray-100 rounded-xl text-xs font-bold text-brand-navy hover:bg-brand-cloud transition-colors"
+            >
+              Previous
+            </Link>
+          )}
+          <span className="px-4 py-2 text-xs font-bold text-gray-400">
+            Page {page} of {totalPages}
+          </span>
+          {page < totalPages && (
+            <Link
+              href={`/admin/audit?page=${page + 1}`}
+              className="px-4 py-2 bg-white border border-gray-100 rounded-xl text-xs font-bold text-brand-navy hover:bg-brand-cloud transition-colors"
+            >
+              Next
+            </Link>
+          )}
+        </div>
+      )}
     </div>
   );
 }

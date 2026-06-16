@@ -31,7 +31,7 @@ export function DocumentUpload({ returnId }: { returnId?: string }) {
 
     try {
       // 1. Get pre-signed URL
-      const { uploadUrl, s3Key } = await getUploadUrl(
+      const { uploadUrl, s3Key, taxYear } = await getUploadUrl(
         file.name,
         file.type,
         category,
@@ -58,6 +58,7 @@ export function DocumentUpload({ returnId }: { returnId?: string }) {
         fileSize: file.size,
         s3Key: s3Key,
         category,
+        taxYear,
         returnId,
       });
 

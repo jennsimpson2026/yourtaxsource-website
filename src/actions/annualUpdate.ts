@@ -126,6 +126,7 @@ export async function submitAnnualUpdate(data: any) {
       fileType: "application/pdf",
       fileSize: buffer.length,
       category: "ADMIN_ONLY",
+      taxYear: currentYear,
     });
 
     // 8. Audit Log

@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { createInvoice } from "@/actions/invoices";
-import { CreditCard, Plus, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { manualSyncInvoice } from "@/actions/admin/qbo";
+import { CreditCard, Plus, Loader2, CheckCircle2, AlertCircle, RefreshCw } from "lucide-react";
 
 interface InvoiceManagerProps {
   returnId: string;
@@ -28,6 +29,24 @@ export function InvoiceManager({ returnId, existingInvoices }: InvoiceManagerPro
     } catch (error) {
       console.error("Error creating invoice:", error);
       alert("Failed to create invoice.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSyncToQbo = async (invoiceId: string) => {
+    setLoading(true);
+    try {
+      const result = await manualSyncInvoice(invoiceId);
+      if (result.success) {
+        alert("Successfully synced to QuickBooks!");
+        window.location.reload();
+      } else {
+        alert("Sync failed: " + result.error);
+      }
+    } catch (error) {
+      console.error("QBO Sync Error:", error);
+      alert("An unexpected error occurred during sync.");
     } finally {
       setLoading(false);
     }
@@ -94,6 +113,20 @@ export function InvoiceManager({ returnId, existingInvoices }: InvoiceManagerPro
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
+                  {invoice.qboSalesReceiptId && (
+                    <span className="flex items-center gap-1 text-[10px] font-black text-brand-purple uppercase bg-brand-lavender/30 px-2 py-1 rounded-md" title={`QBO ID: ${invoice.qboSalesReceiptId}`}>
+                      QBO Synced
+                    </span>
+                  )}
+                  {invoice.status === 'PAID' && !invoice.qboSalesReceiptId && (
+                    <button
+                      onClick={() => handleSyncToQbo(invoice.id)}
+                      disabled={loading}
+                      className="flex items-center gap-1 text-[10px] font-black text-brand-navy hover:text-brand-purple uppercase bg-gray-100 hover:bg-brand-lavender/20 px-2 py-1 rounded-md transition-colors disabled:opacity-50"
+                    >
+                      <RefreshCw size={10} className={loading ? "animate-spin" : ""} /> Sync QBO
+                    </button>
+                  )}
                   {invoice.status === 'PAID' ? (
                     <span className="flex items-center gap-1 text-[10px] font-black text-green-600 uppercase bg-green-50 px-2 py-1 rounded-md">
                       <CheckCircle2 size={12} /> Paid

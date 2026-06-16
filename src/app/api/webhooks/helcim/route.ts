@@ -4,6 +4,7 @@ import { invoices, taxReturns, auditLogs } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { notifyPaymentReceived, notifyAdminPaymentReceived } from "@/lib/notifications";
 import { releaseReturnDocuments } from "@/lib/returns";
+import { syncPaymentToQbo } from "@/lib/qbo";
 
 export async function POST(req: Request) {
   try {
@@ -59,6 +60,21 @@ export async function POST(req: Request) {
           method: "Helcim",
           invoiceReference: invoice.id,
         });
+
+        // Sync to QuickBooks
+        try {
+          await syncPaymentToQbo(invoice.id);
+        } catch (qboError) {
+          console.error("Failed to sync payment to QuickBooks:", qboError);
+          // Don't fail the webhook if QBO sync fails, but log it
+          await db.insert(auditLogs).values({
+            userId: invoice.userId,
+            action: "QBO_SYNC_FAILED",
+            targetType: "INVOICE",
+            targetId: invoice.id,
+            metadata: JSON.stringify({ error: (qboError as any).message }),
+          });
+        }
       }
     }
 

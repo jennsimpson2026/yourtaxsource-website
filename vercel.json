@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/retention?key=YOUR_CRON_SECRET",
       "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/reminders?key=YOUR_CRON_SECRET",
+      "schedule": "0 10 * * *"
     }
   ]
 }

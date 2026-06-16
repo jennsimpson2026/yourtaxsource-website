@@ -3,7 +3,7 @@ import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { SignOutButton } from "@/components/SignOutButton";
-import { Users, FileText, LayoutDashboard, ShieldCheck, Home, BookOpen } from "lucide-react";
+import { Users, FileText, LayoutDashboard, ShieldCheck, Home, BookOpen, Settings, MessageSquare } from "lucide-react";
 
 export default async function AdminLayout({
   children,
@@ -36,8 +36,10 @@ export default async function AdminLayout({
           <AdminNavLink href="/admin" icon={<LayoutDashboard size={20} />} label="Dashboard" />
           <AdminNavLink href="/admin/users" icon={<Users size={20} />} label="Users" />
           <AdminNavLink href="/admin/returns" icon={<FileText size={20} />} label="Tax Returns" />
+          <AdminNavLink href="/admin/messages" icon={<MessageSquare size={20} />} label="Messages" />
           <AdminNavLink href="/admin/blog" icon={<BookOpen size={20} />} label="Blog CMS" />
           <AdminNavLink href="/admin/audit" icon={<ShieldCheck size={20} />} label="Audit Logs" />
+          <AdminNavLink href="/admin/settings" icon={<Settings size={20} />} label="Settings" />
           
           <div className="pt-8">
             <p className="text-[10px] uppercase tracking-[0.2em] text-white/30 font-bold mb-4 ml-2">Quick Links</p>

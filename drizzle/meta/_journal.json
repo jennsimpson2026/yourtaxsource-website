@@ -15,6 +15,27 @@
       "when": 1781118578663,
       "tag": "0001_foamy_franklin_richards",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1781496800871,
+      "tag": "0002_amused_the_order",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1781497374805,
+      "tag": "0003_familiar_black_widow",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1781497427131,
+      "tag": "0004_naive_molten_man",
+      "breakpoints": true
     }
   ]
 }

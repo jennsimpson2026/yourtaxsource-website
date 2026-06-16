@@ -12,8 +12,17 @@ export const users = sqliteTable("users", {
   emailVerified: integer("email_verified", { mode: "timestamp" }),
   image: text("image"),
   lastLoginAt: integer("last_login_at", { mode: "timestamp" }),
+  lastReminderAt: integer("last_reminder_at", { mode: "timestamp" }),
   createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),
+}, (table) => ({
+  roleIdx: index("users_role_idx").on(table.role),
+}));
+
+export const verificationTokens = sqliteTable("verification_tokens", {
+  identifier: text("identifier").notNull(),
+  token: text("token").primaryKey(),
+  expires: integer("expires", { mode: "timestamp" }).notNull(),
 });
 
 export const usersRelations = relations(users, ({ many, one }) => ({
@@ -24,6 +33,8 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   posts: many(posts),
   auditLogs: many(auditLogs),
   appointments: many(appointments),
+  sentMessages: many(messages, { relationName: "sentMessages" }),
+  receivedMessages: many(messages, { relationName: "receivedMessages" }),
   profile: one(profiles, {
     fields: [users.id],
     references: [profiles.userId],
@@ -43,6 +54,7 @@ export const profiles = sqliteTable("profiles", {
   zipCode: text("zip_code"),
   encryptedSsn: text("encrypted_ssn"),
   dateOfBirth: text("date_of_birth"),
+  qboCustomerId: text("qbo_customer_id"),
 }, (table) => ({
   userIdIdx: index("profiles_user_id_idx").on(table.userId),
 }));
@@ -72,6 +84,8 @@ export const taxReturns = sqliteTable("tax_returns", {
   updatedAt: integer("updated_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),
 }, (table) => ({
   clientIdIdx: index("tax_returns_client_id_idx").on(table.clientId),
+  yearIdx: index("tax_returns_year_idx").on(table.year),
+  statusIdx: index("tax_returns_status_idx").on(table.status),
 }));
 
 export const taxReturnsRelations = relations(taxReturns, ({ one, many }) => ({
@@ -81,6 +95,7 @@ export const taxReturnsRelations = relations(taxReturns, ({ one, many }) => ({
   }),
   documents: many(documents),
   invoices: many(invoices),
+  engagementLetters: many(engagementLetters),
   annualUpdate: one(annualUpdates, {
     fields: [taxReturns.id],
     references: [annualUpdates.returnId],
@@ -102,12 +117,21 @@ export const documents = sqliteTable("documents", {
   fileType: text("file_type").notNull(),
   fileSize: integer("file_size").notNull(),
   category: text("category").notNull(),
+  taxYear: integer("tax_year"),
   isLocked: integer("is_locked", { mode: "boolean" }).default(true).notNull(),
+  status: text("status").default("PENDING").notNull(), // 'PENDING', 'ACCEPTED', 'REJECTED', 'CLARIFICATION_REQUESTED'
+  reviewFeedback: text("review_feedback"),
+  reviewedAt: integer("reviewed_at", { mode: "timestamp" }),
+  reviewedBy: text("reviewed_by").references(() => users.id),
   uploadedAt: integer("uploaded_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),
   deletedAt: integer("deleted_at", { mode: "timestamp" }),
 }, (table) => ({
   userIdIdx: index("documents_user_id_idx").on(table.userId),
   returnIdIdx: index("documents_return_id_idx").on(table.returnId),
+  categoryIdx: index("documents_category_idx").on(table.category),
+  statusIdx: index("documents_status_idx").on(table.status),
+  uploadedAtIdx: index("documents_uploaded_at_idx").on(table.uploadedAt),
+  taxYearIdx: index("documents_tax_year_idx").on(table.taxYear),
 }));
 
 export const documentsRelations = relations(documents, ({ one }) => ({
@@ -159,6 +183,9 @@ export const auditLogs = sqliteTable("audit_logs", {
   createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),
 }, (table) => ({
   userIdIdx: index("audit_logs_user_id_idx").on(table.userId),
+  actionIdx: index("audit_logs_action_idx").on(table.action),
+  targetIdIdx: index("audit_logs_target_id_idx").on(table.targetId),
+  createdAtIdx: index("audit_logs_created_at_idx").on(table.createdAt),
 }));
 
 export const auditLogsRelations = relations(auditLogs, ({ one }) => ({
@@ -177,6 +204,8 @@ export const invoices = sqliteTable("invoices", {
     .references(() => taxReturns.id)
     .notNull(),
   helcimInvoiceId: text("helcim_invoice_id"),
+  qboInvoiceId: text("qbo_invoice_id"),
+  qboSalesReceiptId: text("qbo_sales_receipt_id"),
   amount: real("amount").notNull(),
   currency: text("currency").default("USD").notNull(),
   status: text("status").default("UNPAID").notNull(),
@@ -186,6 +215,7 @@ export const invoices = sqliteTable("invoices", {
 }, (table) => ({
   userIdIdx: index("invoices_user_id_idx").on(table.userId),
   returnIdIdx: index("invoices_return_id_idx").on(table.returnId),
+  statusIdx: index("invoices_status_idx").on(table.status),
 }));
 
 export const invoicesRelations = relations(invoices, ({ one }) => ({
@@ -195,6 +225,29 @@ export const invoicesRelations = relations(invoices, ({ one }) => ({
   }),
   taxReturn: one(taxReturns, {
     fields: [invoices.returnId],
+    references: [taxReturns.id],
+  }),
+}));
+
+export const engagementLetters = sqliteTable("engagement_letters", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  returnId: text("return_id")
+    .references(() => taxReturns.id)
+    .notNull(),
+  status: text("status").default("PENDING").notNull(), // 'PENDING', 'SIGNED'
+  content: text("content").notNull(),
+  signedAt: integer("signed_at", { mode: "timestamp" }),
+  signatureData: text("signature_data"),
+  s3Key: text("s3_key"),
+  createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),
+}, (table) => ({
+  returnIdIdx: index("engagement_letters_return_id_idx").on(table.returnId),
+}));
+
+export const engagementLettersRelations = relations(engagementLetters, ({ one }) => ({
+  taxReturn: one(taxReturns, {
+    fields: [engagementLetters.returnId],
     references: [taxReturns.id],
   }),
 }));
@@ -302,3 +355,56 @@ export const postsRelations = relations(posts, ({ one }) => ({
     references: [users.id],
   }),
 }));
+
+export const qboConnection = sqliteTable("qbo_connection", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  accessToken: text("access_token").notNull(),
+  refreshToken: text("refresh_token").notNull(),
+  expiresAt: integer("expires_at", { mode: "timestamp" }).notNull(),
+  refreshTokenExpiresAt: integer("refresh_token_expires_at", { mode: "timestamp" }).notNull(),
+  realmId: text("realm_id").notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),
+});
+
+export const messages = sqliteTable("messages", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  senderId: text("sender_id").references(() => users.id).notNull(),
+  recipientId: text("recipient_id").references(() => users.id).notNull(),
+  content: text("content").notNull(),
+  taxReturnId: text("tax_return_id").references(() => taxReturns.id),
+  isRead: integer("is_read", { mode: "boolean" }).default(false).notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),
+}, (table) => ({
+  senderIdIdx: index("messages_sender_id_idx").on(table.senderId),
+  recipientIdIdx: index("messages_recipient_id_idx").on(table.recipientId),
+  taxReturnIdIdx: index("messages_tax_return_id_idx").on(table.taxReturnId),
+}));
+
+export const messagesRelations = relations(messages, ({ one }) => ({
+  sender: one(users, {
+    fields: [messages.senderId],
+    references: [users.id],
+    relationName: "sentMessages",
+  }),
+  recipient: one(users, {
+    fields: [messages.recipientId],
+    references: [users.id],
+    relationName: "receivedMessages",
+  }),
+  taxReturn: one(taxReturns, {
+    fields: [messages.taxReturnId],
+    references: [taxReturns.id],
+  }),
+}));
+
+export const workflows = sqliteTable("workflows", {
+  id: text("id").primaryKey(), // Upstash Workflow ID
+  name: text("name").notNull(),
+  status: text("status").notNull(), // 'running', 'failed', 'successful'
+  data: text("data"), // JSON input
+  result: text("result"), // JSON output
+  error: text("error"),
+  createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),
+});

@@ -10,10 +10,25 @@ interface Document {
   category: string;
   uploadedAt: Date;
   isLocked: boolean;
+  status: string;
+  reviewFeedback: string | null;
 }
 
 export function DocumentList({ documents }: { documents: Document[] }) {
   const [downloading, setDownloading] = useState<string | null>(null);
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "ACCEPTED":
+        return <span className="px-2 py-0.5 bg-green-50 text-green-600 rounded-full text-[10px] font-black uppercase">Accepted</span>;
+      case "REJECTED":
+        return <span className="px-2 py-0.5 bg-red-50 text-red-600 rounded-full text-[10px] font-black uppercase">Rejected</span>;
+      case "CLARIFICATION_REQUESTED":
+        return <span className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full text-[10px] font-black uppercase">Action Needed</span>;
+      default:
+        return <span className="px-2 py-0.5 bg-gray-50 text-gray-400 rounded-full text-[10px] font-black uppercase">Pending Review</span>;
+    }
+  };
 
   async function handleDownload(docId: string) {
     setDownloading(docId);
@@ -61,13 +76,21 @@ export function DocumentList({ documents }: { documents: Document[] }) {
                       <FileText size={20} />
                     </div>
                     <span className="text-sm font-bold text-brand-black">{doc.fileName}</span>
-                    {doc.isLocked && (
-                      <div className="flex items-center gap-1 px-2 py-0.5 bg-amber-50 text-amber-600 rounded-full text-[10px] font-black uppercase ml-2">
-                        <Lock size={10} />
-                        Locked
-                      </div>
-                    )}
+                    <div className="flex items-center gap-2 ml-2">
+                      {getStatusBadge(doc.status)}
+                      {doc.isLocked && (
+                        <div className="flex items-center gap-1 px-2 py-0.5 bg-amber-50 text-amber-600 rounded-full text-[10px] font-black uppercase">
+                          <Lock size={10} />
+                          Locked
+                        </div>
+                      )}
+                    </div>
                   </div>
+                  {doc.reviewFeedback && (
+                    <p className="text-[10px] text-red-500 mt-1 font-medium italic">
+                      Note: {doc.reviewFeedback}
+                    </p>
+                  )}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className="text-xs font-medium px-3 py-1 bg-gray-100 text-gray-600 rounded-full">

@@ -1,8 +1,24 @@
 import { db } from "@/lib/db";
-import { users, taxReturns, appointments, auditLogs, profiles } from "@/lib/db/schema";
+import { users, taxReturns, appointments, auditLogs, profiles, verificationTokens, engagementLetters } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { notifyPortalInvitation, sendEmail } from "@/lib/notifications";
 import { BookingDetails } from "@/lib/booking";
+import crypto from "crypto";
+
+const DEFAULT_ENGAGEMENT_LETTER_CONTENT = `
+Dear Neighbor,
+
+This letter is to confirm and specify the terms of our engagement with you and to clarify the nature and extent of the services we will provide. In order to ensure an understanding of our mutual responsibilities, we ask all clients for whom returns are prepared to confirm the following arrangements.
+
+We will prepare your 2024 federal and requested state individual income tax returns from information which you will furnish to us. We will not audit or otherwise verify the data you submit, although it may be necessary to ask you for clarification of some of the information. We will furnish you with questionnaires and/or organizers to guide you in gathering the necessary information.
+
+It is your responsibility to provide all the information required for the preparation of complete and accurate returns. You should retain all the documents, canceled checks and other data that form the basis of income and deductions. These may be necessary to prove the accuracy and completeness of the returns to a taxing authority. You have the final responsibility for the income tax returns and, therefore, you should review them carefully before you sign them.
+
+Our work in connection with the preparation of your income tax returns does not include any procedures designed to discover defalcations or other irregularities, should any exist.
+
+Fees & Payment
+Our fee for these services will be based upon the complexity of the return and the time required at our standard billing rates. All invoices are due and payable upon completion of the tax return and before the return is electronically filed.
+`;
 
 /**
  * Handles the onboarding of a new client after a booking event.
@@ -54,7 +70,28 @@ export async function onboardBookingClient(details: BookingDetails) {
       status: "NOT_STARTED",
     }).returning();
     taxReturn = newReturn;
+
+    // Create default Engagement Letter for new returns
+    await db.insert(engagementLetters).values({
+      returnId: taxReturn.id,
+      content: DEFAULT_ENGAGEMENT_LETTER_CONTENT,
+      status: "PENDING",
+    });
+  } else {
+    // Ensure an engagement letter exists even for existing returns
+    const existingLetter = await db.query.engagementLetters.findFirst({
+      where: eq(engagementLetters.returnId, taxReturn.id),
+    });
+
+    if (!existingLetter) {
+      await db.insert(engagementLetters).values({
+        returnId: taxReturn.id,
+        content: DEFAULT_ENGAGEMENT_LETTER_CONTENT,
+        status: "PENDING",
+      });
+    }
   }
+
 
   // 3. Record the appointment
   let note = "";
@@ -79,8 +116,17 @@ export async function onboardBookingClient(details: BookingDetails) {
 
   // 4. Handle invitation if new user
   if (isNewUser) {
-    // Generate an invitation link (magic link or reset password)
-    const invitationLink = `${process.env.NEXTAUTH_URL}/auth/setup?email=${encodeURIComponent(user.email)}&token=AUTO_GEN_${user.id}`;
+    // Generate an invitation token
+    const token = crypto.randomUUID();
+    const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+    await db.insert(verificationTokens).values({
+      identifier: user.email,
+      token,
+      expires,
+    });
+
+    const invitationLink = `${process.env.NEXTAUTH_URL}/auth/setup?email=${encodeURIComponent(user.email)}&token=${token}`;
     
     await notifyPortalInvitation({
       email: user.email,

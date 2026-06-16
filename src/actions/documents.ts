@@ -8,8 +8,8 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
-import { eq, and, isNotNull, lt, sql } from "drizzle-orm";
-import { notifyDocumentRequest, notifyDocumentUpload } from "@/lib/notifications";
+import { eq, and, isNotNull, lt, sql, desc } from "drizzle-orm";
+import { notifyDocumentRequest, notifyDocumentUpload, notifyDocumentStatusUpdate } from "@/lib/notifications";
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 
 export async function softDeleteDocument(documentId: string) {
@@ -138,7 +138,7 @@ export async function getUploadUrl(fileName: string, fileType: string, category:
 
   const uploadUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
 
-  return { uploadUrl, s3Key };
+  return { uploadUrl, s3Key, taxYear };
 }
 
 export async function registerDocument(data: {
@@ -147,6 +147,7 @@ export async function registerDocument(data: {
   fileSize: number;
   s3Key: string;
   category: string;
+  taxYear?: number;
   returnId?: string;
 }) {
   const session = await getServerSession(authOptions);
@@ -162,6 +163,7 @@ export async function registerDocument(data: {
     fileType: data.fileType,
     fileSize: data.fileSize,
     category: data.category,
+    taxYear: data.taxYear || new Date().getFullYear(),
     // Default isLocked to true if it's a Final Return or provided by Staff
     isLocked: data.category === "Final Returns" || (session.user as any).role !== "CLIENT",
   }).returning();
@@ -222,16 +224,110 @@ export async function getDownloadUrl(documentId: string) {
   return downloadUrl;
 }
 
-export async function getUserDocuments() {
+export async function getUserDocuments(year?: number) {
   const session = await getServerSession(authOptions);
   if (!session?.user) throw new Error("Unauthorized");
 
   const userId = (session.user as any).id;
+  const conditions = [
+    eq(documents.userId, userId),
+    sql`${documents.deletedAt} IS NULL`
+  ];
+
+  if (year) {
+    conditions.push(eq(documents.taxYear, year));
+  }
+
   return db.query.documents.findMany({
-    where: and(
-      eq(documents.userId, userId),
-      sql`${documents.deletedAt} IS NULL`
-    ),
+    where: and(...conditions),
     orderBy: (docs, { desc }) => [desc(docs.uploadedAt)],
   });
+}
+
+export async function getUserDocumentYears() {
+  const session = await getServerSession(authOptions);
+  if (!session?.user) throw new Error("Unauthorized");
+
+  const userId = (session.user as any).id;
+  const result = await db.select({ year: documents.taxYear })
+    .from(documents)
+    .where(and(
+      eq(documents.userId, userId),
+      sql`${documents.deletedAt} IS NULL`,
+      isNotNull(documents.taxYear)
+    ))
+    .groupBy(documents.taxYear)
+    .orderBy(desc(documents.taxYear));
+
+  return result.map(r => r.year as number);
+}
+
+export async function getDocumentReviewQueue() {
+  const session = await getServerSession(authOptions);
+  if (!session?.user || (session.user as any).role === "CLIENT") throw new Error("Unauthorized");
+
+  return db.query.documents.findMany({
+    where: and(
+      eq(documents.status, "PENDING"),
+      sql`${documents.deletedAt} IS NULL`
+    ),
+    with: {
+      user: true,
+      taxReturn: true,
+    },
+    orderBy: (docs, { desc }) => [desc(docs.uploadedAt)],
+  });
+}
+
+export async function reviewDocument(documentId: string, status: "ACCEPTED" | "REJECTED" | "CLARIFICATION_REQUESTED", feedback?: string) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user || (session.user as any).role === "CLIENT") throw new Error("Unauthorized");
+
+  const doc = await db.query.documents.findFirst({
+    where: eq(documents.id, documentId),
+    with: {
+      user: {
+        with: {
+          profile: true,
+        }
+      },
+    }
+  });
+
+  if (!doc) throw new Error("Document not found");
+
+  await db.update(documents)
+    .set({
+      status,
+      reviewFeedback: feedback,
+      reviewedAt: new Date(),
+      reviewedBy: (session.user as any).id,
+    })
+    .where(eq(documents.id, documentId));
+
+  // Audit Log
+  await db.insert(auditLogs).values({
+    userId: (session.user as any).id,
+    action: `REVIEW_DOCUMENT_${status}`,
+    targetType: "DOCUMENT",
+    targetId: documentId,
+    metadata: JSON.stringify({ status, feedback }),
+  });
+
+  // Notification
+  if (doc.user.email) {
+    await notifyDocumentStatusUpdate(
+      doc.user.email, 
+      doc.user.profile?.phone || null, 
+      doc.fileName, 
+      status, 
+      feedback
+    );
+  }
+
+  revalidatePath("/admin/admin/returns");
+  if (doc.returnId) {
+    revalidatePath(`/admin/admin/returns/${doc.returnId}`);
+  }
+  revalidatePath("/portal/documents");
 }

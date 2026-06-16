@@ -33,6 +33,7 @@ export default async function PortalLayout({
             <nav className="hidden md:flex gap-8">
               <NavLink href="/portal" label="Dashboard" />
               <NavLink href="/portal/documents" label="Documents" />
+              <NavLink href="/portal/messages" label="Messages" />
               <NavLink href="/portal/questionnaire" label="Intake Form" />
             </nav>
           </div>

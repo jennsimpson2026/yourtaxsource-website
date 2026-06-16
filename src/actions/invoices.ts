@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db";
 import { invoices, auditLogs, taxReturns, users } from "@/lib/db/schema";
-import { createHelcimInvoice, initializeHelcimPay } from "@/lib/helcim";
+import { createQboInvoice, createIntuitPaymentLink, getOrCreateQboCustomer } from "@/lib/qbo";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
@@ -26,18 +26,15 @@ export async function initializePaymentSession(invoiceId: string) {
   if (!invoice) throw new Error("Invoice not found");
   if (invoice.status === "PAID") throw new Error("Invoice already paid");
 
-  const helcimPaySession = await initializeHelcimPay({
-    amount: Number(invoice.amount),
-    currency: invoice.currency,
-    orderNumber: invoice.id,
-    customerCode: invoice.userId,
-    contactName: (invoice as any).user.name || "Client",
-    contactEmail: (invoice as any).user.email,
-  });
+  // Create or get Intuit Payment Link
+  const paymentLink = await createIntuitPaymentLink(
+    Number(invoice.amount),
+    invoice.currency,
+    `Tax Preparation Services - Invoice #${invoice.id.slice(0, 8)}`
+  );
 
   return {
-    checkoutToken: helcimPaySession.checkoutToken,
-    secretToken: helcimPaySession.secretToken,
+    paymentUrl: paymentLink.url,
   };
 }
 
@@ -54,19 +51,23 @@ export async function createInvoice(returnId: string, amount: number) {
 
   if (!taxReturn) throw new Error("Tax return not found");
 
-  const helcimInvoice = await createHelcimInvoice({
+  // 1. Ensure QBO Customer exists
+  const qboCustomerId = await getOrCreateQboCustomer(taxReturn.clientId);
+
+  // 2. Create QBO Invoice
+  const qboInvoice = await createQboInvoice({
+    customerId: qboCustomerId,
     amount,
-    currency: "USD",
-    contactName: (taxReturn as any).client.name || "Client",
-    contactEmail: (taxReturn as any).client.email,
+    description: `Tax preparation services for ${taxReturn.year}`,
   });
 
+  // 3. Create local invoice
   const [invoice] = await db.insert(invoices).values({
     userId: taxReturn.clientId,
     returnId: taxReturn.id,
     amount: amount,
     currency: "USD",
-    helcimInvoiceId: helcimInvoice.invoiceId,
+    qboInvoiceId: qboInvoice.Invoice.Id,
     status: "UNPAID",
   }).returning();
 
@@ -75,7 +76,7 @@ export async function createInvoice(returnId: string, amount: number) {
     action: "CREATE_INVOICE",
     targetType: "INVOICE",
     targetId: invoice.id,
-    metadata: JSON.stringify({ amount, helcimInvoiceId: helcimInvoice.invoiceId }),
+    metadata: JSON.stringify({ amount, qboInvoiceId: qboInvoice.Invoice.Id }),
   });
 
   revalidatePath(`/admin/returns/${returnId}`);

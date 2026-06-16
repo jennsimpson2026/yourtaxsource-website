@@ -4,7 +4,7 @@ import { ClientSecretCredential } from "@azure/identity";
 import "isomorphic-fetch";
 
 const OWNER_EMAIL = "Jsimpson@yourtaxsource.com";
-const BOOKING_URL = process.env.NEXT_PUBLIC_BOOKING_URL || `https://outlook.office365.com/owa/calendar/${OWNER_EMAIL}/bookings/`;
+const BOOKING_URL = process.env.NEXT_PUBLIC_BOOKING_URL || `https://outlook.office.com/bookwithme/user/05744b24f02e49e2a016ecd75e066101@yourtaxsource.com/meetingtype/KBMByWyqUEq5vINyj-95tQ2?anonymous&ismsaljsauthenabled&ep=mlink`;
 
 export interface BookingDetails {
   id: string;

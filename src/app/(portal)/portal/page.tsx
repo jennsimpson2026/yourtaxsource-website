@@ -1,12 +1,13 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { taxReturns, appointments, invoices, auditLogs } from "@/lib/db/schema";
+import { taxReturns, appointments, invoices, auditLogs, engagementLetters } from "@/lib/db/schema";
 import { eq, desc, and, gte, inArray } from "drizzle-orm";
 import Link from "next/link";
 import { BookingButton } from "@/components/BookingButton";
 import { PayInvoiceButton } from "@/components/portal/PayInvoiceButton";
 import { OpenRequests } from "@/components/portal/OpenRequests";
+import { DownloadEngagementLetterButton } from "@/components/portal/DownloadEngagementLetterButton";
 import { 
   FileText, 
   ClipboardCheck, 
@@ -20,7 +21,9 @@ import {
   CheckCircle2,
   Circle,
   HelpCircle,
-  Zap
+  Zap,
+  PenTool,
+  Download
 } from "lucide-react";
 
 export default async function PortalDashboard() {
@@ -31,6 +34,26 @@ export default async function PortalDashboard() {
     where: eq(taxReturns.clientId, userId),
     orderBy: [desc(taxReturns.year)],
   });
+
+  const returnIds = returns.map(r => r.id);
+
+  const pendingLetters = returnIds.length > 0 
+    ? await db.query.engagementLetters.findMany({
+        where: and(
+          inArray(engagementLetters.returnId, returnIds),
+          eq(engagementLetters.status, "PENDING")
+        )
+      })
+    : [];
+
+  const currentYear = new Date().getFullYear();
+  const currentReturn = returns.find(r => r.year === currentYear) || returns[0];
+
+  const currentLetter = currentReturn 
+    ? await db.query.engagementLetters.findFirst({
+        where: eq(engagementLetters.returnId, currentReturn.id)
+      })
+    : null;
 
   const upcomingAppointments = await db.query.appointments.findMany({
     where: and(
@@ -100,7 +123,11 @@ export default async function PortalDashboard() {
       </div>
 
       {/* Open Requests */}
-      <OpenRequests requests={openRequests} unpaidInvoices={unpaidInvoices} />
+      <OpenRequests 
+        requests={openRequests} 
+        unpaidInvoices={unpaidInvoices} 
+        pendingLetters={pendingLetters}
+      />
 
       {/* 7-Step Visual Timeline */}
       <section className="bg-white rounded-[2rem] p-8 md:p-12 border border-gray-100 shadow-sm">
@@ -115,7 +142,7 @@ export default async function PortalDashboard() {
           {/* Progress Line */}
           <div className="absolute top-1/2 left-0 w-full h-0.5 bg-gray-100 -translate-y-1/2 hidden md:block"></div>
           
-          <div className="grid grid-cols-2 md:grid-cols-7 gap-8 relative z-10">
+          <div className="grid grid-cols-2 md:grid-cols-8 gap-8 relative z-10">
             <TimelineStep 
               number={1} 
               label="Annual Update" 
@@ -124,36 +151,42 @@ export default async function PortalDashboard() {
             />
             <TimelineStep 
               number={2} 
-              label="Upload Docs" 
-              status={currentReturn?.status === 'ACTION_NEEDED' ? 'current' : 'pending'} 
-              icon={<Upload size={20} />}
+              label="Engagement Letter" 
+              status={currentLetter?.status === 'SIGNED' ? 'completed' : (currentReturn?.status !== 'NOT_STARTED' ? 'current' : 'pending')} 
+              icon={<PenTool size={20} />}
             />
             <TimelineStep 
               number={3} 
+              label="Upload Docs" 
+              status={currentLetter?.status === 'SIGNED' ? 'current' : 'pending'} 
+              icon={<Upload size={20} />}
+            />
+            <TimelineStep 
+              number={4} 
               label="Tax Preparation" 
               status="pending" 
               icon={<Lock size={20} />}
             />
             <TimelineStep 
-              number={4} 
+              number={5} 
               label="Tax Organizer" 
               status="pending" 
               icon={<FileText size={20} />}
             />
             <TimelineStep 
-              number={5} 
+              number={6} 
               label="Review & File" 
               status="pending" 
               icon={<ShieldCheck size={20} />}
             />
             <TimelineStep 
-              number={6} 
+              number={7} 
               label="Payment" 
               status="pending" 
               icon={<CreditCard size={20} />}
             />
             <TimelineStep 
-              number={7} 
+              number={8} 
               label="Complete" 
               status="pending" 
               icon={<CheckCircle2 size={20} />}
@@ -163,10 +196,35 @@ export default async function PortalDashboard() {
       </section>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Step 2: Upload Docs */}
+        {/* Engagement Letter Card */}
+        <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all group flex flex-col">
+          <div className="w-14 h-14 bg-brand-soft-gray rounded-2xl flex items-center justify-center mb-6 group-hover:bg-brand-lavender transition-colors">
+            <PenTool className="text-brand-purple" size={28} />
+          </div>
+          <h3 className="text-xl font-heading font-bold text-brand-black mb-3">Engagement Letter</h3>
+          <p className="text-brand-charcoal/60 text-sm mb-8 leading-relaxed">
+            {currentLetter?.status === 'SIGNED' 
+              ? "Your engagement letter has been signed and is on file."
+              : "Please review and sign your professional services agreement to begin."}
+          </p>
+          <div className="mt-auto">
+            {currentLetter?.status === 'SIGNED' ? (
+              <DownloadEngagementLetterButton letterId={currentLetter.id} />
+            ) : (
+              <Link
+                href={currentLetter ? `/portal/engagement-letter?id=${currentLetter.id}` : "#"}
+                className="flex items-center gap-2 text-brand-purple font-bold text-sm hover:gap-3 transition-all"
+              >
+                Sign Now <ArrowRight size={16} />
+              </Link>
+            )}
+          </div>
+        </div>
+
+        {/* Step 3: Upload Docs */}
         {process.env.AWS_S3_BUCKET ? (
           <DashboardCard
-            title="Step 2: Upload Documents"
+            title="Step 3: Upload Documents"
             description="Securely upload your W-2s, 1099s, and other tax-related files."
             icon={<Upload className="text-brand-purple" size={28} />}
             href="/portal/documents"
@@ -178,7 +236,7 @@ export default async function PortalDashboard() {
             <div className="w-14 h-14 bg-brand-soft-gray rounded-2xl flex items-center justify-center mb-6">
               <Upload className="text-gray-400" size={28} />
             </div>
-            <h3 className="text-xl font-heading font-bold text-gray-500 mb-3">Step 2: Upload Docs</h3>
+            <h3 className="text-xl font-heading font-bold text-gray-500 mb-3">Step 3: Upload Docs</h3>
             <p className="text-gray-400 text-sm mb-8 leading-relaxed">
               Securely upload your tax files. (Coming Soon in Phase 2).
             </p>
@@ -188,12 +246,12 @@ export default async function PortalDashboard() {
           </div>
         )}
 
-        {/* Step 3: Tax Preparation */}
+        {/* Step 4: Tax Preparation */}
         <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all group flex flex-col">
           <div className="w-14 h-14 bg-brand-soft-gray rounded-2xl flex items-center justify-center mb-6 group-hover:bg-brand-lavender transition-colors">
             <ExternalLink className="text-brand-purple" size={28} />
           </div>
-          <h3 className="text-xl font-heading font-bold text-brand-black mb-3">Step 3: Tax Preparation</h3>
+          <h3 className="text-xl font-heading font-bold text-brand-black mb-3">Step 4: Tax Preparation</h3>
           <p className="text-brand-charcoal/60 text-sm mb-8 leading-relaxed">
             Access your permanent document storage and prior year returns through our secure legacy portal.
           </p>
@@ -205,20 +263,6 @@ export default async function PortalDashboard() {
           >
             Access Legacy Portal <ExternalLink size={16} />
           </a>
-        </div>
-
-        {/* Step 4: Organizer */}
-        <div className="bg-gray-50 p-8 rounded-3xl border border-dashed border-gray-200 flex flex-col opacity-75">
-          <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center mb-6">
-            <FileText className="text-gray-400" size={28} />
-          </div>
-          <h3 className="text-xl font-heading font-bold text-gray-500 mb-3">Step 4: Tax Organizer</h3>
-          <p className="text-gray-400 text-sm mb-8 leading-relaxed">
-            Detailed organizer for business owners and complex returns. (Coming Soon for 2024 Tax Season).
-          </p>
-          <span className="mt-auto text-gray-400 font-bold text-sm flex items-center gap-2">
-            Available Jan 2025
-          </span>
         </div>
       </div>
 
