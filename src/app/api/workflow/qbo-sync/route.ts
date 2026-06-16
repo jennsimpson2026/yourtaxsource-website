@@ -23,7 +23,7 @@ export const { POST } = serve<{
     }
   });
 
-  const results = [];
+  const results: any[] = [];
 
   // Step 2: Iterate and sync each user
   // We use chunks or parallel execution if supported, 
