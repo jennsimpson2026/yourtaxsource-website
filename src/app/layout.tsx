@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Your Tax Source | Professional & Modern Tax Solutions",
+  title: "Your Tax Source | Secure Admin & Client Portal",
   description: "Nationwide tax preparation and advisory for more than a decade. Secure digital portal, plain-English advice, and personalized service.",
 };
 
@@ -30,10 +30,10 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        {/* Force Deploy: 2026-06-12 13:30 */}
+        {/* Force Deploy: 2026-06-16 02:50 */}
         <Providers>{children}</Providers>
       </body>
     </html>
   );
 }
-// Final authentic deployment trigger - Jun 14 2026
+// Final authentic deployment trigger - Jun 16 2026
