@@ -79,9 +79,6 @@ export default async function PortalDashboard() {
     limit: 5,
   });
 
-  const currentYear = new Date().getFullYear();
-  const currentReturn = returns.find(r => r.year === currentYear) || returns[0];
-
   const hasEncryption = !!process.env.ENCRYPTION_KEY;
 
   return (
