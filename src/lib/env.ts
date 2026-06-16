@@ -48,7 +48,7 @@ const envSchema = z.object({
   ADMIN_EMAIL: z.string().email(),
   CONTACT_FORM_RECIPIENT: z.string().email(),
   CRON_SECRET: z.string().min(1),
-  ENCRYPTION_KEY: z.string().length(32).optional(),
+  ENCRYPTION_KEY: z.string().min(1).optional(),
 });
 
 export const env = envSchema.safeParse(process.env);
