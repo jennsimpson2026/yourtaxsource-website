@@ -82,12 +82,24 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        console.log("JWT callback - user object:", JSON.stringify(user));
         token.id = user.id;
         // @ts-ignore
         token.role = user.role;
         // @ts-ignore
         token.mfaEnabled = user.mfaEnabled;
+      } else if (token.id && !token.role) {
+        // Fallback: Fetch role from DB if missing from token
+        try {
+          const dbUser = await db.query.users.findFirst({
+            where: eq(users.id, token.id as string),
+          });
+          if (dbUser) {
+            // @ts-ignore
+            token.role = dbUser.role;
+          }
+        } catch (e) {
+          console.error("Error fetching user role in JWT callback:", e);
+        }
       }
       return token;
     },
