@@ -2,14 +2,13 @@
 
 import { db } from "@/lib/db";
 import { auditLogs, users } from "@/lib/db/schema";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm";
 import { notifyDocumentRequest } from "@/lib/notifications";
 
 export async function requestDocuments(clientId: string, returnId: string, documentList: string) {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session?.user || (session.user as any).role === "CLIENT") {
     throw new Error("Unauthorized");
   }

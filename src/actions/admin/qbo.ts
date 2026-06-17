@@ -1,13 +1,13 @@
 "use server";
 
 import { syncPaymentToQbo } from "@/lib/qbo";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/lib/auth";
+
 import { db } from "@/lib/db";
 import { auditLogs } from "@/lib/db/schema";
 
 export async function manualSyncInvoice(invoiceId: string) {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session || session.user.role !== "ADMIN") {
     throw new Error("Unauthorized");
   }

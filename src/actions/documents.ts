@@ -7,7 +7,7 @@ import { PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
-import { eq, and, isNotNull, lt, sql, desc } from "drizzle-orm";
+import { eq, and, isNotNull, lt, sql, desc, not } from "drizzle-orm";
 import { notifyDocumentRequest, notifyDocumentUpload, notifyDocumentStatusUpdate } from "@/lib/notifications";
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 
@@ -230,7 +230,8 @@ export async function getUserDocuments(year?: number) {
   const userId = (session.user as any).id;
   const conditions = [
     eq(documents.userId, userId),
-    sql`${documents.deletedAt} IS NULL`
+    sql`${documents.deletedAt} IS NULL`,
+    not(eq(documents.category, "ADMIN_ONLY"))
   ];
 
   if (year) {

@@ -2,13 +2,13 @@
 
 import { db } from "@/lib/db";
 import { questionnaires, auditLogs, taxReturns } from "@/lib/db/schema";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/lib/auth";
+
 import { revalidatePath } from "next/cache";
 import { eq, and } from "drizzle-orm";
 
 export async function saveQuestionnaire(returnId: string, data: any, isSubmitted: boolean = false) {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session?.user) throw new Error("Unauthorized");
 
   const userId = (session.user as any).id;
@@ -53,7 +53,7 @@ export async function saveQuestionnaire(returnId: string, data: any, isSubmitted
 }
 
 export async function getQuestionnaire(returnId: string) {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session?.user) throw new Error("Unauthorized");
 
   const userId = (session.user as any).id;

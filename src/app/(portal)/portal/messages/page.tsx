@@ -1,13 +1,13 @@
 import { db } from "@/lib/db";
 import { users, taxReturns } from "@/lib/db/schema";
 import { eq, or } from "drizzle-orm";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/lib/auth";
+
 import { MessageCenter } from "@/components/portal/MessageCenter";
 import { redirect } from "next/navigation";
 
 export default async function MessagesPage() {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session || !session.user) {
     redirect("/auth/login");
   }

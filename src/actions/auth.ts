@@ -166,6 +166,7 @@ export async function forgotPassword(formData: FormData) {
     });
 
     const resetLink = `${process.env.NEXTAUTH_URL}/auth/reset-password?email=${encodeURIComponent(email)}&token=${token}`;
+    console.log(`Sending reset link to ${email}: ${resetLink}`);
 
     await sendEmail({
       to: email,

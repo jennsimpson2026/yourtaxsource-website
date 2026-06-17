@@ -3,13 +3,13 @@
 import { db } from "@/lib/db";
 import { invoices, auditLogs, taxReturns, users } from "@/lib/db/schema";
 import { createQboInvoice, createIntuitPaymentLink, getOrCreateQboCustomer } from "@/lib/qbo";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/lib/auth";
+
 import { revalidatePath } from "next/cache";
 import { eq, and } from "drizzle-orm";
 
 export async function initializePaymentSession(invoiceId: string) {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session?.user) throw new Error("Unauthorized");
   const userId = (session.user as any).id;
 
@@ -39,7 +39,7 @@ export async function initializePaymentSession(invoiceId: string) {
 }
 
 export async function createInvoice(returnId: string, amount: number) {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session?.user || (session.user as any).role === "CLIENT") throw new Error("Unauthorized");
 
   const taxReturn = await db.query.taxReturns.findFirst({

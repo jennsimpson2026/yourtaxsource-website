@@ -1,5 +1,5 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/lib/auth";
+
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { qboConnection } from "@/lib/db/schema";
@@ -8,7 +8,7 @@ import { CheckCircle2, XCircle, RefreshCw, ExternalLink, Zap } from "lucide-reac
 import { QboStatus } from "@/components/admin/QboStatus";
 
 export default async function AdminSettingsPage() {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session || session.user.role !== "ADMIN") {
     redirect("/auth/login");
   }

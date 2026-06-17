@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { exchangeQboCode } from "@/lib/qbo";
 import { db } from "@/lib/db";
 import { auditLogs } from "@/lib/db/schema";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/lib/auth";
+
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -22,7 +22,7 @@ export async function GET(req: Request) {
   try {
     await exchangeQboCode(code, realmId);
 
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (session) {
         await db.insert(auditLogs).values({
             userId: (session.user as any).id,

@@ -1,5 +1,5 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/lib/auth";
+
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
@@ -7,7 +7,7 @@ import { redirect } from "next/navigation";
 import { MfaSetup } from "@/components/portal/MfaSetup";
 
 export default async function MfaSetupPage() {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session?.user) redirect("/auth/login");
 
   const userId = (session.user as any).id;

@@ -1,5 +1,5 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/lib/auth";
+
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { taxReturns, appointments, invoices, auditLogs, engagementLetters } from "@/lib/db/schema";
@@ -28,7 +28,7 @@ import {
 } from "lucide-react";
 
 export default async function PortalDashboard() {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
 
   // If the user is an admin or staff, redirect them to the admin hub
   if (session?.user?.role === "ADMIN" || session?.user?.role === "STAFF") {
@@ -214,13 +214,17 @@ export default async function PortalDashboard() {
           <div className="mt-auto">
             {currentLetter?.status === 'SIGNED' ? (
               <DownloadEngagementLetterButton letterId={currentLetter.id} />
-            ) : (
+            ) : currentLetter ? (
               <Link
-                href={currentLetter ? `/portal/engagement-letter?id=${currentLetter.id}` : "#"}
+                href={`/portal/engagement-letter?id=${currentLetter.id}`}
                 className="flex items-center gap-2 text-brand-purple font-bold text-sm hover:gap-3 transition-all"
               >
                 Sign Now <ArrowRight size={16} />
               </Link>
+            ) : (
+              <span className="text-brand-charcoal/40 text-xs font-bold uppercase tracking-widest italic flex items-center gap-2">
+                <Clock size={14} /> Awaiting Letter
+              </span>
             )}
           </div>
         </div>

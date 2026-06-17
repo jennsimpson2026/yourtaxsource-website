@@ -5,8 +5,7 @@ import { annualUpdates, documents, auditLogs, taxReturns } from "@/lib/db/schema
 import { encrypt } from "@/lib/crypto";
 import { s3Client, BUCKET_NAME } from "@/lib/s3";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 import { eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import React from "react";
@@ -14,7 +13,7 @@ import { renderToBuffer } from "@react-pdf/renderer";
 import { AnnualUpdatePDF } from "@/components/portal/AnnualUpdatePDF";
 
 export async function submitAnnualUpdate(data: any) {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session?.user) throw new Error("Unauthorized");
 
   const userId = (session.user as any).id;

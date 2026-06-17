@@ -162,7 +162,14 @@ export default async function ReviewReturnPage({ params }: { params: Promise<{ i
                         <FileText size={20} />
                       </div>
                       <div>
-                        <p className="text-sm font-bold text-brand-navy group-hover:text-brand-orange transition-colors line-clamp-1">{doc.fileName}</p>
+                        <p className="text-sm font-bold text-brand-navy group-hover:text-brand-orange transition-colors line-clamp-1">
+                          {doc.fileName}
+                          {doc.category === "ADMIN_ONLY" && (
+                            <span className="ml-2 px-1.5 py-0.5 bg-brand-purple/10 text-brand-purple text-[8px] font-black uppercase rounded-md border border-brand-purple/20">
+                              Admin Only
+                            </span>
+                          )}
+                        </p>
                         <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">
                           {doc.category} • {(doc.fileSize / 1024 / 1024).toFixed(2)} MB
                         </p>

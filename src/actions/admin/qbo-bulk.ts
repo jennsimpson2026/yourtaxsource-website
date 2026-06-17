@@ -4,11 +4,11 @@ import { db } from "@/lib/db";
 import { invoices } from "@/lib/db/schema";
 import { and, eq, isNull } from "drizzle-orm";
 import { syncPaymentToQbo } from "@/lib/qbo";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/lib/auth";
+
 
 export async function syncAllPendingPayments() {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session || session.user.role !== "ADMIN") {
     throw new Error("Unauthorized");
   }
