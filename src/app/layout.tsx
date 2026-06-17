@@ -30,7 +30,7 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        {/* Force Deploy: 2026-06-16 02:50 */}
+        {/* Force Deploy: 2026-06-17 10:35 */}
         <Providers>{children}</Providers>
       </body>
     </html>
