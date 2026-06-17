@@ -82,6 +82,7 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
+        console.log("JWT callback - user object:", JSON.stringify(user));
         token.id = user.id;
         // @ts-ignore
         token.role = user.role;
@@ -92,6 +93,7 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       if (session.user) {
+        console.log("Session callback - token object:", JSON.stringify(token));
         // @ts-ignore
         session.user.id = token.id;
         // @ts-ignore

@@ -1,5 +1,6 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { taxReturns, appointments, invoices, auditLogs, engagementLetters } from "@/lib/db/schema";
 import { eq, desc, and, gte, inArray } from "drizzle-orm";
@@ -28,6 +29,12 @@ import {
 
 export default async function PortalDashboard() {
   const session = await getServerSession(authOptions);
+
+  // If the user is an admin or staff, redirect them to the admin hub
+  if (session?.user?.role === "ADMIN" || session?.user?.role === "STAFF") {
+    redirect("/admin");
+  }
+
   const userId = (session?.user as any).id;
 
   const returns = await db.query.taxReturns.findMany({
