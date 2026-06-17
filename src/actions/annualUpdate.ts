@@ -138,6 +138,29 @@ export async function submitAnnualUpdate(data: any) {
       metadata: JSON.stringify({ fileName, s3Key }),
     });
 
+    // 9. Notify Admin (Jenn) via Email
+    try {
+      const { sendEmail } = await import("@/lib/notifications");
+      await sendEmail({
+        to: process.env.ADMIN_EMAIL || "jsimpson@yourtaxsource.com",
+        subject: `[Annual Update] ${data.firstName} ${data.lastName} - 2024`,
+        html: `
+          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+            <h2 style="color: #6d28d9;">New Annual Update Submitted</h2>
+            <p><strong>Client:</strong> ${data.firstName} ${data.lastName}</p>
+            <p><strong>Tax Year:</strong> ${currentYear}</p>
+            <p><strong>Filing Status:</strong> ${data.filingStatus}</p>
+            <p>A summary PDF has been generated and saved to the client's documents under "Admin Only".</p>
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${process.env.NEXTAUTH_URL}/admin/returns/${taxReturn.id}" style="background-color: #6d28d9; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">Review Return</a>
+            </div>
+          </div>
+        `,
+      });
+    } catch (emailError) {
+      console.error("Failed to send admin notification email:", emailError);
+    }
+
     revalidatePath("/portal");
     revalidatePath(`/admin/returns/${taxReturn.id}`);
     
