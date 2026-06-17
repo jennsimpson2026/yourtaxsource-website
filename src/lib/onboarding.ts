@@ -98,18 +98,28 @@ export async function onboardBookingClient(details: BookingDetails) {
   if (customFields && Object.keys(customFields).length > 0) {
     note = "Tax Situation / Booking Details:\n";
     for (const [key, value] of Object.entries(customFields)) {
-      // Map known Question IDs to human-readable labels if necessary
-      // For now, we use the key provided by Graph
       note += `- ${key}: ${value}\n`;
     }
   }
+
+  // Determine if virtual or in-person
+  const isVirtual = details.onlineMeetingUrl || 
+                    details.location?.toLowerCase().includes("virtual") || 
+                    details.location?.toLowerCase().includes("teams") ||
+                    note.toLowerCase().includes("virtual") ||
+                    note.toLowerCase().includes("teams");
+
+  const officeAddress = "100 1/2 S Main St, Belmont, NC 28012";
+  const finalLocation = isVirtual 
+    ? (details.onlineMeetingUrl || "Microsoft Teams (link in email)") 
+    : officeAddress;
 
   await db.insert(appointments).values({
     userId: user.id,
     bookingId,
     startTime,
     endTime,
-    location: details.location || "Remote / To be determined",
+    location: finalLocation,
     notes: note,
     status: "SCHEDULED",
   });
@@ -151,7 +161,8 @@ export async function onboardBookingClient(details: BookingDetails) {
       <p><strong>Client:</strong> ${clientName} (${clientEmail})</p>
       <p><strong>Service:</strong> ${details.serviceType}</p>
       <p><strong>Time:</strong> ${startTime.toLocaleString()} - ${endTime.toLocaleString()}</p>
-      <p><strong>Location:</strong> ${details.location || "Remote"}</p>
+      <p><strong>Type:</strong> ${isVirtual ? "Virtual (Teams)" : "In-Person (Belmont Office)"}</p>
+      <p><strong>Location/Link:</strong> ${finalLocation}</p>
       <hr />
       <h3>Tax Situation / Custom Fields:</h3>
       <pre>${note || "None provided"}</pre>

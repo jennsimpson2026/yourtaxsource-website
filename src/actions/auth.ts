@@ -145,34 +145,39 @@ export async function verifyAndEnableMfa(userId: string, token: string) {
 }
 
 export async function forgotPassword(formData: FormData) {
-  const email = formData.get("email") as string;
-  if (!email) return { error: "Email is required" };
+  try {
+    const email = formData.get("email") as string;
+    if (!email) return { error: "Email is required" };
 
-  const user = await db.query.users.findFirst({
-    where: eq(users.email, email.toLowerCase()),
-  });
+    const user = await db.query.users.findFirst({
+      where: eq(users.email, email.toLowerCase()),
+    });
 
-  // Security best practice: don't reveal if user exists
-  if (!user) return { success: true };
+    // Security best practice: don't reveal if user exists
+    if (!user) return { success: true };
 
-  const token = crypto.randomUUID();
-  const expires = new Date(Date.now() + 1 * 60 * 60 * 1000); // 1 hour
+    const token = crypto.randomUUID();
+    const expires = new Date(Date.now() + 1 * 60 * 60 * 1000); // 1 hour
 
-  await db.insert(verificationTokens).values({
-    identifier: email.toLowerCase(),
-    token,
-    expires,
-  });
+    await db.insert(verificationTokens).values({
+      identifier: email.toLowerCase(),
+      token,
+      expires,
+    });
 
-  const resetLink = `${process.env.NEXTAUTH_URL}/auth/reset-password?email=${encodeURIComponent(email)}&token=${token}`;
+    const resetLink = `${process.env.NEXTAUTH_URL}/auth/reset-password?email=${encodeURIComponent(email)}&token=${token}`;
 
-  await sendEmail({
-    to: email,
-    subject: "Reset your password - Your Tax Source",
-    html: `<p>Click <a href="${resetLink}">here</a> to reset your password. This link expires in 1 hour.</p>`
-  });
+    await sendEmail({
+      to: email,
+      subject: "Reset your password - Your Tax Source",
+      html: `<p>Click <a href="${resetLink}">here</a> to reset your password. This link expires in 1 hour.</p>`
+    });
 
-  return { success: true };
+    return { success: true };
+  } catch (error) {
+    console.error("Forgot password error:", error);
+    return { error: "An unexpected error occurred. Please try again later." };
+  }
 }
 
 export async function resetPassword(formData: FormData) {
