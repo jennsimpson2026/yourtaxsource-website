@@ -24,7 +24,8 @@ import {
   HelpCircle,
   Zap,
   PenTool,
-  Download
+  Download,
+  Clock
 } from "lucide-react";
 
 export default async function PortalDashboard() {

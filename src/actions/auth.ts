@@ -150,60 +150,73 @@ export async function forgotPassword(formData: FormData) {
     if (!email) return { error: "Email is required" };
 
     const user = await db.query.users.findFirst({
-      where: eq(users.email, email.toLowerCase()),
+      where: eq(users.email, email.toLowerCase().trim()),
     });
 
     // Security best practice: don't reveal if user exists
-    if (!user) return { success: true };
+    if (!user) {
+      console.log(`Forgot password requested for non-existent email: ${email}`);
+      return { success: true };
+    }
 
     const token = crypto.randomUUID();
     const expires = new Date(Date.now() + 1 * 60 * 60 * 1000); // 1 hour
 
     await db.insert(verificationTokens).values({
-      identifier: email.toLowerCase(),
+      identifier: email.toLowerCase().trim(),
       token,
       expires,
     });
 
-    const resetLink = `${process.env.NEXTAUTH_URL}/auth/reset-password?email=${encodeURIComponent(email)}&token=${token}`;
+    const resetLink = `${process.env.NEXTAUTH_URL}/auth/reset-password?email=${encodeURIComponent(email.toLowerCase().trim())}&token=${token}`;
     console.log(`Sending reset link to ${email}: ${resetLink}`);
 
     await sendEmail({
-      to: email,
+      to: email.toLowerCase().trim(),
       subject: "Reset your password - Your Tax Source",
       html: `<p>Click <a href="${resetLink}">here</a> to reset your password. This link expires in 1 hour.</p>`
     });
 
     return { success: true };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Forgot password error:", error);
+    // Provide more specific feedback if it's a known connection issue
+    if (error.message?.includes("database") || error.message?.includes("connect")) {
+      return { error: "System currently unavailable. Our team has been notified. Please try again in a few minutes." };
+    }
     return { error: "An unexpected error occurred. Please try again later." };
   }
 }
 
 export async function resetPassword(formData: FormData) {
-  const email = formData.get("email") as string;
-  const token = formData.get("token") as string;
-  const password = formData.get("password") as string;
-
-  if (!email || !token || !password) return { error: "All fields are required" };
-
-  const verificationToken = await db.query.verificationTokens.findFirst({
-    where: (vt, { and, eq }) => and(eq(vt.identifier, email.toLowerCase()), eq(vt.token, token)),
-  });
-
-  if (!verificationToken || verificationToken.expires < new Date()) {
-    return { error: "Invalid or expired reset token" };
-  }
-
-  const hashedPassword = await bcrypt.hash(password, 10);
-
   try {
+    const email = formData.get("email") as string;
+    const token = formData.get("token") as string;
+    const password = formData.get("password") as string;
+
+    if (!email || !token || !password) return { error: "All fields are required" };
+
+    const normalizedEmail = email.toLowerCase().trim();
+
+    const verificationToken = await db.query.verificationTokens.findFirst({
+      where: (vt, { and, eq }) => and(eq(vt.identifier, normalizedEmail), eq(vt.token, token)),
+    });
+
+    if (!verificationToken) {
+      return { error: "Invalid reset token" };
+    }
+
+    if (verificationToken.expires < new Date()) {
+      return { error: "Reset token has expired" };
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
     await db.transaction(async (tx) => {
-      await tx.update(users).set({ password: hashedPassword }).where(eq(users.email, email.toLowerCase()));
-      await tx.delete(verificationTokens).where(and(eq(verificationTokens.identifier, email.toLowerCase()), eq(verificationTokens.token, token)));
+      await tx.update(users).set({ password: hashedPassword }).where(eq(users.email, normalizedEmail));
+      await tx.delete(verificationTokens).where(and(eq(verificationTokens.identifier, normalizedEmail), eq(verificationTokens.token, token)));
       
-      const user = await tx.query.users.findFirst({ where: eq(users.email, email.toLowerCase()) });
+      const user = await tx.query.users.findFirst({ where: eq(users.email, normalizedEmail) });
       if (user) {
         await tx.insert(auditLogs).values({
           userId: user.id,
@@ -215,8 +228,11 @@ export async function resetPassword(formData: FormData) {
     });
 
     return { success: true };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Reset password error:", error);
-    return { error: "Failed to reset password" };
+    if (error.message?.includes("database") || error.message?.includes("connect")) {
+      return { error: "System currently unavailable. Please try again shortly." };
+    }
+    return { error: "Failed to reset password. Please try again." };
   }
 }
