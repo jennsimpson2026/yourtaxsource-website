@@ -1,0 +1,25 @@
+❌ Invalid environment variables: {
+  "_errors": [],
+  "NEXTAUTH_SECRET": {
+    "_errors": [
+      "Invalid input: expected string, received undefined"
+    ]
+  },
+  "ADMIN_EMAIL": {
+    "_errors": [
+      "Invalid input: expected string, received undefined"
+    ]
+  },
+  "CONTACT_FORM_RECIPIENT": {
+    "_errors": [
+      "Invalid input: expected string, received undefined"
+    ]
+  },
+  "CRON_SECRET": {
+    "_errors": [
+      "Invalid input: expected string, received undefined"
+    ]
+  }
+}
+Seeding database...
+Seeding complete.

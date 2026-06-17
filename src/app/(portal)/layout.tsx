@@ -35,6 +35,9 @@ export default async function PortalLayout({
               <NavLink href="/portal/documents" label="Documents" />
               <NavLink href="/portal/messages" label="Messages" />
               <NavLink href="/portal/questionnaire" label="Intake Form" />
+              {((session?.user as any)?.role === "ADMIN" || (session?.user as any)?.role === "STAFF") && (
+                <NavLink href="/admin" label="Admin Hub" />
+              )}
             </nav>
           </div>
           
@@ -49,7 +52,9 @@ export default async function PortalLayout({
               />
             </Link>
             <div className="hidden lg:flex flex-col text-right">
-              <span className="text-xs font-bold text-brand-charcoal/40 uppercase tracking-widest leading-none mb-1">Authenticated Client</span>
+              <span className="text-xs font-bold text-brand-charcoal/40 uppercase tracking-widest leading-none mb-1">
+                {(session.user as any)?.role === "ADMIN" ? "Administrator" : (session.user as any)?.role === "STAFF" ? "Staff Member" : "Authenticated Client"}
+              </span>
               <span className="text-sm font-bold text-brand-black">{session.user?.email}</span>
             </div>
             <SignOutButton />

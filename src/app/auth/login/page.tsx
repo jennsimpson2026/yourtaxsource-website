@@ -33,7 +33,15 @@ export default function LoginPage() {
         setError(result.error);
       }
     } else {
-      router.push("/portal");
+      // Get the session to check the role
+      const sessionResponse = await fetch("/api/auth/session");
+      const session = await sessionResponse.json();
+      
+      if (session?.user?.role === "ADMIN" || session?.user?.role === "STAFF") {
+        router.push("/admin");
+      } else {
+        router.push("/portal");
+      }
     }
   }
 
