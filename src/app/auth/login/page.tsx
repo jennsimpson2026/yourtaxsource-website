@@ -13,6 +13,7 @@ export default function LoginPage() {
     password: "",
     code: "",
   });
+  const [isAdminLogin, setIsAdminLogin] = useState(false);
   const router = useRouter();
 
   async function handleSubmit(e: React.FormEvent) {
@@ -34,16 +35,37 @@ export default function LoginPage() {
       }
     } else {
       // Successfully signed in.
-      // Force a full page load to the portal.
-      // We use window.location.href instead of router.push to ensure a fresh session check.
-      window.location.href = "/portal";
+      // If the user explicitly chose Admin login, or if they land in portal, 
+      // our portal/page.tsx will redirect them. 
+      // But let's be proactive here.
+      if (isAdminLogin) {
+        window.location.href = "/admin";
+      } else {
+        window.location.href = "/portal";
+      }
     }
   }
 
   return (
     <div className="flex min-h-screen items-center justify-center">
       <div className="w-full max-w-md space-y-8 p-8 border rounded-lg shadow">
-        <h2 className="text-center text-3xl font-bold">Log in to your account</h2>
+        <h2 className="text-center text-3xl font-bold">
+          {isAdminLogin ? "Admin & Staff Login" : "Log in to your account"}
+        </h2>
+        <div className="flex justify-center gap-4 text-xs">
+          <button 
+            onClick={() => setIsAdminLogin(false)}
+            className={`px-3 py-1 rounded-full ${!isAdminLogin ? 'bg-brand-purple text-white' : 'bg-gray-100'}`}
+          >
+            Client Login
+          </button>
+          <button 
+            onClick={() => setIsAdminLogin(true)}
+            className={`px-3 py-1 rounded-full ${isAdminLogin ? 'bg-brand-black text-white' : 'bg-gray-100'}`}
+          >
+            Admin / Staff
+          </button>
+        </div>
         <form onSubmit={handleSubmit} className="space-y-6">
           {!showMfa ? (
             <>
