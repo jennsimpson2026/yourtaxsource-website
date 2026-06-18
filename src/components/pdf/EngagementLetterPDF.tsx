@@ -1,35 +1,42 @@
-import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
 
 const styles = StyleSheet.create({
   page: {
     padding: 50,
-    fontSize: 11,
+    fontSize: 10,
     fontFamily: 'Helvetica',
-    lineHeight: 1.5,
+    lineHeight: 1.4,
+    color: '#333',
+  },
+  logo: {
+    width: 200,
+    marginBottom: 20,
+    alignSelf: 'center',
   },
   header: {
     marginBottom: 30,
-    borderBottom: 1,
-    paddingBottom: 10,
+    textAlign: 'center',
   },
   title: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 5,
+    textTransform: 'uppercase',
   },
   subtitle: {
-    color: '#666',
+    fontSize: 12,
     marginBottom: 10,
   },
   section: {
-    marginBottom: 15,
+    marginBottom: 12,
   },
   bold: {
     fontWeight: 'bold',
   },
   footer: {
-    marginTop: 50,
+    marginTop: 40,
     borderTop: 1,
+    borderColor: '#eee',
     paddingTop: 20,
   },
   signatureBox: {
@@ -39,6 +46,13 @@ const styles = StyleSheet.create({
     border: 1,
     borderColor: '#eee',
   },
+  checkboxSection: {
+    marginTop: 15,
+    padding: 10,
+    border: 1,
+    borderColor: '#eee',
+    fontSize: 9,
+  }
 });
 
 interface EngagementLetterPDFProps {
@@ -47,6 +61,7 @@ interface EngagementLetterPDFProps {
   signatureData: string;
   content: string;
   year: number;
+  logoData?: string;
 }
 
 export const EngagementLetterPDF = ({
@@ -54,37 +69,52 @@ export const EngagementLetterPDF = ({
   signedAt,
   signatureData,
   content,
-  year
-}: EngagementLetterPDFProps) => (
-  <Document>
-    <Page size="A4" style={styles.page}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Your Tax Source</Text>
-        <Text style={styles.subtitle}>Individual Income Tax Engagement Letter - Tax Year {year}</Text>
-      </View>
+  year,
+  logoData
+}: EngagementLetterPDFProps) => {
+  // Use provided logoData or fallback to a relative path
+  const logoSrc = logoData || "/home/team/shared/repository/public/images/logo-long.png";
 
-      <View style={styles.section}>
-        <Text>Date: {signedAt.toLocaleDateString()}</Text>
-      </View>
+  return (
+    <Document>
+      <Page size="A4" style={styles.page}>
+        <Image src={logoPath} style={styles.logo} />
+        
+        <View style={styles.header}>
+          <Text style={styles.title}>Tax Preparation Engagement Agreement</Text>
+          <Text style={styles.subtitle}>Tax Year {year}</Text>
+        </View>
 
-      <View style={styles.section}>
-        <Text>{content}</Text>
-      </View>
+        <View style={styles.section}>
+          <Text>{content}</Text>
+        </View>
 
-      <View style={styles.signatureBox}>
-        <Text style={styles.bold}>Electronic Signature:</Text>
-        <Text style={{ fontSize: 20, marginTop: 10, fontStyle: 'italic' }}>{signatureData}</Text>
-        <Text style={{ marginTop: 5, color: '#666' }}>
-          Signed by: {clientName} on {signedAt.toLocaleString()}
-        </Text>
-      </View>
+        <View style={styles.checkboxSection}>
+          <Text>[X] I have read and agree to the terms of this Engagement Agreement and authorize Your Tax Source to prepare and electronically file my tax return.</Text>
+          <Text style={{ marginTop: 4 }}>[X] I consent to electronic delivery of documents.</Text>
+          <Text style={{ marginTop: 4 }}>[X] I understand I am responsible for reviewing my completed return before filing.</Text>
+        </View>
 
-      <View style={styles.footer}>
-        <Text style={{ textAlign: 'center', color: '#999', fontSize: 9 }}>
-          This document was electronically signed and is legally binding.
-          Your Tax Source | Belmont, NC
-        </Text>
-      </View>
-    </Page>
-  </Document>
-);
+        <View style={styles.signatureBox}>
+          <Text style={styles.bold}>Electronic Signature:</Text>
+          <Text style={{ fontSize: 18, marginTop: 8, fontStyle: 'italic', fontFamily: 'Times-Italic' }}>{signatureData}</Text>
+          <Text style={{ marginTop: 8, color: '#666', fontSize: 9 }}>
+            Signed by: {clientName}
+          </Text>
+          <Text style={{ marginTop: 2, color: '#666', fontSize: 9 }}>
+            Date: {signedAt.toLocaleString()}
+          </Text>
+        </View>
+
+        <View style={styles.footer}>
+          <Text style={{ textAlign: 'center', color: '#999', fontSize: 8 }}>
+            Jennifer Simpson, EA | Owner, Your Tax Source
+          </Text>
+          <Text style={{ textAlign: 'center', color: '#999', fontSize: 8, marginTop: 2 }}>
+            Belmont, NC | Securely signed via Your Tax Source Portal
+          </Text>
+        </View>
+      </Page>
+    </Document>
+  );
+};

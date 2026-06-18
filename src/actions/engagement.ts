@@ -10,7 +10,13 @@ import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { s3Client, BUCKET_NAME, getPresignedUrl } from "@/lib/s3";
 import { workflowClient } from "@/lib/workflow";
 
-export async function signEngagementLetter(letterId: string, signatureData: string) {
+export async function signEngagementLetter(
+  letterId: string, 
+  signatureData: string,
+  consentAgreed: boolean = true,
+  consentElectronic: boolean = true,
+  consentResponsibility: boolean = true
+) {
   const session = await auth();
   if (!session) return { error: "Unauthorized" };
 
@@ -57,26 +63,28 @@ export async function signEngagementLetter(letterId: string, signatureData: stri
         content: letter.content,
         year: (letter.taxReturn as any).year,
         userId,
+        consentAgreed,
+        consentElectronic,
+        consentResponsibility,
       },
       headers: {
         "Content-Type": "application/json",
       },
     });
 
-    // Update workflow entry with real Upstash ID if needed, 
-    // or just use the one we created.
-    // Actually, trigger() returns workflowRunId.
+    // Update workflow entry with real Upstash ID if needed
     await db.update(workflows)
       .set({ id: workflowRunId })
       .where(eq(workflows.id, workflowId));
 
-    // Update letter status to "PROCESSING" or similar?
-    // The requirement says "SIGNED", but since it's background, 
-    // maybe "PROCESSING" is better until the workflow finishes.
+    // Update letter status to "PROCESSING"
     await db.update(engagementLetters)
       .set({
         status: "PROCESSING",
         signatureData,
+        consentAgreed,
+        consentElectronic,
+        consentResponsibility,
         updatedAt: new Date(),
       })
       .where(eq(engagementLetters.id, letterId));

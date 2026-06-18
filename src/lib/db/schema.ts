@@ -234,11 +234,14 @@ export const engagementLetters = sqliteTable("engagement_letters", {
   returnId: text("return_id")
     .references(() => taxReturns.id)
     .notNull(),
-  status: text("status").default("PENDING").notNull(), // 'PENDING', 'SIGNED'
+  status: text("status").default("PENDING").notNull(), // 'PENDING', 'SIGNED', 'PROCESSING'
   content: text("content").notNull(),
   signedAt: integer("signed_at", { mode: "timestamp" }),
   signatureData: text("signature_data"),
   s3Key: text("s3_key"),
+  consentAgreed: integer("consent_agreed", { mode: "boolean" }).default(false).notNull(),
+  consentElectronic: integer("consent_electronic", { mode: "boolean" }).default(false).notNull(),
+  consentResponsibility: integer("consent_responsibility", { mode: "boolean" }).default(false).notNull(),
   createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),
 }, (table) => ({

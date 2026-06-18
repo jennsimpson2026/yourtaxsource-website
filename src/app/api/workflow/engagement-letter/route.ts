@@ -13,8 +13,21 @@ export const { POST } = serve<{
   content: string;
   year: number;
   userId: string;
+  consentAgreed?: boolean;
+  consentElectronic?: boolean;
+  consentResponsibility?: boolean;
 }>(async (context) => {
-  const { letterId, signatureData, clientName, content, year, userId } = context.requestPayload;
+  const { 
+    letterId, 
+    signatureData, 
+    clientName, 
+    content, 
+    year, 
+    userId,
+    consentAgreed,
+    consentElectronic,
+    consentResponsibility 
+  } = context.requestPayload;
 
   // Step 1: Generate PDF
   const pdfBuffer = await context.run("generate-pdf", async () => {
