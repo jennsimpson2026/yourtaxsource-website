@@ -78,7 +78,7 @@ export const EngagementLetterPDF = ({
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        <Image src={logoPath} style={styles.logo} />
+        <Image src={logoSrc} style={styles.logo} />
         
         <View style={styles.header}>
           <Text style={styles.title}>Tax Preparation Engagement Agreement</Text>
