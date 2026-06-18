@@ -37,7 +37,7 @@ export default async function ReviewReturnPage({ params }: { params: Promise<{ i
       documents: true,
       questionnaire: true,
       annualUpdate: true,
-      engagementLetter: true,
+      engagementLetters: true,
       invoices: {
         orderBy: [desc(invoices.createdAt)],
       },
@@ -268,7 +268,7 @@ export default async function ReviewReturnPage({ params }: { params: Promise<{ i
           <EngagementLetterManager 
             returnId={ret.id} 
             clientId={ret.clientId} 
-            existingLetter={ret.engagementLetter} 
+            existingLetter={ret.engagementLetters[0]} 
           />
 
           {/* Document Request Tool */}
