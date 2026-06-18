@@ -23,16 +23,24 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
+          console.log("Auth: Missing email or password");
           return null;
         }
 
         const normalizedEmail = credentials.email.toLowerCase().trim();
+        console.log(`Auth: Attempting login for ${normalizedEmail}`);
 
         const user = await db.query.users.findFirst({
           where: eq(users.email, normalizedEmail),
         });
 
-        if (!user || !user.password) {
+        if (!user) {
+          console.log(`Auth: User not found: ${normalizedEmail}`);
+          return null;
+        }
+
+        if (!user.password) {
+          console.log(`Auth: User has no password set: ${normalizedEmail}`);
           return null;
         }
 
@@ -42,8 +50,11 @@ export const authOptions: NextAuthOptions = {
         );
 
         if (!isPasswordValid) {
+          console.log(`Auth: Invalid password for ${normalizedEmail}`);
           return null;
         }
+
+        console.log(`Auth: Login successful for ${normalizedEmail}, role: ${user.role}`);
 
         // Check MFA if enabled
         if (user.mfaEnabled) {
