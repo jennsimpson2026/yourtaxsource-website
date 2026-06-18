@@ -7,6 +7,7 @@ export default async function ReturnsAdminPage() {
   const returns = await db.query.taxReturns.findMany({
     with: {
       client: true,
+      invoices: true,
     },
     orderBy: [desc(taxReturns.createdAt)],
   });

@@ -35,6 +35,7 @@ export default async function ReviewReturnPage({ params }: { params: Promise<{ i
       },
       documents: true,
       questionnaire: true,
+      annualUpdate: true,
       invoices: {
         orderBy: [desc(invoices.createdAt)],
       },
@@ -52,17 +53,23 @@ export default async function ReviewReturnPage({ params }: { params: Promise<{ i
   });
 
   const questionnaireData = ret.questionnaire?.data ? JSON.parse(ret.questionnaire.data) : null;
+  const annualUpdateData = ret.annualUpdate?.taxInfo ? JSON.parse(ret.annualUpdate.taxInfo) : null;
+  const displayData = questionnaireData || annualUpdateData;
 
   async function handleUpdateReturn(formData: FormData) {
     "use server";
     const status = formData.get("status") as string;
     const paymentStatus = formData.get("paymentStatus") as string;
     const notes = formData.get("notes") as string;
+    const federalResult = parseFloat(formData.get("federalResult") as string) || 0;
+    const stateResults = formData.get("stateResults") as string;
 
     await updateReturnDetails(id, {
       status,
       paymentStatus,
       notes,
+      federalResult,
+      stateResults: stateResults ? JSON.parse(stateResults) : {},
     });
   }
 
@@ -112,25 +119,25 @@ export default async function ReviewReturnPage({ params }: { params: Promise<{ i
               )}
             </div>
             
-            {questionnaireData ? (
+            {displayData ? (
               <div className="p-8">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                   <div className="space-y-6">
-                    <InfoItem label="Filing Status" value={questionnaireData.filingStatus} />
-                    <InfoItem label="Dependents" value={questionnaireData.dependents} />
-                    <InfoItem label="Address" value={`${(ret as any).client?.profile?.addressLine1 || 'N/A'}, ${(ret as any).client?.profile?.city || ''} ${(ret as any).client?.profile?.state || ''}`} />
+                    <InfoItem label="Filing Status" value={displayData.filingStatus} />
+                    <InfoItem label="Dependents" value={displayData.dependents || "N/A"} />
+                    <InfoItem label="Address" value={`${displayData.address || (ret as any).client?.profile?.addressLine1 || 'N/A'}, ${displayData.city || (ret as any).client?.profile?.city || ''} ${displayData.state || (ret as any).client?.profile?.state || ''}`} />
                   </div>
                   <div className="space-y-6">
-                    <BooleanItem label="W-2 Income" value={questionnaireData.hasW2} />
-                    <BooleanItem label="1099 Income" value={questionnaireData.has1099} />
-                    <BooleanItem label="Small Business" value={questionnaireData.hasBusiness} />
+                    <BooleanItem label="W-2 Income" value={displayData.hasW2 || displayData.hasW2s} />
+                    <BooleanItem label="1099 Income" value={displayData.has1099 || displayData.has1099s} />
+                    <BooleanItem label="Small Business" value={displayData.hasBusiness || displayData.startedBusiness} />
                   </div>
                 </div>
                 
-                {questionnaireData.notes && (
+                {displayData.notes && (
                   <div className="mt-8 p-4 bg-brand-cloud rounded-xl border border-gray-100">
                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Client Notes</p>
-                    <p className="text-sm text-brand-charcoal/80 leading-relaxed font-medium">{questionnaireData.notes}</p>
+                    <p className="text-sm text-brand-charcoal/80 leading-relaxed font-medium">{displayData.notes}</p>
                   </div>
                 )}
               </div>
@@ -162,21 +169,8 @@ export default async function ReviewReturnPage({ params }: { params: Promise<{ i
                         <FileText size={20} />
                       </div>
                       <div>
-                        <p className="text-sm font-bold text-brand-navy group-hover:text-brand-orange transition-colors line-clamp-1">
-                          {doc.fileName}
-                          {doc.category === "ADMIN_ONLY" && (
-                            <span className="ml-2 px-1.5 py-0.5 bg-brand-purple/10 text-brand-purple text-[8px] font-black uppercase rounded-md border border-brand-purple/20">
-                              Admin Only
-                            </span>
-                          )}
-                        </p>
-                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">
-                          {doc.category} • {(doc.fileSize / 1024 / 1024).toFixed(2)} MB
-                        </p>
+                        <DocumentDownloadButton documentId={doc.id} showLabel={true} fileName={doc.fileName} category={doc.category} fileSize={doc.fileSize} />
                       </div>
-                    </div>
-                    <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                       <DocumentDownloadButton documentId={doc.id} />
                     </div>
                   </div>
                 ))
@@ -198,32 +192,55 @@ export default async function ReviewReturnPage({ params }: { params: Promise<{ i
               Workflow
             </h2>
             <form action={handleUpdateReturn} className="space-y-6">
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] ml-1">Return Status</label>
-                <select
-                  name="status"
-                  defaultValue={ret.status}
-                  className="w-full rounded-xl border border-white/10 p-3 text-sm bg-white/5 focus:bg-white focus:text-brand-navy transition-all focus:outline-none focus:ring-2 focus:ring-brand-orange/50 appearance-none cursor-pointer"
-                >
-                  <option value="NOT_STARTED">Not Started</option>
-                  <option value="IN_PROGRESS">In Progress</option>
-                  <option value="REVIEW">Review</option>
-                  <option value="READY_FOR_SIGNATURE">Ready for Signature</option>
-                  <option value="FILED">Filed</option>
-                </select>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] ml-1">Return Status</label>
+                  <select
+                    name="status"
+                    defaultValue={ret.status}
+                    className="w-full rounded-xl border border-white/10 p-3 text-sm bg-white/5 focus:bg-white focus:text-brand-navy transition-all focus:outline-none focus:ring-2 focus:ring-brand-orange/50 appearance-none cursor-pointer"
+                  >
+                    <option value="NOT_STARTED">Not Started</option>
+                    <option value="IN_PROGRESS">In Progress</option>
+                    <option value="REVIEW">Review</option>
+                    <option value="READY_FOR_SIGNATURE">Ready for Signature</option>
+                    <option value="FILED">Filed</option>
+                  </select>
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] ml-1">Payment Status</label>
+                  <select
+                    name="paymentStatus"
+                    defaultValue={ret.paymentStatus}
+                    className="w-full rounded-xl border border-white/10 p-3 text-sm bg-white/5 focus:bg-white focus:text-brand-navy transition-all focus:outline-none focus:ring-2 focus:ring-brand-orange/50 appearance-none cursor-pointer"
+                  >
+                    <option value="UNPAID">Unpaid</option>
+                    <option value="PAID">Paid</option>
+                    <option value="VOID">Void</option>
+                  </select>
+                </div>
               </div>
-              
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] ml-1">Payment Status</label>
-                <select
-                  name="paymentStatus"
-                  defaultValue={ret.paymentStatus}
-                  className="w-full rounded-xl border border-white/10 p-3 text-sm bg-white/5 focus:bg-white focus:text-brand-navy transition-all focus:outline-none focus:ring-2 focus:ring-brand-orange/50 appearance-none cursor-pointer"
-                >
-                  <option value="UNPAID">Unpaid</option>
-                  <option value="PAID">Paid</option>
-                  <option value="VOID">Void</option>
-                </select>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] ml-1">Federal Result ($)</label>
+                  <input
+                    type="number"
+                    name="federalResult"
+                    defaultValue={ret.federalResult || 0}
+                    className="w-full rounded-xl border border-white/10 p-3 text-sm bg-white/5 focus:bg-white focus:text-brand-navy transition-all focus:outline-none focus:ring-2 focus:ring-brand-orange/50"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] ml-1">State Results (JSON)</label>
+                  <input
+                    type="text"
+                    name="stateResults"
+                    defaultValue={ret.stateResults || "{}"}
+                    className="w-full rounded-xl border border-white/10 p-3 text-sm bg-white/5 focus:bg-white focus:text-brand-navy transition-all focus:outline-none focus:ring-2 focus:ring-brand-orange/50"
+                  />
+                </div>
               </div>
 
               <div className="space-y-2">

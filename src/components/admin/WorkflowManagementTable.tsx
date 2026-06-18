@@ -42,22 +42,32 @@ export function WorkflowManagementTable({ returns: initialReturns }: WorkflowMan
   const [selectedReturns, setSelectedReturns] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Map the DB returns to our workflow format (mocking missing fields for UI design)
-  const workflowReturns: WorkflowReturn[] = initialReturns.map(r => ({
-    id: r.id,
-    clientName: r.client?.name || "N/A",
-    clientEmail: r.client?.email || "N/A",
-    year: r.year,
-    status: r.status,
-    step: mapStatusToStep(r.status),
-    fedResult: (r as any).fedResult || (Math.random() > 0.5 ? Math.floor(Math.random() * 5000) : -Math.floor(Math.random() * 2000)),
-    stateResult: (r as any).stateResult || (Math.random() > 0.5 ? Math.floor(Math.random() * 1000) : -Math.floor(Math.random() * 500)),
-    fee: (r as any).fee || 450,
-    balance: r.paymentStatus === 'PAID' ? 0 : 450,
-    paymentStatus: r.paymentStatus,
-    lastLogin: new Date(Date.now() - Math.random() * 1000000000).toISOString(),
-    downloaded: Math.random() > 0.5
-  }));
+  // Map the DB returns to our workflow format
+  const workflowReturns: WorkflowReturn[] = initialReturns.map(r => {
+    let stateVal = 0;
+    if (r.stateResults) {
+      try {
+        const parsed = JSON.parse(r.stateResults);
+        stateVal = Object.values(parsed).reduce((sum: any, val: any) => sum + (parseFloat(val) || 0), 0) as number;
+      } catch (e) {}
+    }
+
+    return {
+      id: r.id,
+      clientName: r.client?.name || "N/A",
+      clientEmail: r.client?.email || "N/A",
+      year: r.year,
+      status: r.status,
+      step: mapStatusToStep(r.status),
+      fedResult: r.federalResult,
+      stateResult: stateVal,
+      fee: r.invoices?.reduce((sum: number, inv: any) => sum + (inv.amount || 0), 0) || 0,
+      balance: r.invoices?.filter((inv: any) => inv.status === 'UNPAID').reduce((sum: number, inv: any) => sum + (inv.amount || 0), 0) || 0,
+      paymentStatus: r.paymentStatus,
+      lastLogin: (r.client as any)?.lastLoginAt,
+      downloaded: !!(r as any).downloadedAt // This would need to be tracked in audit logs or a column
+    };
+  });
 
   const toggleSelectAll = () => {
     if (selectedReturns.length === workflowReturns.length) {
