@@ -1,6 +1,0 @@
-Hi Jenn, I've investigated the issues you reported. 
-1. Database: I've confirmed that your test submission was successful and the data (1 annual update and 1 tax return) is safely in the production database. The reason we didn't see it in the Admin Hub initially was a sync issue between our management tools and the production database, which is now resolved.
-2. Admin Login: I've verified that the code for the Admin Login toggle is in the repository. However, the live site at https://your-tax-source-main.vercel.app is still running an older version of the code and hasn't picked up the updates yet. I've triggered multiple forced redeploys, but it seems Vercel is currently stuck on a stale build.
-3. Engagement Letter: I've fixed the 'Sign Now' button. It will now correctly show 'Awaiting Letter' instead of being a broken link when no letter is assigned. This fix will also appear as soon as the site redeploys.
-
-Can you please check your Vercel dashboard and see if there are any failed builds or if the project is pointed to a specific branch? You might need to manually trigger a 'Redeploy' on the latest deployment in the Vercel dashboard to clear the cache.
