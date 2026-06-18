@@ -51,6 +51,12 @@ export const authOptions: NextAuthOptions = {
 
         if (!isPasswordValid) {
           console.log(`Auth: Invalid password for ${normalizedEmail}`);
+          await db.insert(auditLogs).values({
+            action: "SIGN_IN_FAILED_PASSWORD",
+            targetType: "USER",
+            targetId: user.id,
+            metadata: JSON.stringify({ email: normalizedEmail }),
+          });
           return null;
         }
 
