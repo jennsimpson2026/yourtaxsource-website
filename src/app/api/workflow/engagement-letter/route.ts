@@ -67,6 +67,9 @@ export const { POST } = serve<{
         signatureData,
         signedAt: new Date(),
         s3Key,
+        consentAgreed,
+        consentElectronic,
+        consentResponsibility,
         updatedAt: new Date(),
       })
       .where(eq(engagementLetters.id, letterId));
