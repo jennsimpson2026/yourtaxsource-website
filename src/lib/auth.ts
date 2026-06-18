@@ -3,7 +3,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { db } from "./db";
 import { users, auditLogs } from "./db/schema";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { authenticator } from "./otplib";
 
@@ -29,70 +29,76 @@ export const authOptions: NextAuthOptions = {
 
         const normalizedEmail = credentials.email.toLowerCase().trim();
         console.log(`Auth: Attempting login for ${normalizedEmail}`);
+        
+        // Debug DB connection
+        console.log(`Auth: DB URL configured: ${process.env.DATABASE_URL?.substring(0, 15)}...`);
 
-        const user = await db.query.users.findFirst({
-          where: eq(users.email, normalizedEmail),
-        });
-
-        if (!user) {
-          console.log(`Auth: User not found: ${normalizedEmail}`);
-          return null;
-        }
-
-        if (!user.password) {
-          console.log(`Auth: User has no password set: ${normalizedEmail}`);
-          return null;
-        }
-
-        const isPasswordValid = await bcrypt.compare(
-          credentials.password,
-          user.password
-        );
-
-        if (!isPasswordValid) {
-          console.log(`Auth: Invalid password for ${normalizedEmail}`);
-          await db.insert(auditLogs).values({
-            action: "SIGN_IN_FAILED_PASSWORD",
-            targetType: "USER",
-            targetId: user.id,
-            metadata: JSON.stringify({ email: normalizedEmail }),
-          });
-          return null;
-        }
-
-        console.log(`Auth: Login successful for ${normalizedEmail}, role: ${user.role}`);
-
-        // Check MFA if enabled
-        if (user.mfaEnabled) {
-          if (!credentials.code) {
-            throw new Error("MFA_REQUIRED");
-          }
-
-          if (!user.mfaSecret) {
-            throw new Error("MFA_SECRET_MISSING");
-          }
-
-          const isValidCode = authenticator.verify({
-            token: credentials.code,
-            secret: user.mfaSecret,
+        try {
+          const user = await db.query.users.findFirst({
+            where: eq(users.email, normalizedEmail),
           });
 
-          if (!isValidCode) {
-            throw new Error("INVALID_MFA_CODE");
+          if (!user) {
+            console.log(`Auth: User not found: ${normalizedEmail}`);
+            // Check if ANY users exist to verify DB connectivity
+            const userCount = await db.select({ count: sql`count(*)` }).from(users);
+            console.log(`Auth: Total users in DB: ${JSON.stringify(userCount)}`);
+            return null;
           }
-        } else if (user.role === "ADMIN" || user.role === "STAFF") {
-            // Force MFA setup for staff/admin if not enabled
-            // This is a business requirement. We might handle this by redirecting to an MFA setup page if the session indicates it's missing.
-            // For now, let's just log them in but we should enforce this in the UI/Middleware.
-        }
 
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          role: user.role,
-          mfaEnabled: user.mfaEnabled || false,
-        };
+          if (!user.password) {
+            console.log(`Auth: User has no password set: ${normalizedEmail}`);
+            return null;
+          }
+
+          console.log(`Auth: Found user, comparing password...`);
+          const isPasswordValid = await bcrypt.compare(
+            credentials.password,
+            user.password
+          );
+
+          if (!isPasswordValid) {
+            console.log(`Auth: Invalid password for ${normalizedEmail}`);
+            return null;
+          }
+
+          console.log(`Auth: Login successful for ${normalizedEmail}, role: ${user.role}`);
+
+          // Check MFA if enabled
+          if (user.mfaEnabled) {
+            if (!credentials.code) {
+              throw new Error("MFA_REQUIRED");
+            }
+
+            if (!user.mfaSecret) {
+              throw new Error("MFA_SECRET_MISSING");
+            }
+
+            const isValidCode = authenticator.verify({
+              token: credentials.code,
+              secret: user.mfaSecret,
+            });
+
+            if (!isValidCode) {
+              throw new Error("INVALID_MFA_CODE");
+            }
+          }
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role,
+            mfaEnabled: user.mfaEnabled || false,
+          };
+        } catch (dbError: any) {
+          console.error("Auth: Database error during authorize:", dbError);
+          // Log specific Turso/LibSQL errors if possible
+          if (dbError.message) {
+             console.error("Auth: Error message:", dbError.message);
+          }
+          return null;
+        }
       },
     }),
   ],
@@ -122,7 +128,6 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       if (session.user) {
-        console.log("Session callback - token object:", JSON.stringify(token));
         // @ts-ignore
         session.user.id = token.id;
         // @ts-ignore
@@ -136,25 +141,33 @@ export const authOptions: NextAuthOptions = {
   events: {
     async signIn({ user }) {
       // Update lastLoginAt
-      await db.update(users)
-        .set({ lastLoginAt: new Date() })
-        .where(eq(users.id, user.id));
+      try {
+        await db.update(users)
+          .set({ lastLoginAt: new Date() })
+          .where(eq(users.id, user.id));
 
-      await db.insert(auditLogs).values({
-        userId: user.id,
-        action: "SIGN_IN",
-        targetType: "USER",
-        targetId: user.id,
-      });
+        await db.insert(auditLogs).values({
+          userId: user.id,
+          action: "SIGN_IN",
+          targetType: "USER",
+          targetId: user.id,
+        });
+      } catch (e) {
+        console.error("Error in signIn event:", e);
+      }
     },
     async signOut({ token }) {
       if (token?.id) {
-        await db.insert(auditLogs).values({
-          userId: token.id as string,
-          action: "SIGN_OUT",
-          targetType: "USER",
-          targetId: token.id as string,
-        });
+        try {
+          await db.insert(auditLogs).values({
+            userId: token.id as string,
+            action: "SIGN_OUT",
+            targetType: "USER",
+            targetId: token.id as string,
+          });
+        } catch (e) {
+          console.error("Error in signOut event:", e);
+        }
       }
     },
   },
