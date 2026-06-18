@@ -21,6 +21,7 @@ import { updateReturnDetails } from "@/actions/returns";
 import { DocumentRequestTool } from "@/components/admin/DocumentRequestTool";
 import { CommunicationLog } from "@/components/admin/CommunicationLog";
 import { DocumentDownloadButton } from "@/components/admin/DocumentDownloadButton";
+import { EngagementLetterManager } from "@/components/admin/EngagementLetterManager";
 import { InvoiceManager } from "@/components/admin/InvoiceManager";
 
 export default async function ReviewReturnPage({ params }: { params: Promise<{ id: string }> }) {
@@ -36,6 +37,7 @@ export default async function ReviewReturnPage({ params }: { params: Promise<{ i
       documents: true,
       questionnaire: true,
       annualUpdate: true,
+      engagementLetter: true,
       invoices: {
         orderBy: [desc(invoices.createdAt)],
       },
@@ -62,14 +64,14 @@ export default async function ReviewReturnPage({ params }: { params: Promise<{ i
     const paymentStatus = formData.get("paymentStatus") as string;
     const notes = formData.get("notes") as string;
     const federalResult = parseFloat(formData.get("federalResult") as string) || 0;
-    const stateResults = formData.get("stateResults") as string;
+    const stateResult = parseFloat(formData.get("stateResult") as string) || 0;
 
     await updateReturnDetails(id, {
       status,
       paymentStatus,
       notes,
       federalResult,
-      stateResults: stateResults ? JSON.parse(stateResults) : {},
+      stateResults: JSON.stringify({ primary: stateResult }),
     });
   }
 
@@ -227,17 +229,19 @@ export default async function ReviewReturnPage({ params }: { params: Promise<{ i
                   <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] ml-1">Federal Result ($)</label>
                   <input
                     type="number"
+                    step="0.01"
                     name="federalResult"
                     defaultValue={ret.federalResult || 0}
                     className="w-full rounded-xl border border-white/10 p-3 text-sm bg-white/5 focus:bg-white focus:text-brand-navy transition-all focus:outline-none focus:ring-2 focus:ring-brand-orange/50"
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] ml-1">State Results (JSON)</label>
+                  <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] ml-1">State Result ($)</label>
                   <input
-                    type="text"
-                    name="stateResults"
-                    defaultValue={ret.stateResults || "{}"}
+                    type="number"
+                    step="0.01"
+                    name="stateResult"
+                    defaultValue={ret.stateResults ? (JSON.parse(ret.stateResults).primary || 0) : 0}
                     className="w-full rounded-xl border border-white/10 p-3 text-sm bg-white/5 focus:bg-white focus:text-brand-navy transition-all focus:outline-none focus:ring-2 focus:ring-brand-orange/50"
                   />
                 </div>
@@ -259,6 +263,13 @@ export default async function ReviewReturnPage({ params }: { params: Promise<{ i
               </button>
             </form>
           </div>
+
+          {/* Engagement Letter */}
+          <EngagementLetterManager 
+            returnId={ret.id} 
+            clientId={ret.clientId} 
+            existingLetter={ret.engagementLetter} 
+          />
 
           {/* Document Request Tool */}
           <DocumentRequestTool clientId={ret.clientId} returnId={ret.id} />

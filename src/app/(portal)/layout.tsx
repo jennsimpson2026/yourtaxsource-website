@@ -35,6 +35,7 @@ export default async function PortalLayout({
               <NavLink href="/portal/documents" label="Documents" />
               <NavLink href="/portal/messages" label="Messages" />
               <NavLink href="/portal/questionnaire" label="Intake Form" />
+              <NavLink href="/portal/resources" label="Resources" />
               {((session?.user as any)?.role === "ADMIN" || (session?.user as any)?.role === "STAFF") && (
                 <NavLink href="/admin" label="Admin Hub" />
               )}
