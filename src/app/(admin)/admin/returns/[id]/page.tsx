@@ -241,7 +241,23 @@ export default async function ReviewReturnPage({ params }: { params: Promise<{ i
                     type="number"
                     step="0.01"
                     name="stateResult"
-                    defaultValue={ret.stateResults ? (JSON.parse(ret.stateResults).primary || 0) : 0}
+                    defaultValue={(() => {
+                      if (!ret.stateResults) return 0;
+                      try {
+                        let parsed = typeof ret.stateResults === 'string' ? JSON.parse(ret.stateResults) : ret.stateResults;
+                        // Handle double stringification
+                        if (typeof parsed === 'string') {
+                          parsed = JSON.parse(parsed);
+                        }
+                        if (typeof parsed === 'object' && parsed !== null) {
+                          return parsed.primary || 0;
+                        }
+                        return 0;
+                      } catch (e) {
+                        console.error("Error parsing stateResults:", e);
+                        return 0;
+                      }
+                    })()}
                     className="w-full rounded-xl border border-white/10 p-3 text-sm bg-white/5 focus:bg-white focus:text-brand-navy transition-all focus:outline-none focus:ring-2 focus:ring-brand-orange/50"
                   />
                 </div>

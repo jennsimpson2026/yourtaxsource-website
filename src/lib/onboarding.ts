@@ -5,7 +5,7 @@ import { notifyPortalInvitation, notifyAppointmentScheduled, sendEmail } from "@
 import { BookingDetails } from "@/lib/booking";
 import crypto from "crypto";
 
-const DEFAULT_ENGAGEMENT_LETTER_CONTENT = `
+export const DEFAULT_ENGAGEMENT_LETTER_CONTENT = `
 YOUR TAX SOURCE
 Tax Preparation Engagement Agreement
 

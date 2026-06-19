@@ -31,12 +31,14 @@ export function DocumentUpload({ returnId }: { returnId?: string }) {
 
     try {
       // 1. Get pre-signed URL
+      console.log("Requesting upload URL for:", file.name, category);
       const { uploadUrl, s3Key, taxYear } = await getUploadUrl(
         file.name,
         file.type,
         category,
         returnId
       );
+      console.log("Got upload URL, starting fetch...");
 
       // 2. Upload to S3
       const uploadResponse = await fetch(uploadUrl, {
@@ -47,8 +49,12 @@ export function DocumentUpload({ returnId }: { returnId?: string }) {
         },
       });
 
+      console.log("Upload response status:", uploadResponse.status);
+
       if (!uploadResponse.ok) {
-        throw new Error("Failed to upload file to storage.");
+        const errorText = await uploadResponse.text();
+        console.error("S3 Upload Error:", errorText);
+        throw new Error(`Failed to upload file: ${uploadResponse.statusText}`);
       }
 
       // 3. Register in database

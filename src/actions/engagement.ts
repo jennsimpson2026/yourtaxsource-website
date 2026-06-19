@@ -96,7 +96,27 @@ export async function signEngagementLetter(
   }
 }
 
-export async function getEngagementLetterDownloadUrl(letterId: string) {
+import { DEFAULT_ENGAGEMENT_LETTER_CONTENT } from "@/lib/onboarding";
+
+export async function createEngagementLetter(returnId: string) {
+  const session = await auth();
+  if (!session || (session.user as any).role === "CLIENT") throw new Error("Unauthorized");
+
+  const taxReturn = await db.query.taxReturns.findFirst({
+    where: eq(taxReturns.id, returnId),
+  });
+
+  if (!taxReturn) throw new Error("Return not found");
+
+  const [letter] = await db.insert(engagementLetters).values({
+    returnId,
+    content: DEFAULT_ENGAGEMENT_LETTER_CONTENT,
+    status: "PENDING",
+  }).returning();
+
+  revalidatePath(`/admin/returns/${returnId}`);
+  return letter;
+}
   const session = await auth();
   if (!session) return { error: "Unauthorized" };
 

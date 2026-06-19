@@ -47,7 +47,11 @@ export function WorkflowManagementTable({ returns: initialReturns }: WorkflowMan
     let stateVal = 0;
     if (r.stateResults) {
       try {
-        const parsed = JSON.parse(r.stateResults);
+        let parsed = typeof r.stateResults === 'string' ? JSON.parse(r.stateResults) : r.stateResults;
+        // Handle double stringification
+        if (typeof parsed === 'string') {
+          parsed = JSON.parse(parsed);
+        }
         stateVal = Object.values(parsed).reduce((sum: any, val: any) => sum + (parseFloat(val) || 0), 0) as number;
       } catch (e) {}
     }

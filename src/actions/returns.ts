@@ -25,7 +25,11 @@ export async function updateReturnDetails(returnId: string, data: {
   if (data.paymentStatus) updateData.paymentStatus = data.paymentStatus;
   if (data.notes !== undefined) updateData.notes = data.notes;
   if (data.federalResult !== undefined) updateData.federalResult = data.federalResult;
-  if (data.stateResults !== undefined) updateData.stateResults = JSON.stringify(data.stateResults);
+  if (data.stateResults !== undefined) {
+    updateData.stateResults = typeof data.stateResults === 'string' 
+      ? data.stateResults 
+      : JSON.stringify(data.stateResults);
+  }
   if (data.manualRelease !== undefined) updateData.manualRelease = data.manualRelease;
   if (data.isComplimentary !== undefined) updateData.isComplimentary = data.isComplimentary;
 

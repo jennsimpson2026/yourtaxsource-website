@@ -14,6 +14,8 @@ import {
 } from "lucide-react";
 import { DownloadEngagementLetterButton } from "@/components/portal/DownloadEngagementLetterButton";
 
+import { createEngagementLetter } from "@/actions/engagement";
+
 export default async function ResourcesPage() {
   const session = await auth();
 
@@ -30,15 +32,19 @@ export default async function ResourcesPage() {
 
   const returnIds = returns.map(r => r.id);
 
-  const letters = returnIds.length > 0 
-    ? await db.query.engagementLetters.findMany({
-        where: and(
-          eq(engagementLetters.returnId, returnIds[0]), // Show latest return's letter
-        )
-      })
-    : [];
-
-  const currentLetter = letters[0];
+  let currentLetter = null;
+  if (returnIds.length > 0) {
+    const letters = await db.query.engagementLetters.findMany({
+      where: eq(engagementLetters.returnId, returnIds[0]),
+    });
+    
+    if (letters.length > 0) {
+      currentLetter = letters[0];
+    } else {
+      // Auto-create letter if missing for the current return
+      currentLetter = await createEngagementLetter(returnIds[0]);
+    }
+  }
 
   return (
     <div className="max-w-4xl mx-auto space-y-12 pb-20">

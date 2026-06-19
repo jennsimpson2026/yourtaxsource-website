@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
+import { createEngagementLetter } from "@/actions/engagement";
+
 export function EngagementLetterManager({ 
   returnId, 
   clientId,
@@ -30,14 +32,7 @@ export function EngagementLetterManager({
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/workflow/engagement-letter", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ returnId, action: "generate" }),
-      });
-      
-      if (!res.ok) throw new Error("Failed to generate engagement letter");
-      
+      await createEngagementLetter(returnId);
       router.refresh();
     } catch (err: any) {
       setError(err.message);
