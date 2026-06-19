@@ -1,14 +1,16 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { engagementLetters, auditLogs, users, workflows } from "@/lib/db/schema";
+import { engagementLetters, auditLogs, users, workflows, taxReturns } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
+import { revalidatePath } from "next/cache";
 
 import { generateEngagementLetterPDF } from "@/lib/pdf-server";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { s3Client, BUCKET_NAME, getPresignedUrl } from "@/lib/s3";
 import { workflowClient } from "@/lib/workflow";
+import { DEFAULT_ENGAGEMENT_LETTER_CONTENT } from "@/lib/onboarding";
 
 export async function signEngagementLetter(
   letterId: string, 
@@ -96,8 +98,6 @@ export async function signEngagementLetter(
   }
 }
 
-import { DEFAULT_ENGAGEMENT_LETTER_CONTENT } from "@/lib/onboarding";
-
 export async function createEngagementLetter(returnId: string) {
   const session = await auth();
   if (!session || (session.user as any).role === "CLIENT") throw new Error("Unauthorized");
@@ -117,6 +117,8 @@ export async function createEngagementLetter(returnId: string) {
   revalidatePath(`/admin/returns/${returnId}`);
   return letter;
 }
+
+export async function getEngagementLetterDownloadUrl(letterId: string) {
   const session = await auth();
   if (!session) return { error: "Unauthorized" };
 
@@ -145,5 +147,3 @@ export async function createEngagementLetter(returnId: string) {
     return { error: "Failed to generate download link" };
   }
 }
-
-
