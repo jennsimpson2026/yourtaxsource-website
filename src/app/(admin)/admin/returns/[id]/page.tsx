@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { taxReturns, users, questionnaires, auditLogs, invoices } from "@/lib/db/schema";
+import { taxReturns, users, questionnaires, auditLogs, invoices, documents } from "@/lib/db/schema";
 import { eq, desc, and } from "drizzle-orm";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
