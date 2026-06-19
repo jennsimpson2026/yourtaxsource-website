@@ -24,25 +24,36 @@ export default async function ResourcesPage() {
   }
 
   const userId = (session.user as any).id;
+  console.log(`ResourcesPage: Fetching data for userId=${userId}`);
 
   const returns = await db.query.taxReturns.findMany({
     where: eq(taxReturns.clientId, userId),
     orderBy: [desc(taxReturns.year)],
   });
 
+  console.log(`ResourcesPage: Found ${returns.length} returns`);
+
   const returnIds = returns.map(r => r.id);
 
   let currentLetter = null;
   if (returnIds.length > 0) {
+    console.log(`ResourcesPage: Checking letters for returnId=${returnIds[0]}`);
     const letters = await db.query.engagementLetters.findMany({
       where: eq(engagementLetters.returnId, returnIds[0]),
     });
     
     if (letters.length > 0) {
       currentLetter = letters[0];
+      console.log(`ResourcesPage: Found existing letter status=${currentLetter.status}`);
     } else {
       // Auto-create letter if missing for the current return
-      currentLetter = await createEngagementLetter(returnIds[0]);
+      console.log(`ResourcesPage: Attempting auto-creation of engagement letter`);
+      try {
+        currentLetter = await createEngagementLetter(returnIds[0]);
+        console.log(`ResourcesPage: Auto-created letter success`);
+      } catch (err) {
+        console.error("ResourcesPage: Failed to auto-create letter", err);
+      }
     }
   }
 

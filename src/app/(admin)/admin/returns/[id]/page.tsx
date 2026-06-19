@@ -48,6 +48,20 @@ export default async function ReviewReturnPage({ params }: { params: Promise<{ i
     notFound();
   }
 
+  console.log(`[ADMIN_RETURN] Loading return ${id} for client ${ret.clientId}`);
+  // Fetch ALL documents for this client to ensure visibility of generic uploads
+  const allClientDocuments = await db.query.documents.findMany({
+    where: eq(documents.userId, ret.clientId),
+    orderBy: [desc(documents.uploadedAt)],
+  });
+  console.log(`[ADMIN_RETURN] Found ${allClientDocuments.length} total documents for client`);
+
+  // Filter out documents already in ret.documents (linked to this return)
+  // to avoid duplicates, although we might just want to show the full list
+  const otherDocuments = allClientDocuments.filter(
+    doc => doc.returnId !== id
+  );
+
   // Fetch communication logs for this client
   const logs = await db.query.auditLogs.findMany({
     where: eq(auditLogs.targetId, ret.clientId),
@@ -158,25 +172,51 @@ export default async function ReviewReturnPage({ params }: { params: Promise<{ i
                 Client Documents
               </h2>
               <span className="text-xs font-bold text-brand-charcoal/40 uppercase tracking-widest">
-                {ret.documents.length} Files
+                {allClientDocuments.length} Total Files
               </span>
             </div>
             
             <div className="divide-y divide-gray-50">
-              {ret.documents.length > 0 ? (
-                ret.documents.map((doc) => (
-                  <div key={doc.id} className="p-5 flex items-center justify-between hover:bg-brand-cloud/30 transition-colors group">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 bg-brand-cloud rounded-xl flex items-center justify-center text-brand-navy border border-gray-100">
-                        <FileText size={20} />
-                      </div>
-                      <div>
-                        <DocumentDownloadButton documentId={doc.id} showLabel={true} fileName={doc.fileName} category={doc.category} fileSize={doc.fileSize} />
-                      </div>
+              {ret.documents.length > 0 && (
+                <div className="px-6 py-3 bg-blue-50/30 text-[10px] font-black text-brand-navy uppercase tracking-widest">
+                  Documents for this return
+                </div>
+              )}
+              {ret.documents.map((doc) => (
+                <div key={doc.id} className="p-5 flex items-center justify-between hover:bg-brand-cloud/30 transition-colors group">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 bg-brand-cloud rounded-xl flex items-center justify-center text-brand-navy border border-gray-100">
+                      <FileText size={20} />
+                    </div>
+                    <div>
+                      <DocumentDownloadButton documentId={doc.id} showLabel={true} fileName={doc.fileName} category={doc.category} fileSize={doc.fileSize} />
                     </div>
                   </div>
-                ))
-              ) : (
+                </div>
+              ))}
+
+              {otherDocuments.length > 0 && (
+                <>
+                  <div className="px-6 py-3 bg-gray-50/50 text-[10px] font-black text-gray-400 uppercase tracking-widest border-t border-gray-100">
+                    Other client documents
+                  </div>
+                  {otherDocuments.map((doc) => (
+                    <div key={doc.id} className="p-5 flex items-center justify-between hover:bg-brand-cloud/30 transition-colors group">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 bg-brand-cloud rounded-xl flex items-center justify-center text-brand-navy border border-gray-100">
+                          <FileText size={20} />
+                        </div>
+                        <div>
+                          <DocumentDownloadButton documentId={doc.id} showLabel={true} fileName={doc.fileName} category={doc.category} fileSize={doc.fileSize} />
+                          {doc.taxYear && <span className="text-[10px] text-gray-400 ml-2 font-bold">FY {doc.taxYear}</span>}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </>
+              )}
+
+              {allClientDocuments.length === 0 && (
                 <div className="p-12 text-center text-gray-400 font-medium italic">
                   No documents uploaded yet.
                 </div>

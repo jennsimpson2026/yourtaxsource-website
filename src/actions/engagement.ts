@@ -46,6 +46,68 @@ export async function signEngagementLetter(
   try {
     const signedAt = new Date();
     
+    // Check if Upstash is configured. If not, perform signing synchronously.
+    const isUpstashConfigured = !!process.env.QSTASH_TOKEN;
+
+    if (!isUpstashConfigured) {
+      console.log(`[SIGN_ENGAGEMENT] Upstash not configured for letter ${letterId}, performing synchronous signing...`);
+      
+      try {
+        // 1. Generate PDF
+        console.log("[SIGN_ENGAGEMENT] Generating PDF...");
+        const pdfBuffer = await generateEngagementLetterPDF({
+          clientName: (letter.taxReturn as any).client.name || "Valued Client",
+          signedAt,
+          signatureData,
+          content: letter.content,
+          year: (letter.taxReturn as any).year,
+        });
+        console.log(`[SIGN_ENGAGEMENT] PDF generated, size: ${pdfBuffer.length} bytes`);
+
+        // 2. Upload to S3
+        const s3Key = `engagement-letters/${letterId}-signed.pdf`;
+        console.log(`[SIGN_ENGAGEMENT] Uploading to S3: ${BUCKET_NAME}/${s3Key}`);
+        await s3Client.send(new PutObjectCommand({
+          Bucket: BUCKET_NAME,
+          Key: s3Key,
+          Body: pdfBuffer,
+          ContentType: 'application/pdf',
+        }));
+        console.log("[SIGN_ENGAGEMENT] S3 upload successful");
+
+        // 3. Update database
+        console.log("[SIGN_ENGAGEMENT] Updating database...");
+        await db.update(engagementLetters)
+          .set({
+            status: "SIGNED",
+            signatureData,
+            signedAt,
+            s3Key,
+            consentAgreed,
+            consentElectronic,
+            consentResponsibility,
+            updatedAt: new Date(),
+          })
+          .where(eq(engagementLetters.id, letterId));
+        console.log("[SIGN_ENGAGEMENT] Database update successful");
+
+        await db.insert(auditLogs).values({
+          userId,
+          action: "SIGN_ENGAGEMENT_LETTER_COMPLETE_SYNC",
+          targetType: "ENGAGEMENT_LETTER",
+          targetId: letterId,
+        });
+
+        revalidatePath("/portal/resources");
+        return { success: true, message: "Letter signed successfully." };
+      } catch (innerError) {
+        console.error("[SIGN_ENGAGEMENT] Inner failure during synchronous signing:", innerError);
+        throw innerError;
+      }
+    }
+
+    // --- Original Workflow Path ---
+    
     // Track workflow in our DB
     const workflowId = `wf_el_${letterId}_${Date.now()}`;
     await db.insert(workflows).values({
@@ -91,22 +153,38 @@ export async function signEngagementLetter(
       })
       .where(eq(engagementLetters.id, letterId));
 
+    revalidatePath("/portal/resources");
     return { success: true, message: "Processing signature..." };
   } catch (error) {
     console.error("Sign engagement letter error:", error);
-    return { error: "Failed to sign engagement letter" };
+    return { error: "Failed to sign engagement letter. Please contact support if this persists." };
   }
 }
 
 export async function createEngagementLetter(returnId: string) {
   const session = await auth();
-  if (!session || (session.user as any).role === "CLIENT") throw new Error("Unauthorized");
+  if (!session) throw new Error("Unauthorized");
 
   const taxReturn = await db.query.taxReturns.findFirst({
     where: eq(taxReturns.id, returnId),
   });
 
   if (!taxReturn) throw new Error("Return not found");
+
+  // Check permission: Staff/Admin OR Client who owns the return
+  const isStaff = ["STAFF", "ADMIN"].includes((session.user as any).role);
+  const isOwner = taxReturn.clientId === (session.user as any).id;
+
+  if (!isStaff && !isOwner) {
+    throw new Error("Unauthorized: You do not have permission to create this letter");
+  }
+
+  // Check if one already exists to avoid duplicates
+  const existing = await db.query.engagementLetters.findFirst({
+    where: eq(engagementLetters.returnId, returnId),
+  });
+
+  if (existing) return existing;
 
   const [letter] = await db.insert(engagementLetters).values({
     returnId,
@@ -115,6 +193,7 @@ export async function createEngagementLetter(returnId: string) {
   }).returning();
 
   revalidatePath(`/admin/returns/${returnId}`);
+  revalidatePath("/portal/resources");
   return letter;
 }
 

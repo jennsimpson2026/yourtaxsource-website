@@ -2,21 +2,23 @@
 
 import { useState } from "react";
 import { 
-  Plus, 
   FileEdit, 
   Trash2, 
-  Eye, 
-  Search, 
-  Filter, 
   CheckCircle2,
   Clock,
-  Loader2
+  ExternalLink,
+  Plus
 } from "lucide-react";
 import Link from "next/link";
 import { deletePost } from "@/actions/admin/blog";
 import { useRouter } from "next/navigation";
 
-export function BlogCMSTable({ posts, categories }: { posts: any[], categories: any[] }) {
+interface BlogCMSTableProps {
+  initialPosts: any[];
+}
+
+export function BlogCMSTable({ initialPosts }: BlogCMSTableProps) {
+  const [posts, setPosts] = useState(initialPosts);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const router = useRouter();
 
@@ -26,9 +28,10 @@ export function BlogCMSTable({ posts, categories }: { posts: any[], categories: 
     setIsDeleting(id);
     try {
       await deletePost(id);
+      setPosts(posts.filter(p => p.id !== id));
       router.refresh();
     } catch (error) {
-      console.error(error);
+      console.error("Failed to delete post:", error);
       alert("Failed to delete post");
     } finally {
       setIsDeleting(null);
@@ -48,63 +51,50 @@ export function BlogCMSTable({ posts, categories }: { posts: any[], categories: 
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-50">
-          {posts.length === 0 ? (
-            <tr>
-              <td colSpan={5} className="px-8 py-12 text-center text-gray-400 italic">
-                No posts found. Create your first post to get started!
+          {posts.map((post: any) => (
+            <tr key={post.id} className="hover:bg-gray-50 transition-colors group">
+              <td className="px-8 py-6">
+                <Link href={`/blog/${post.slug}`} target="_blank" className="font-bold text-brand-black group-hover:text-brand-purple transition-colors block max-w-md truncate flex items-center gap-2">
+                  {post.title} <ExternalLink size={14} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                </Link>
+                <span className="text-xs text-gray-400">{post.author?.name}</span>
+              </td>
+              <td className="px-8 py-6">
+                <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${
+                  post.status === 'published' 
+                    ? 'bg-green-50 text-green-600 border-green-200' 
+                    : 'bg-orange-50 text-orange-600 border-orange-200'
+                }`}>
+                  {post.status}
+                </span>
+              </td>
+              <td className="px-8 py-6 text-sm font-medium text-brand-charcoal/60">{post.category?.name}</td>
+              <td className="px-8 py-6 text-sm text-brand-charcoal/40">{new Date(post.createdAt).toLocaleDateString()}</td>
+              <td className="px-8 py-6 text-right">
+                <div className="flex justify-end gap-2">
+                  <Link 
+                    href={`/admin/blog/edit/${post.id}`}
+                    className="p-2 text-gray-400 hover:text-brand-purple hover:bg-brand-purple/5 rounded-lg transition-all"
+                  >
+                    <FileEdit size={18} />
+                  </Link>
+                  <button 
+                    onClick={() => handleDelete(post.id)}
+                    disabled={isDeleting === post.id}
+                    className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all disabled:opacity-50"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
               </td>
             </tr>
-          ) : (
-            posts.map((post: any) => (
-              <tr key={post.id} className="hover:bg-gray-50 transition-colors group">
-                <td className="px-8 py-6">
-                  <span className="font-bold text-brand-black group-hover:text-brand-purple transition-colors block max-w-md truncate">
-                    {post.title}
-                  </span>
-                  <span className="text-xs text-gray-400">{post.author?.name || 'Jenn Simpson'}</span>
-                </td>
-                <td className="px-8 py-6">
-                  <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${
-                    post.status === 'published' 
-                      ? 'bg-green-50 text-green-600 border-green-200' 
-                      : 'bg-orange-50 text-orange-600 border-orange-200'
-                  }`}>
-                    {post.status}
-                  </span>
-                </td>
-                <td className="px-8 py-6 text-sm font-medium text-brand-charcoal/60">{post.category?.name || 'Uncategorized'}</td>
-                <td className="px-8 py-6 text-sm text-brand-charcoal/40">
-                  {post.publishDate ? new Date(post.publishDate).toLocaleDateString() : new Date(post.createdAt).toLocaleDateString()}
-                </td>
-                <td className="px-8 py-6 text-right">
-                  <div className="flex justify-end gap-2">
-                    <Link 
-                      href={`/blog/${post.slug}`} 
-                      target="_blank"
-                      className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-all"
-                      title="View Live"
-                    >
-                      <Eye size={18} />
-                    </Link>
-                    <button 
-                      className="p-2 text-gray-400 hover:text-brand-purple hover:bg-brand-purple/5 rounded-lg transition-all"
-                      title="Edit (Coming Soon)"
-                      onClick={() => alert("Post editing will be available in the next update. For now, please create a new post.")}
-                    >
-                      <FileEdit size={18} />
-                    </button>
-                    <button 
-                      onClick={() => handleDelete(post.id)}
-                      disabled={isDeleting === post.id}
-                      className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all disabled:opacity-50"
-                      title="Delete"
-                    >
-                      {isDeleting === post.id ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))
+          ))}
+          {posts.length === 0 && (
+            <tr>
+              <td colSpan={5} className="px-8 py-20 text-center text-gray-400">
+                No posts found. Create your first post!
+              </td>
+            </tr>
           )}
         </tbody>
       </table>

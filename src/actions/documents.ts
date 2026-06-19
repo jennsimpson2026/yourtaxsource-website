@@ -154,35 +154,49 @@ export async function registerDocument(data: {
 
   const userId = (session.user as any).id;
 
-  const [doc] = await db.insert(documents).values({
-    userId,
-    returnId: data.returnId,
-    s3Key: data.s3Key,
-    fileName: data.fileName,
-    fileType: data.fileType,
-    fileSize: data.fileSize,
-    category: data.category,
-    taxYear: data.taxYear || new Date().getFullYear(),
-    // Default isLocked to true if it's a Final Return or provided by Staff
-    isLocked: data.category === "Final Returns" || (session.user as any).role !== "CLIENT",
-  }).returning();
+  console.log(`registerDocument: Registering file ${data.fileName} for userId ${userId}, returnId ${data.returnId}`);
 
-  await db.insert(auditLogs).values({
-    userId,
-    action: "UPLOAD_DOCUMENT",
-    targetType: "DOCUMENT",
-    targetId: doc.id,
-    metadata: JSON.stringify({ fileName: data.fileName }),
-  });
+  try {
+    const [doc] = await db.insert(documents).values({
+      userId,
+      returnId: data.returnId,
+      s3Key: data.s3Key,
+      fileName: data.fileName,
+      fileType: data.fileType,
+      fileSize: data.fileSize,
+      category: data.category,
+      taxYear: data.taxYear || new Date().getFullYear(),
+      // Default isLocked to true if it's a Final Return or provided by Staff
+      isLocked: data.category === "Final Returns" || (session.user as any).role !== "CLIENT",
+    }).returning();
 
-  // Notify staff if a client uploaded a document
-  if ((session.user as any).role === "CLIENT") {
-    const adminEmail = process.env.ADMIN_EMAIL || "Jsimpson@yourtaxsource.com";
-    await notifyDocumentUpload(adminEmail, session.user.name || session.user.email!, data.fileName);
+    console.log(`registerDocument: Created record with ID ${doc.id}`);
+
+    await db.insert(auditLogs).values({
+      userId,
+      action: "UPLOAD_DOCUMENT",
+      targetType: "DOCUMENT",
+      targetId: doc.id,
+      metadata: JSON.stringify({ fileName: data.fileName }),
+    });
+
+    // Notify staff if a client uploaded a document
+    if ((session.user as any).role === "CLIENT") {
+      const adminEmail = process.env.ADMIN_EMAIL || "Jsimpson@yourtaxsource.com";
+      await notifyDocumentUpload(adminEmail, session.user.name || session.user.email!, data.fileName);
+    }
+
+    revalidatePath("/portal/documents");
+    revalidatePath("/admin/returns");
+    if (data.returnId) {
+      revalidatePath(`/admin/returns/${data.returnId}`);
+    }
+    
+    return doc;
+  } catch (err) {
+    console.error("registerDocument: Failed to insert document record", err);
+    throw err;
   }
-
-  revalidatePath("/portal/documents");
-  return doc;
 }
 
 export async function getDownloadUrl(documentId: string) {
@@ -325,9 +339,9 @@ export async function reviewDocument(documentId: string, status: "ACCEPTED" | "R
     );
   }
 
-  revalidatePath("/admin/admin/returns");
+  revalidatePath("/admin/returns");
   if (doc.returnId) {
-    revalidatePath(`/admin/admin/returns/${doc.returnId}`);
+    revalidatePath(`/admin/returns/${doc.returnId}`);
   }
   revalidatePath("/portal/documents");
 }
