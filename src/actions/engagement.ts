@@ -155,9 +155,11 @@ export async function signEngagementLetter(
 
     revalidatePath("/portal/resources");
     return { success: true, message: "Processing signature..." };
-  } catch (error) {
-    console.error("Sign engagement letter error:", error);
-    return { error: "Failed to sign engagement letter. Please contact support if this persists." };
+  } catch (error: any) {
+    console.error("[SIGN_ENGAGEMENT] Critical failure:", error);
+    return { 
+      error: `Failed to sign engagement letter: ${error.message || 'Unknown error'}. [${error.code || 'NO_CODE'}]` 
+    };
   }
 }
 

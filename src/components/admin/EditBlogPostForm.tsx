@@ -143,9 +143,10 @@ export function EditBlogPostForm({ post, categories }: { post: any, categories: 
                 onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as any }))}
                 className="w-full p-3 rounded-xl border border-gray-100 bg-gray-50 outline-none"
               >
-                <option value="draft">Draft</option>
-                <option value="published">Published</option>
+                <option value="draft">Draft (Admin Only)</option>
+                <option value="published">Published (Public)</option>
               </select>
+              <p className="text-[10px] text-gray-400 mt-2">Change status to "Published" to show on the live /blog page.</p>
             </div>
 
             <div>

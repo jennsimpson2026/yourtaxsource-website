@@ -41,9 +41,9 @@ export default async function BlogCMSPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <StatCard title="Total Posts" value={dbPosts.length.toString()} icon={<FileEdit className="text-brand-purple" />} />
+        <StatCard title="Total Posts" value={dbPosts.length.toString()} icon={<FileText className="text-brand-purple" />} />
         <StatCard title="Published" value={dbPosts.filter(p => p.status === 'published').length.toString()} icon={<CheckCircle2 className="text-green-500" />} />
-        <StatCard title="Total Views" value="---" icon={<Eye className="text-blue-500" />} />
+        <StatCard title="Public URL" value="/blog" icon={<Eye className="text-blue-500" />} />
       </div>
 
       {/* Table Section */}

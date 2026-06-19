@@ -38,6 +38,10 @@ export async function softDeleteDocument(documentId: string) {
   });
 
   revalidatePath("/portal/documents");
+  revalidatePath("/admin/returns");
+  if (doc.returnId) {
+    revalidatePath(`/admin/returns/${doc.returnId}`);
+  }
 }
 
 export async function permanentlyDeleteOldDocuments() {

@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { taxReturns, users, questionnaires, auditLogs, invoices, documents } from "@/lib/db/schema";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, isNull } from "drizzle-orm";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { 
@@ -21,6 +21,7 @@ import { updateReturnDetails } from "@/actions/returns";
 import { DocumentRequestTool } from "@/components/admin/DocumentRequestTool";
 import { CommunicationLog } from "@/components/admin/CommunicationLog";
 import { DocumentDownloadButton } from "@/components/admin/DocumentDownloadButton";
+import { DocumentDeleteButton } from "@/components/admin/DocumentDeleteButton";
 import { EngagementLetterManager } from "@/components/admin/EngagementLetterManager";
 import { InvoiceManager } from "@/components/admin/InvoiceManager";
 
@@ -51,7 +52,10 @@ export default async function ReviewReturnPage({ params }: { params: Promise<{ i
   console.log(`[ADMIN_RETURN] Loading return ${id} for client ${ret.clientId}`);
   // Fetch ALL documents for this client to ensure visibility of generic uploads
   const allClientDocuments = await db.query.documents.findMany({
-    where: eq(documents.userId, ret.clientId),
+    where: and(
+      eq(documents.userId, ret.clientId),
+      isNull(documents.deletedAt)
+    ),
     orderBy: [desc(documents.uploadedAt)],
   });
   console.log(`[ADMIN_RETURN] Found ${allClientDocuments.length} total documents for client`);
@@ -206,10 +210,11 @@ export default async function ReviewReturnPage({ params }: { params: Promise<{ i
                         <div className="w-10 h-10 bg-brand-cloud rounded-xl flex items-center justify-center text-brand-navy border border-gray-100">
                           <FileText size={20} />
                         </div>
-                        <div>
+                        <div className="flex items-center gap-2">
                           <DocumentDownloadButton documentId={doc.id} showLabel={true} fileName={doc.fileName} category={doc.category} fileSize={doc.fileSize} />
-                          {doc.taxYear && <span className="text-[10px] text-gray-400 ml-2 font-bold">FY {doc.taxYear}</span>}
+                          <DocumentDeleteButton documentId={doc.id} fileName={doc.fileName} />
                         </div>
+                        {doc.taxYear && <span className="text-[10px] text-gray-400 ml-2 font-bold">FY {doc.taxYear}</span>}
                       </div>
                     </div>
                   ))}
