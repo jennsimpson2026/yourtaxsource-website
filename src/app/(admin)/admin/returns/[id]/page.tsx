@@ -194,19 +194,19 @@ export default async function ReviewReturnPage({ params }: { params: Promise<{ i
               {ret.documents.map((doc) => (
                 <div key={doc.id} className="p-5 flex items-center justify-between hover:bg-brand-cloud/30 transition-colors group">
                   <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 bg-brand-cloud rounded-xl flex items-center justify-center text-brand-navy border border-gray-100">
-                    <FileText size={20} />
+                    <div className="w-10 h-10 bg-brand-cloud rounded-xl flex items-center justify-center text-brand-navy border border-gray-100">
+                      <FileText size={20} />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <DocumentDownloadButton documentId={doc.id} showLabel={true} fileName={doc.fileName} category={doc.category} fileSize={doc.fileSize} />
+                      <DocumentDeleteButton documentId={doc.id} fileName={doc.fileName} />
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <DocumentDownloadButton documentId={doc.id} showLabel={true} fileName={doc.fileName} category={doc.category} fileSize={doc.fileSize} />
-                    <DocumentDeleteButton documentId={doc.id} fileName={doc.fileName} />
-                  </div>
-                  </div>
-
+                </div>
               ))}
 
               {otherDocuments.length > 0 && (
-                <>
+
                   <div className="px-6 py-3 bg-gray-50/50 text-[10px] font-black text-gray-400 uppercase tracking-widest border-t border-gray-100">
                     Other client documents
                   </div>
