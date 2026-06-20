@@ -2,13 +2,12 @@
 
 import { db } from "@/lib/db";
 import { users, auditLogs } from "@/lib/db/schema";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm";
 
 export async function updateUserRole(userId: string, newRole: string) {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session?.user || (session.user as any).role !== "ADMIN") {
     throw new Error("Unauthorized");
   }

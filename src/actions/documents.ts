@@ -5,15 +5,14 @@ import { documents, auditLogs, users, taxReturns } from "@/lib/db/schema";
 import { s3Client, BUCKET_NAME } from "@/lib/s3";
 import { PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { eq, and, isNotNull, lt, sql, desc } from "drizzle-orm";
 import { notifyDocumentRequest, notifyDocumentUpload, notifyDocumentStatusUpdate } from "@/lib/notifications";
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 
 export async function softDeleteDocument(documentId: string) {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session?.user) throw new Error("Unauthorized");
 
   const doc = await db.query.documents.findFirst({
@@ -75,7 +74,7 @@ export async function permanentlyDeleteOldDocuments() {
 }
 
 export async function requestDocument(userId: string, documentName: string) {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session?.user || (session.user as any).role === "CLIENT") throw new Error("Unauthorized");
 
   const user = await db.query.users.findFirst({
@@ -99,7 +98,7 @@ export async function requestDocument(userId: string, documentName: string) {
 }
 
 export async function getUploadUrl(fileName: string, fileType: string, category: string, returnId?: string) {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session?.user) throw new Error("Unauthorized");
 
   const userId = (session.user as any).id;
@@ -150,7 +149,7 @@ export async function registerDocument(data: {
   taxYear?: number;
   returnId?: string;
 }) {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session?.user) throw new Error("Unauthorized");
 
   const userId = (session.user as any).id;
@@ -187,7 +186,7 @@ export async function registerDocument(data: {
 }
 
 export async function getDownloadUrl(documentId: string) {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session?.user) throw new Error("Unauthorized");
 
   const doc = await db.query.documents.findFirst({
@@ -225,7 +224,7 @@ export async function getDownloadUrl(documentId: string) {
 }
 
 export async function getUserDocuments(year?: number) {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session?.user) throw new Error("Unauthorized");
 
   const userId = (session.user as any).id;
@@ -245,7 +244,7 @@ export async function getUserDocuments(year?: number) {
 }
 
 export async function getUserDocumentYears() {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session?.user) throw new Error("Unauthorized");
 
   const userId = (session.user as any).id;
@@ -263,7 +262,7 @@ export async function getUserDocumentYears() {
 }
 
 export async function getDocumentReviewQueue() {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session?.user || (session.user as any).role === "CLIENT") throw new Error("Unauthorized");
 
   return db.query.documents.findMany({
@@ -280,7 +279,7 @@ export async function getDocumentReviewQueue() {
 }
 
 export async function reviewDocument(documentId: string, status: "ACCEPTED" | "REJECTED" | "CLARIFICATION_REQUESTED", feedback?: string) {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session?.user || (session.user as any).role === "CLIENT") throw new Error("Unauthorized");
 
   const doc = await db.query.documents.findFirst({

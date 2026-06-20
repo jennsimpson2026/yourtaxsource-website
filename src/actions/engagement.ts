@@ -3,15 +3,14 @@
 import { db } from "@/lib/db";
 import { engagementLetters, auditLogs, users, workflows } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 import { generateEngagementLetterPDF } from "@/lib/pdf-server";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { s3Client, BUCKET_NAME, getPresignedUrl } from "@/lib/s3";
 import { workflowClient } from "@/lib/workflow";
 
 export async function signEngagementLetter(letterId: string, signatureData: string) {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session) return { error: "Unauthorized" };
 
   const userId = (session.user as any).id;
@@ -48,7 +47,7 @@ export async function signEngagementLetter(letterId: string, signatureData: stri
     });
 
     // Trigger Upstash Workflow
-    const { workflowInstanceId } = await workflowClient.trigger({
+    const { workflowRunId } = await workflowClient.trigger({
       url: `${process.env.NEXTAUTH_URL}/api/workflow/engagement-letter`,
       body: {
         letterId,
@@ -65,9 +64,9 @@ export async function signEngagementLetter(letterId: string, signatureData: stri
 
     // Update workflow entry with real Upstash ID if needed, 
     // or just use the one we created.
-    // Actually, trigger() returns workflowInstanceId.
+    // Actually, trigger() returns workflowRunId.
     await db.update(workflows)
-      .set({ id: workflowInstanceId })
+      .set({ id: workflowRunId })
       .where(eq(workflows.id, workflowId));
 
     // Update letter status to "PROCESSING" or similar?
@@ -89,7 +88,7 @@ export async function signEngagementLetter(letterId: string, signatureData: stri
 }
 
 export async function getEngagementLetterDownloadUrl(letterId: string) {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session) return { error: "Unauthorized" };
 
   const userId = (session.user as any).id;
