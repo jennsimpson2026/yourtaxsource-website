@@ -97,7 +97,7 @@ export const EngagementLetterPDF = ({
 
         <View style={styles.signatureBox}>
           <Text style={styles.bold}>Electronic Signature:</Text>
-          <Text style={{ fontSize: 18, marginTop: 8, fontStyle: 'italic', fontFamily: 'Times-Italic' }}>{signatureData}</Text>
+          <Text style={{ fontSize: 18, marginTop: 8, fontFamily: 'Helvetica', fontStyle: 'italic' }}>{signatureData}</Text>
           <Text style={{ marginTop: 8, color: '#666', fontSize: 9 }}>
             Signed by: {clientName}
           </Text>

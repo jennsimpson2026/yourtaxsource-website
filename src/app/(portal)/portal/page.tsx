@@ -3,7 +3,7 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { taxReturns, appointments, invoices, auditLogs, engagementLetters } from "@/lib/db/schema";
-import { eq, desc, and, gte, inArray } from "drizzle-orm";
+import { eq, desc, and, gte, inArray, not } from "drizzle-orm";
 import Link from "next/link";
 import { BookingButton } from "@/components/BookingButton";
 import { PayInvoiceButton } from "@/components/portal/PayInvoiceButton";
@@ -81,7 +81,8 @@ export default async function PortalDashboard() {
   const openRequests = await db.query.auditLogs.findMany({
     where: and(
       eq(auditLogs.targetId, userId),
-      inArray(auditLogs.action, ["REQUEST_DOCUMENT", "REQUEST_DOCUMENTS"])
+      inArray(auditLogs.action, ["REQUEST_DOCUMENT", "REQUEST_DOCUMENTS"]),
+      not(eq(auditLogs.status, "COMPLETED"))
     ),
     orderBy: [desc(auditLogs.createdAt)],
     limit: 5,

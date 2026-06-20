@@ -349,3 +349,27 @@ export async function reviewDocument(documentId: string, status: "ACCEPTED" | "R
   }
   revalidatePath("/portal/documents");
 }
+
+export async function markRequestComplete(requestId: string) {
+  const session = await auth();
+  if (!session?.user) throw new Error("Unauthorized");
+
+  const log = await db.query.auditLogs.findFirst({
+    where: eq(auditLogs.id, requestId),
+  });
+
+  if (!log) throw new Error("Request not found");
+
+  // Security: Only target user or Admin can mark as complete
+  const isTargetUser = log.targetId === (session.user as any).id;
+  const isAdmin = (session.user as any).role === "ADMIN";
+
+  if (!isTargetUser && !isAdmin) throw new Error("Forbidden");
+
+  await db.update(auditLogs)
+    .set({ status: "COMPLETED" })
+    .where(eq(auditLogs.id, requestId));
+
+  revalidatePath("/portal");
+  revalidatePath("/admin/returns");
+}
