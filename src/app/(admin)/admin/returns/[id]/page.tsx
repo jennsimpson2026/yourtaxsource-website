@@ -206,7 +206,7 @@ export default async function ReviewReturnPage({ params }: { params: Promise<{ i
               ))}
 
               {otherDocuments.length > 0 && (
-
+                <>
                   <div className="px-6 py-3 bg-gray-50/50 text-[10px] font-black text-gray-400 uppercase tracking-widest border-t border-gray-100">
                     Other client documents
                   </div>
