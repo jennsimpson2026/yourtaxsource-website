@@ -231,7 +231,7 @@ export default async function PortalDashboard() {
               <TimelineStep 
                 number={5} 
                 label="Payment" 
-                status={currentReturn?.status === 'AWAITING_PAYMENT' ? 'current' : (currentReturn?.status === 'FILED' ? 'completed' : 'pending')} 
+                status={currentReturn?.paymentStatus === 'PAID' ? 'completed' : (currentReturn?.status === 'AWAITING_PAYMENT' ? 'current' : 'pending')} 
                 icon={<CreditCard size={20} />}
               />
               <TimelineStep 

@@ -125,6 +125,26 @@ export default async function ReviewReturnPage({ params }: { params: Promise<{ i
         </div>
       </div>
 
+      {/* Ready to File Notice */}
+      {ret.paymentStatus === "PAID" && ret.status !== "FILED" && (
+        <div className="bg-green-600 text-white p-6 rounded-2xl shadow-lg border-2 border-green-400 flex items-center justify-between animate-in fade-in slide-in-from-top-4 duration-500">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+              <CheckCircle2 size={28} />
+            </div>
+            <div>
+              <h3 className="text-lg font-black uppercase tracking-tight">Ready to File</h3>
+              <p className="text-sm font-medium text-green-50 opacity-90">Payment has been received and all documents are signed. You can now file this return.</p>
+            </div>
+          </div>
+          <div className="hidden md:block">
+            <span className="text-[10px] font-black bg-white/20 px-3 py-1.5 rounded-full uppercase tracking-widest border border-white/30">
+              Action Required
+            </span>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
           {/* Intake Questionnaire */}

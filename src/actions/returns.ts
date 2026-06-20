@@ -23,17 +23,17 @@ export async function updateReturnDetails(returnId: string, data: {
 
   const updateData: any = { updatedAt: new Date() };
   if (data.status) updateData.status = data.status;
-  if (data.paymentStatus) updateData.paymentStatus = data.paymentStatus;
+  
+  // Ensure paymentStatus is properly handled (especially transition to PAID)
+  if (data.paymentStatus) {
+    updateData.paymentStatus = data.paymentStatus;
+  }
+  
   if (data.notes !== undefined) updateData.notes = data.notes;
   if (data.federalResult !== undefined) updateData.federalResult = data.federalResult;
   if (data.taxPrepFee !== undefined) updateData.taxPrepFee = data.taxPrepFee;
-  if (data.stateResults !== undefined) {
-    updateData.stateResults = typeof data.stateResults === 'string' 
-      ? data.stateResults 
-      : JSON.stringify(data.stateResults);
-  }
-  if (data.manualRelease !== undefined) updateData.manualRelease = data.manualRelease;
-  if (data.isComplimentary !== undefined) updateData.isComplimentary = data.isComplimentary;
+  
+  console.log(`[updateReturnDetails] Updating return ${returnId}`, updateData);
 
   const [updatedReturn] = await db.update(taxReturns)
     .set(updateData)
@@ -41,6 +41,8 @@ export async function updateReturnDetails(returnId: string, data: {
     .returning();
 
   if (updatedReturn) {
+    console.log(`[updateReturnDetails] Successfully updated return ${returnId}. New status: ${updatedReturn.status}, Payment: ${updatedReturn.paymentStatus}`);
+    
     const client = await db.query.users.findFirst({
       where: eq(users.id, updatedReturn.clientId),
       with: {
@@ -55,6 +57,7 @@ export async function updateReturnDetails(returnId: string, data: {
 
       if (data.paymentStatus === "PAID" || data.manualRelease === true || data.isComplimentary === true) {
         // Release documents on payment or manual release
+        console.log(`[updateReturnDetails] Releasing documents for return ${returnId}`);
         await releaseReturnDocuments(returnId, (session.user as any).id);
 
         if (data.paymentStatus === "PAID") {
@@ -62,21 +65,37 @@ export async function updateReturnDetails(returnId: string, data: {
             where: and(eq(invoices.returnId, returnId), eq(invoices.status, "UNPAID")),
           });
           
-          const totalAmount = unpaidInvoices.reduce((sum, inv) => sum + Number(inv.amount), 0);
+          let totalAmount = unpaidInvoices.reduce((sum, inv) => sum + Number(inv.amount), 0);
           
           // Mark invoices as paid if manual payment entry
           if (unpaidInvoices.length > 0) {
+            console.log(`[updateReturnDetails] Marking ${unpaidInvoices.length} invoices as PAID`);
             await db.update(invoices)
               .set({ status: "PAID", paidAt: new Date() })
               .where(and(eq(invoices.returnId, returnId), eq(invoices.status, "UNPAID")));
+          } else if (Number(updatedReturn.taxPrepFee) > 0) {
+            // If no unpaid invoices but fee exists, create a paid invoice to satisfy balance logic
+            console.log(`[updateReturnDetails] Creating a PAID invoice for fee amount: ${updatedReturn.taxPrepFee}`);
+            await db.insert(invoices).values({
+              userId: updatedReturn.clientId,
+              returnId: returnId,
+              amount: Number(updatedReturn.taxPrepFee),
+              status: "PAID",
+              paidAt: new Date(),
+            });
+            totalAmount = Number(updatedReturn.taxPrepFee);
           }
 
-          await notifyAdminPaymentReceived({
-            clientName: client.name || "Client",
-            amount: totalAmount,
-            method: "Manual Entry (Admin)",
-            invoiceReference: `Return ${updatedReturn.year}`,
-          });
+          try {
+            await notifyAdminPaymentReceived({
+              clientName: client.name || "Client",
+              amount: totalAmount,
+              method: "Manual Entry (Admin)",
+              invoiceReference: `Return ${updatedReturn.year}`,
+            });
+          } catch (notifErr) {
+            console.error("[updateReturnDetails] Notification failed but proceeding:", notifErr);
+          }
         }
       }
     }
