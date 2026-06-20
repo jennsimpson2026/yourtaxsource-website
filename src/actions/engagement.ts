@@ -184,7 +184,7 @@ export async function createEngagementLetter(returnId: string) {
 
   // Check if one already exists to avoid duplicates
   const existing = await db.query.engagementLetters.findFirst({
-    where: eq(engagementLetters.id, returnId),
+    where: eq(engagementLetters.returnId, returnId),
   });
 
   if (existing) return existing;

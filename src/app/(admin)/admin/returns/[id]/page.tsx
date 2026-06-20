@@ -126,7 +126,7 @@ export default async function ReviewReturnPage({ params }: { params: Promise<{ i
       </div>
 
       {/* Ready to File Notice */}
-      {ret.paymentStatus?.toUpperCase() === "PAID" && ret.status?.toUpperCase() !== "FILED" && (
+      {ret.paymentStatus?.trim().toUpperCase() === "PAID" && ret.status?.trim().toUpperCase() !== "FILED" && (
         <div className="bg-green-600 text-white p-6 rounded-2xl shadow-lg border-2 border-green-400 flex items-center justify-between animate-in fade-in slide-in-from-top-4 duration-500">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">

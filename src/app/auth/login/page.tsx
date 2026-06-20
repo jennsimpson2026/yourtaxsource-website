@@ -157,6 +157,7 @@ export default function LoginPage() {
           src="/images/jenn-portrait-office.png"
           alt="Jenn Simpson"
           fill
+          sizes="50vw"
           className="h-full w-full object-cover"
           priority
         />

@@ -56,6 +56,7 @@ export default function Home() {
                       src="/images/jenn-hero-authentic.png"
                       alt="Jenn Simpson, Your Tax Source"
                       fill
+                      sizes="(max-width: 1024px) 100vw, 50vw"
                       className="object-cover object-top"
                       priority
                     />
@@ -132,6 +133,7 @@ export default function Home() {
                       src="/images/jenn-meeting-authentic.png"
                       alt="Jenn meeting with clients"
                       fill
+                      sizes="(max-width: 1024px) 100vw, 25vw"
                       className="object-cover group-hover:scale-110 transition-transform duration-500"
                     />
                   </div>
@@ -145,6 +147,7 @@ export default function Home() {
                       src="/images/jenn-working-authentic.png"
                       alt="Jenn reviewing reports"
                       fill
+                      sizes="(max-width: 1024px) 100vw, 25vw"
                       className="object-cover group-hover:scale-110 transition-transform duration-500"
                     />
                   </div>
@@ -153,6 +156,7 @@ export default function Home() {
                       src="/images/jenn-consultation-authentic.png"
                       alt="Jenn working in office"
                       fill
+                      sizes="(max-width: 1024px) 100vw, 25vw"
                       className="object-cover group-hover:scale-110 transition-transform duration-500"
                     />
                   </div>

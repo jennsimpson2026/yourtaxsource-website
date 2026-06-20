@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { taxReturns, appointments, invoices, auditLogs, engagementLetters } from "@/lib/db/schema";
 import { eq, desc, and, gte, inArray, not } from "drizzle-orm";
 import Link from "next/link";
+import Image from "next/image";
 import { BookingButton } from "@/components/BookingButton";
 import { PayInvoiceButton } from "@/components/portal/PayInvoiceButton";
 import { OpenRequests } from "@/components/portal/OpenRequests";
@@ -120,38 +121,47 @@ export default async function PortalDashboard() {
     return (
       <div className="max-w-6xl mx-auto space-y-12 pb-20">
         {/* Welcome Banner */}
-        <div className="bg-brand-black rounded-[2.5rem] p-8 md:p-14 text-white shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-brand-purple opacity-20 rounded-full -mr-32 -mt-32 blur-3xl"></div>
-          <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-10">
-            <div className="text-center md:text-left">
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-brand-purple/20 text-brand-lavender rounded-full text-[10px] font-bold uppercase tracking-widest mb-6 border border-brand-purple/30">
-                <ShieldCheck size={12} /> Secure Client Environment
-              </div>
-              <h2 className="text-4xl md:text-5xl font-heading font-bold mb-6">
-                Welcome, <span className="text-brand-purple">{(session?.user?.name || 'Neighbor').split(' ')[0]}</span>
-              </h2>
-              <p className="text-gray-400 text-lg max-w-xl leading-relaxed">
-                Your Boutique Advisory hub for tax preparation, secure document sharing, and financial strategy.
-              </p>
+        <div className="bg-white rounded-[2.5rem] p-0 shadow-xl shadow-brand-purple/5 border border-gray-100 overflow-hidden relative flex flex-col md:flex-row">
+          <div className="flex-1 p-8 md:p-14 flex flex-col justify-center">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-brand-purple/10 text-brand-purple rounded-full text-[10px] font-black uppercase tracking-widest mb-6 w-fit">
+              <ShieldCheck size={12} /> Secure Advisory Portal
             </div>
-            <div className="flex flex-col gap-4 w-full md:w-80">
+            <h2 className="text-4xl md:text-5xl font-serif font-medium text-brand-black mb-6 leading-tight">
+              Welcome back, <span className="text-brand-purple">{(session?.user?.name || 'Neighbor').split(' ')[0]}</span>
+            </h2>
+            <p className="text-brand-charcoal/60 text-lg max-w-md leading-relaxed mb-10">
+              Your personalized hub for tax preparation, secure advisory, and financial peace of mind.
+            </p>
+            
+            <div className="flex flex-wrap gap-4">
               {hasEncryption ? (
                 <Link 
                   href="/portal/annual-update"
-                  className="bg-brand-purple text-white px-8 py-5 rounded-2xl font-bold text-lg hover:bg-opacity-90 transition-all shadow-lg shadow-brand-purple/20 flex items-center justify-center gap-3 group"
+                  className="bg-brand-purple text-white px-8 py-4 rounded-xl font-bold text-base hover:bg-brand-purple/90 transition-all shadow-lg shadow-brand-purple/20 flex items-center gap-3 group"
                 >
-                  <ClipboardCheck size={24} />
+                  <ClipboardCheck size={20} />
                   Annual Update
-                  <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                 </Link>
               ) : (
-                <div className="bg-brand-purple/20 text-brand-lavender/50 px-8 py-5 rounded-2xl font-bold text-lg flex flex-col items-center justify-center gap-1 border border-brand-purple/30 italic">
-                  <span className="flex items-center gap-2"><Lock size={18} /> Annual Update</span>
-                  <span className="text-[10px] uppercase tracking-widest">Coming in Phase 2</span>
+                <div className="bg-brand-purple/10 text-brand-purple/60 px-8 py-4 rounded-xl font-bold text-base flex items-center gap-2 border border-brand-purple/20 italic">
+                  <Lock size={18} /> Annual Update (Coming Soon)
                 </div>
               )}
-              <BookingButton className="bg-white text-brand-black px-8 py-4 rounded-2xl font-bold text-base hover:bg-gray-100 transition-all flex items-center justify-center gap-2" />
+              <BookingButton className="bg-white text-brand-black px-8 py-4 rounded-xl font-bold text-base border border-gray-200 hover:bg-gray-50 transition-all flex items-center gap-2" />
             </div>
+          </div>
+          
+          <div className="w-full md:w-[400px] h-[300px] md:h-auto relative bg-brand-lavender/30">
+            <Image
+              src="/images/jenn-portrait-office.png"
+              alt="Jenn Simpson"
+              fill
+              sizes="(max-width: 768px) 100vw, 400px"
+              className="object-cover object-top mix-blend-multiply opacity-90"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-white via-transparent to-transparent hidden md:block" />
+            <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent md:hidden" />
           </div>
         </div>
 
@@ -173,7 +183,7 @@ export default async function PortalDashboard() {
                 <div className="inline-flex items-center gap-2 px-3 py-1 bg-brand-purple/10 text-brand-purple rounded-full text-[10px] font-black uppercase tracking-widest mb-4">
                   <CreditCard size={12} /> Payment Balance
                 </div>
-                <h3 className="text-3xl font-heading font-black text-brand-black">Outstanding Balance</h3>
+                <h3 className="text-3xl font-serif font-medium text-brand-black">Outstanding Balance</h3>
                 <p className="text-brand-charcoal/60 mt-2 font-medium">Your total balance for tax preparation services.</p>
               </div>
               
@@ -181,7 +191,7 @@ export default async function PortalDashboard() {
                 <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">Total Due</span>
                 <span className="text-5xl font-black text-brand-navy">${outstandingBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                 <div className="mt-6 w-full">
-                  <Link href="#invoices" className="bg-brand-purple text-white w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-opacity-90 transition-all">
+                  <Link href="#invoices" className="bg-brand-purple text-white w-full py-4 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-brand-purple/90 transition-all shadow-lg shadow-brand-purple/10">
                     Pay Now <ArrowRight size={18} />
                   </Link>
                 </div>
@@ -191,17 +201,22 @@ export default async function PortalDashboard() {
         )}
 
         {/* 6-Step Visual Timeline */}
-        <section className="bg-white rounded-[2rem] p-8 md:p-12 border border-gray-100 shadow-sm">
-          <div className="flex flex-col md:flex-row justify-between items-center mb-12 gap-4">
-            <h3 className="text-2xl font-heading font-bold text-brand-black">Your Tax Filing Journey</h3>
-            <div className="text-sm font-bold text-brand-purple bg-brand-purple/5 px-4 py-2 rounded-full">
-              Status: {currentReturn?.status?.replace(/_/g, ' ') || 'Starting Soon'}
+        <section className="bg-white rounded-[2rem] p-8 md:p-12 border border-gray-100 shadow-sm relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-brand-lavender opacity-5 rounded-full -mr-20 -mt-20 blur-2xl" />
+          
+          <div className="flex flex-col md:flex-row justify-between items-center mb-16 gap-4 relative z-10">
+            <div>
+              <h3 className="text-3xl font-serif font-medium text-brand-black">Your Tax Journey</h3>
+              <p className="text-brand-charcoal/40 text-sm font-medium mt-1">A transparent view of your filing progress</p>
+            </div>
+            <div className="text-xs font-black uppercase tracking-widest text-brand-purple bg-brand-purple/5 px-6 py-2.5 rounded-full border border-brand-purple/10">
+              Current Status: {currentReturn?.status?.replace(/_/g, ' ') || 'Onboarding'}
             </div>
           </div>
           
           <div className="relative">
             {/* Progress Line */}
-            <div className="absolute top-1/2 left-0 w-full h-0.5 bg-gray-100 -translate-y-1/2 hidden md:block"></div>
+            <div className="absolute top-6 left-0 w-full h-0.5 bg-gray-100 -translate-y-1/2 hidden md:block"></div>
             
             <div className="grid grid-cols-2 md:grid-cols-6 gap-8 relative z-10">
               <TimelineStep 
@@ -212,27 +227,27 @@ export default async function PortalDashboard() {
               />
               <TimelineStep 
                 number={2} 
-                label="Upload Docs" 
+                label="Engagement" 
+                status={currentLetter?.status === 'SIGNED' ? 'completed' : (currentLetter ? 'current' : 'pending')} 
+                icon={<PenTool size={20} />}
+              />
+              <TimelineStep 
+                number={3} 
+                label="Documents" 
                 status={currentReturn?.status === 'IN_PROCESS' ? 'current' : (currentReturn && ['READY_FOR_SIGNATURE', 'AWAITING_PAYMENT', 'FILED'].includes(currentReturn.status) ? 'completed' : 'pending')} 
                 icon={<Upload size={20} />}
               />
               <TimelineStep 
-                number={3} 
-                label="Tax Preparation" 
+                number={4} 
+                label="Preparation" 
                 status={currentReturn?.status === 'IN_PROCESS' ? 'current' : (currentReturn && ['READY_FOR_SIGNATURE', 'AWAITING_PAYMENT', 'FILED'].includes(currentReturn.status) ? 'completed' : 'pending')} 
                 icon={<Lock size={20} />}
               />
               <TimelineStep 
-                number={4} 
+                number={5} 
                 label="Signature" 
                 status={currentReturn?.status === 'READY_FOR_SIGNATURE' ? 'current' : (currentReturn && ['AWAITING_PAYMENT', 'FILED'].includes(currentReturn.status) ? 'completed' : 'pending')} 
                 icon={<PenTool size={20} />}
-              />
-              <TimelineStep 
-                number={5} 
-                label="Payment" 
-                status={currentReturn?.paymentStatus === 'PAID' ? 'completed' : (currentReturn?.status === 'AWAITING_PAYMENT' ? 'current' : 'pending')} 
-                icon={<CreditCard size={20} />}
               />
               <TimelineStep 
                 number={6} 
@@ -328,7 +343,7 @@ export default async function PortalDashboard() {
                   <CreditCard size={24} />
                 </div>
                 <div>
-                  <h3 className="text-2xl font-heading font-bold text-brand-black">Outstanding Invoices</h3>
+                  <h3 className="text-2xl font-serif font-medium text-brand-black">Outstanding Invoices</h3>
                   <p className="text-brand-purple font-bold text-sm">Action Required: Payment Needed</p>
                 </div>
               </div>
@@ -369,7 +384,7 @@ export default async function PortalDashboard() {
               <div className="w-12 h-12 bg-brand-lavender rounded-2xl flex items-center justify-center text-brand-purple">
                 <Zap size={24} />
               </div>
-              <h3 className="text-2xl font-heading font-bold text-brand-black">Manual Payment (No Fees)</h3>
+              <h3 className="text-2xl font-serif font-medium text-brand-black">Manual Payment (No Fees)</h3>
             </div>
             <p className="text-brand-charcoal/60 text-sm mb-8 leading-relaxed">
               Prefer to pay via mobile app? Scan the codes below or use the direct links to pay Jenn directly. 
@@ -410,7 +425,7 @@ export default async function PortalDashboard() {
               <div className="w-12 h-12 bg-brand-lavender rounded-2xl flex items-center justify-center text-brand-purple">
                 <CreditCard size={24} />
               </div>
-              <h3 className="text-2xl font-heading font-bold text-brand-black">Other Payment Methods</h3>
+              <h3 className="text-2xl font-serif font-medium text-brand-black">Other Payment Methods</h3>
             </div>
             <p className="text-brand-charcoal/60 text-sm mb-6">
               We accept the following secure payment methods for your convenience:
@@ -451,7 +466,7 @@ export default async function PortalDashboard() {
                 <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center text-brand-lavender">
                   <ShieldCheck size={24} />
                 </div>
-                <h3 className="text-2xl font-heading font-bold">Privacy & Security</h3>
+                <h3 className="text-2xl font-serif font-medium text-white">Privacy & Security</h3>
               </div>
               <p className="text-gray-400 text-sm mb-6 leading-relaxed">
                 Your security is our top priority. We use bank-grade encryption to protect your Personally Identifiable Information (PII) and financial data.
@@ -479,7 +494,7 @@ export default async function PortalDashboard() {
                 <div className="w-12 h-12 bg-brand-soft-gray rounded-2xl flex items-center justify-center text-brand-purple">
                   <Calendar size={24} />
                 </div>
-                <h3 className="text-2xl font-heading font-bold text-brand-black">Upcoming Appointments</h3>
+                <h3 className="text-2xl font-serif font-medium text-brand-black">Upcoming Appointments</h3>
               </div>
               <BookingButton className="text-brand-purple font-bold text-sm hover:underline" label="Book New" />
             </div>
@@ -532,15 +547,15 @@ function TimelineStep({
   return (
     <div className="flex flex-col items-center text-center relative">
       <div className={`
-        w-12 h-12 rounded-full flex items-center justify-center mb-4 border-2 transition-all duration-500
-        ${status === 'completed' ? 'bg-brand-purple border-brand-purple text-white' : 
-          status === 'current' ? 'bg-white border-brand-purple text-brand-purple scale-110 shadow-lg shadow-brand-purple/20' : 
-          'bg-white border-gray-200 text-gray-300'}
+        w-12 h-12 rounded-2xl flex items-center justify-center mb-4 border-2 transition-all duration-500 relative z-20
+        ${status === 'completed' ? 'bg-brand-purple border-brand-purple text-white shadow-lg shadow-brand-purple/20' : 
+          status === 'current' ? 'bg-white border-brand-purple text-brand-purple scale-110 shadow-xl shadow-brand-purple/10' : 
+          'bg-white border-gray-100 text-gray-300'}
       `}>
         {status === 'completed' ? <CheckCircle2 size={24} /> : icon}
       </div>
       <div className="space-y-1">
-        <p className={`text-[10px] font-black uppercase tracking-tighter ${status === 'pending' ? 'text-gray-300' : 'text-brand-purple'}`}>
+        <p className={`text-[9px] font-black uppercase tracking-[0.2em] ${status === 'pending' ? 'text-gray-300' : 'text-brand-purple'}`}>
           Step {number}
         </p>
         <p className={`text-xs font-bold leading-tight ${status === 'pending' ? 'text-gray-400' : 'text-brand-black'}`}>
@@ -567,11 +582,11 @@ function DashboardCard({
   accentColor?: string;
 }) {
   return (
-    <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all group hover:-translate-y-1 flex flex-col">
+    <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all group hover:-translate-y-1 flex flex-col h-full">
       <div className="w-14 h-14 bg-brand-soft-gray rounded-2xl flex items-center justify-center mb-6 group-hover:bg-brand-lavender transition-colors">
         {icon}
       </div>
-      <h3 className="text-xl font-heading font-bold text-brand-black mb-3">{title}</h3>
+      <h3 className="text-xl font-serif font-medium text-brand-black mb-3">{title}</h3>
       <p className="text-brand-charcoal/60 text-sm mb-8 leading-relaxed">
         {description}
       </p>
