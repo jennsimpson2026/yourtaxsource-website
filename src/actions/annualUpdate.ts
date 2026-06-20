@@ -8,6 +8,9 @@ import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { auth } from "@/lib/auth";
 import { eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import React from "react";
+import { renderToBuffer } from "@react-pdf/renderer";
+import { AnnualUpdatePDF } from "@/components/portal/AnnualUpdatePDF";
 
 export async function submitAnnualUpdate(data: any) {
   const session = await auth();
