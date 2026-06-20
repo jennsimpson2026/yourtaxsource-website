@@ -40,7 +40,7 @@ export default async function AdminDashboard() {
     .from(taxReturns)
     .where(and(
       inArray(taxReturns.status, ["FILED", "AWAITING_PAYMENT", "READY_FOR_SIGNATURE"]),
-      not(eq(taxReturns.paymentStatus, "PAID")),
+      not(sql`upper(trim(${taxReturns.paymentStatus})) = 'PAID'`),
       gt(taxReturns.taxPrepFee, 0)
     ));
 
@@ -62,7 +62,7 @@ export default async function AdminDashboard() {
   const outstandingFeesReturns = await db.query.taxReturns.findMany({
     where: and(
       inArray(taxReturns.status, ["FILED", "AWAITING_PAYMENT", "READY_FOR_SIGNATURE"]),
-      not(eq(taxReturns.paymentStatus, "PAID")),
+      not(sql`upper(trim(${taxReturns.paymentStatus})) = 'PAID'`),
       gt(taxReturns.taxPrepFee, 0)
     ),
     with: {
@@ -90,8 +90,8 @@ export default async function AdminDashboard() {
 
   const readyToFileReturns = await db.query.taxReturns.findMany({
     where: and(
-      eq(taxReturns.paymentStatus, "PAID"),
-      not(eq(taxReturns.status, "FILED"))
+      sql`upper(trim(${taxReturns.paymentStatus})) = 'PAID'`,
+      not(sql`upper(trim(${taxReturns.status})) = 'FILED'`)
     ),
     with: {
       client: true,
