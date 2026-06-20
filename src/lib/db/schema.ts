@@ -72,11 +72,12 @@ export const taxReturns = sqliteTable("tax_returns", {
     .references(() => users.id)
     .notNull(),
   year: integer("year").notNull(),
-  status: text("status").default("NOT_STARTED").notNull(), // 'NOT_STARTED', 'IN_PROGRESS', etc.
+  status: text("status").default("NOT_STARTED").notNull(), // 'NOT_STARTED', 'IN_PROCESS', 'READY_FOR_SIGNATURE', 'AWAITING_PAYMENT', 'FILED'
   paymentStatus: text("payment_status").default("UNPAID").notNull(),
   assignedStaffId: text("assigned_staff_id").references(() => users.id),
   federalResult: real("federal_result"),
   stateResults: text("state_results"), // JSON string
+  taxPrepFee: real("tax_prep_fee").default(0),
   manualRelease: integer("manual_release", { mode: "boolean" }).default(false).notNull(),
   isComplimentary: integer("is_complimentary", { mode: "boolean" }).default(false).notNull(),
   notes: text("notes"),
@@ -178,6 +179,7 @@ export const auditLogs = sqliteTable("audit_logs", {
   action: text("action").notNull(),
   targetType: text("target_type").notNull(),
   targetId: text("target_id"),
+  status: text("status").default("PENDING"),
   metadata: text("metadata"), // JSON string
   ipAddress: text("ip_address"),
   createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),
@@ -234,11 +236,14 @@ export const engagementLetters = sqliteTable("engagement_letters", {
   returnId: text("return_id")
     .references(() => taxReturns.id)
     .notNull(),
-  status: text("status").default("PENDING").notNull(), // 'PENDING', 'SIGNED'
+  status: text("status").default("PENDING").notNull(), // 'PENDING', 'SIGNED', 'PROCESSING'
   content: text("content").notNull(),
   signedAt: integer("signed_at", { mode: "timestamp" }),
   signatureData: text("signature_data"),
   s3Key: text("s3_key"),
+  consentAgreed: integer("consent_agreed", { mode: "boolean" }).default(false).notNull(),
+  consentElectronic: integer("consent_electronic", { mode: "boolean" }).default(false).notNull(),
+  consentResponsibility: integer("consent_responsibility", { mode: "boolean" }).default(false).notNull(),
   createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),
 }, (table) => ({

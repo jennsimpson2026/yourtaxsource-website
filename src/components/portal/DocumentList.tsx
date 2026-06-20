@@ -107,7 +107,7 @@ export function DocumentList({ documents }: { documents: Document[] }) {
                   <div className="flex justify-end gap-2">
                     {doc.isLocked ? (
                       <button
-                        onClick={() => alert("This final return is locked until the invoice is paid. Please visit the Payments tab.")}
+                        onClick={() => alert("This final return is locked until your tax preparation fee is paid. Please visit the Payments section on your dashboard.")}
                         className="p-2 text-amber-500 hover:bg-amber-50 rounded-lg transition-colors"
                         title="Locked - Payment Required"
                       >

@@ -1,0 +1,18 @@
+import { createClient } from "@libsql/client";
+
+async function test() {
+  const client = createClient({
+    url: process.env.DATABASE_URL!,
+    authToken: process.env.DATABASE_AUTH_TOKEN,
+  });
+
+  try {
+    console.log("Checking table_info for tax_returns in production DB...");
+    const result = await client.execute("PRAGMA table_info(tax_returns)");
+    console.log(JSON.stringify(result.rows, null, 2));
+  } catch (error) {
+    console.error("Failed to check table info!", error);
+  }
+}
+
+test();

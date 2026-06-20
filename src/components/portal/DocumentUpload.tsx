@@ -31,24 +31,34 @@ export function DocumentUpload({ returnId }: { returnId?: string }) {
 
     try {
       // 1. Get pre-signed URL
+      console.log("Requesting upload URL for:", file.name, category);
       const { uploadUrl, s3Key, taxYear } = await getUploadUrl(
         file.name,
         file.type,
         category,
         returnId
       );
-
       // 2. Upload to S3
-      const uploadResponse = await fetch(uploadUrl, {
-        method: "PUT",
-        body: file,
-        headers: {
-          "Content-Type": file.type,
-        },
-      });
+      try {
+        const uploadResponse = await fetch(uploadUrl, {
+          method: "PUT",
+          body: file,
+          headers: {
+            "Content-Type": file.type,
+          },
+        });
 
-      if (!uploadResponse.ok) {
-        throw new Error("Failed to upload file to storage.");
+        if (!uploadResponse.ok) {
+          const errorText = await uploadResponse.text();
+          console.error("S3 Upload Error Response:", errorText);
+          throw new Error(`S3 Error (${uploadResponse.status}): ${uploadResponse.statusText}. Please verify AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are valid in Vercel.`);
+        }
+      } catch (fetchErr: any) {
+        console.error("Fetch/CORS Error during S3 PUT:", fetchErr);
+        if (fetchErr.message === "Failed to fetch") {
+          throw new Error("Upload failed: Connection blocked. This usually means the S3 Bucket CORS policy is missing or your local browser is blocking the request. Verify the CORS JSON provided in Headquarters is applied to your bucket.");
+        }
+        throw fetchErr;
       }
 
       // 3. Register in database

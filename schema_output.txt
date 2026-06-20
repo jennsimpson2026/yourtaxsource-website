@@ -1,0 +1,115 @@
+Checking table_info for tax_returns in production DB...
+[
+  {
+    "cid": 0,
+    "name": "id",
+    "type": "TEXT",
+    "notnull": 1,
+    "dflt_value": null,
+    "pk": 1
+  },
+  {
+    "cid": 1,
+    "name": "client_id",
+    "type": "TEXT",
+    "notnull": 1,
+    "dflt_value": null,
+    "pk": 0
+  },
+  {
+    "cid": 2,
+    "name": "year",
+    "type": "INTEGER",
+    "notnull": 1,
+    "dflt_value": null,
+    "pk": 0
+  },
+  {
+    "cid": 3,
+    "name": "status",
+    "type": "TEXT",
+    "notnull": 1,
+    "dflt_value": "'NOT_STARTED'",
+    "pk": 0
+  },
+  {
+    "cid": 4,
+    "name": "payment_status",
+    "type": "TEXT",
+    "notnull": 1,
+    "dflt_value": "'UNPAID'",
+    "pk": 0
+  },
+  {
+    "cid": 5,
+    "name": "assigned_staff_id",
+    "type": "TEXT",
+    "notnull": 0,
+    "dflt_value": null,
+    "pk": 0
+  },
+  {
+    "cid": 6,
+    "name": "notes",
+    "type": "TEXT",
+    "notnull": 0,
+    "dflt_value": null,
+    "pk": 0
+  },
+  {
+    "cid": 7,
+    "name": "created_at",
+    "type": "INTEGER",
+    "notnull": 1,
+    "dflt_value": "strftime('%s', 'now')",
+    "pk": 0
+  },
+  {
+    "cid": 8,
+    "name": "updated_at",
+    "type": "INTEGER",
+    "notnull": 1,
+    "dflt_value": "strftime('%s', 'now')",
+    "pk": 0
+  },
+  {
+    "cid": 9,
+    "name": "federal_result",
+    "type": "REAL",
+    "notnull": 0,
+    "dflt_value": null,
+    "pk": 0
+  },
+  {
+    "cid": 10,
+    "name": "state_results",
+    "type": "TEXT",
+    "notnull": 0,
+    "dflt_value": null,
+    "pk": 0
+  },
+  {
+    "cid": 11,
+    "name": "manual_release",
+    "type": "INTEGER",
+    "notnull": 1,
+    "dflt_value": "false",
+    "pk": 0
+  },
+  {
+    "cid": 12,
+    "name": "is_complimentary",
+    "type": "INTEGER",
+    "notnull": 1,
+    "dflt_value": "false",
+    "pk": 0
+  },
+  {
+    "cid": 13,
+    "name": "tax_prep_fee",
+    "type": "REAL",
+    "notnull": 0,
+    "dflt_value": "0",
+    "pk": 0
+  }
+]

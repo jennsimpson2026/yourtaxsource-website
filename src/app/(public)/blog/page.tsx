@@ -1,37 +1,35 @@
+import { db } from "@/lib/db";
+import { posts, categories } from "@/lib/db/schema";
+import { desc, eq } from "drizzle-orm";
 import Link from "next/link";
 import { ArrowRight, Calendar, User, Tag, ChevronRight } from "lucide-react";
 
-const BLOG_POSTS = [
-  {
-    title: "5 Tax Planning Strategies for Small Business Owners in 2024",
-    excerpt: "Maximize your deductions and prepare for the upcoming tax season with these essential tips.",
-    date: "June 15, 2024",
-    author: "Jenn Simpson",
-    category: "Small Business",
-    slug: "tax-planning-strategies-2024",
-    image: "https://images.unsplash.com/photo-1454165833767-027ffea9e7a7?q=80&w=800&auto=format&fit=crop"
-  },
-  {
-    title: "Understanding the New Clean Vehicle Credit",
-    excerpt: "What you need to know about qualifying for the federal tax credit when purchasing an EV.",
-    date: "June 10, 2024",
-    author: "Jenn Simpson",
-    category: "Individual Tax",
-    slug: "clean-vehicle-credit-guide",
-    image: "https://images.unsplash.com/photo-1593941707882-a5bba14938c7?q=80&w=800&auto=format&fit=crop"
-  },
-  {
-    title: "How to Keep Your Books Audit-Ready All Year Round",
-    excerpt: "Best practices for document retention and financial record-keeping for entrepreneurs.",
-    date: "June 05, 2024",
-    author: "Jenn Simpson",
-    category: "Bookkeeping",
-    slug: "audit-ready-bookkeeping",
-    image: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?q=80&w=800&auto=format&fit=crop"
-  }
-];
+export default async function BlogPage() {
+  const dbPosts = await db.query.posts.findMany({
+    where: eq(posts.status, "published"),
+    with: {
+      category: true,
+      author: true,
+    },
+    orderBy: [desc(posts.publishDate)],
+  });
 
-export default function BlogPage() {
+  const dbCategories = await db.query.categories.findMany({
+    with: {
+      posts: true,
+    }
+  });
+
+  const displayPosts = dbPosts.map(p => ({
+    title: p.title,
+    excerpt: p.content.substring(0, 150).replace(/<[^>]*>/g, '') + "...",
+    date: p.publishDate ? new Date(p.publishDate).toLocaleDateString() : "Draft",
+    author: (p as any).author?.name || "Jenn Simpson",
+    category: (p as any).category?.name || "Uncategorized",
+    slug: p.slug,
+    image: p.featuredImageUrl || "https://images.unsplash.com/photo-1454165833767-027ffea9e7a7?q=80&w=800&auto=format&fit=crop"
+  }));
+
   return (
     <div className="bg-white min-h-screen">
       {/* Hero Section */}
@@ -47,35 +45,41 @@ export default function BlogPage() {
 
       {/* Featured Posts */}
       <section className="py-20 max-w-7xl mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-          {BLOG_POSTS.map((post, idx) => (
-            <Link key={idx} href={`/blog/${post.slug}`} className="group flex flex-col">
-              <div className="relative h-64 w-full mb-6 overflow-hidden rounded-3xl">
-                <img 
-                  src={post.image} 
-                  alt={post.title} 
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-                <div className="absolute top-4 left-4 bg-brand-purple text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest">
-                  {post.category}
+        {displayPosts.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+            {displayPosts.map((post, idx) => (
+              <Link key={idx} href={`/blog/${post.slug}`} className="group flex flex-col">
+                <div className="relative h-64 w-full mb-6 overflow-hidden rounded-3xl">
+                  <img 
+                    src={post.image} 
+                    alt={post.title} 
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute top-4 left-4 bg-brand-purple text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest">
+                    {post.category}
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-center gap-4 text-xs font-bold text-brand-charcoal/40 uppercase tracking-widest mb-3">
-                <span className="flex items-center gap-1"><Calendar size={14} /> {post.date}</span>
-                <span className="flex items-center gap-1"><User size={14} /> {post.author}</span>
-              </div>
-              <h3 className="text-2xl font-heading font-bold text-brand-black group-hover:text-brand-purple transition-colors mb-4 line-clamp-2">
-                {post.title}
-              </h3>
-              <p className="text-brand-charcoal/60 leading-relaxed mb-6 line-clamp-3">
-                {post.excerpt}
-              </p>
-              <div className="mt-auto flex items-center gap-2 text-brand-purple font-bold text-sm">
-                Read Article <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-              </div>
-            </Link>
-          ))}
-        </div>
+                <div className="flex items-center gap-4 text-xs font-bold text-brand-charcoal/40 uppercase tracking-widest mb-3">
+                  <span className="flex items-center gap-1"><Calendar size={14} /> {post.date}</span>
+                  <span className="flex items-center gap-1"><User size={14} /> {post.author}</span>
+                </div>
+                <h3 className="text-2xl font-heading font-bold text-brand-black group-hover:text-brand-purple transition-colors mb-4 line-clamp-2">
+                  {post.title}
+                </h3>
+                <p className="text-brand-charcoal/60 leading-relaxed mb-6 line-clamp-3">
+                  {post.excerpt}
+                </p>
+                <div className="mt-auto flex items-center gap-2 text-brand-purple font-bold text-sm">
+                  Read Article <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                </div>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-20 bg-gray-50 rounded-[3rem] border border-dashed border-gray-200">
+            <h3 className="text-xl font-bold text-gray-400">No published articles yet. Check back soon!</h3>
+          </div>
+        )}
       </section>
 
       {/* Categories & Newsletter */}
@@ -84,12 +88,16 @@ export default function BlogPage() {
           <div>
             <h2 className="text-3xl font-heading font-bold text-brand-black mb-10">Browse by Category</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <CategoryLink label="Small Business Tax" count={12} />
-              <CategoryLink label="Individual Planning" count={8} />
-              <CategoryLink label="IRS Updates" count={15} />
-              <CategoryLink label="Bookkeeping Tips" count={6} />
-              <CategoryLink label="Wealth Building" count={4} />
-              <CategoryLink label="Tax Deadlines" count={9} />
+              {dbCategories.length > 0 ? dbCategories.map(cat => (
+                <CategoryLink key={cat.id} label={cat.name} count={cat.posts.length} />
+              )) : (
+                <>
+                  <CategoryLink label="Small Business Tax" count={12} />
+                  <CategoryLink label="Individual Planning" count={8} />
+                  <CategoryLink label="IRS Updates" count={15} />
+                  <CategoryLink label="Bookkeeping Tips" count={6} />
+                </>
+              )}
             </div>
           </div>
           <div className="bg-brand-black p-12 rounded-[3rem] text-white relative overflow-hidden">

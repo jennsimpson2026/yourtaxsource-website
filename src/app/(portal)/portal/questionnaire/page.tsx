@@ -1,13 +1,13 @@
 import { IntakeQuestionnaire } from "@/components/portal/IntakeQuestionnaire";
 import { db } from "@/lib/db";
 import { taxReturns } from "@/lib/db/schema";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/lib/auth";
+
 import { eq, and } from "drizzle-orm";
 import { redirect } from "next/navigation";
 
 export default async function QuestionnairePage() {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session?.user) redirect("/auth/login");
   
   const userId = (session.user as any).id;

@@ -23,7 +23,7 @@ export const { POST } = serve<{
     }
   });
 
-  const results = [];
+  const results: any[] = [];
 
   // Step 2: Iterate and sync each user
   // We use chunks or parallel execution if supported, 
@@ -47,6 +47,6 @@ export const { POST } = serve<{
         result: JSON.stringify({ synced: results.length, details: results }),
         updatedAt: new Date(),
       })
-      .where(eq(workflows.id, context.workflowInstanceId));
+      .where(eq(workflows.id, context.workflowRunId));
   });
 });
