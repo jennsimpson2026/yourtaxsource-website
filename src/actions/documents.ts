@@ -221,7 +221,18 @@ export async function getDownloadUrl(documentId: string) {
 
   // If client is the owner, check if the document is locked
   if (isOwner && !isStaff && doc.isLocked) {
-    throw new Error("Document is locked until payment is received.");
+    // If it's a final return, check if it's paid
+    if (doc.category === "Final Returns" && doc.returnId) {
+      const taxReturn = await db.query.taxReturns.findFirst({
+        where: eq(taxReturns.id, doc.returnId),
+      });
+      
+      if (taxReturn?.paymentStatus !== "PAID") {
+        throw new Error("This document is locked until your tax preparation fee is paid. Please visit the Payments section on your dashboard.");
+      }
+    } else {
+      throw new Error("This document is currently locked.");
+    }
   }
 
   const command = new GetObjectCommand({
@@ -256,9 +267,27 @@ export async function getUserDocuments(year?: number) {
     conditions.push(eq(documents.taxYear, year));
   }
 
-  return db.query.documents.findMany({
+  const docs = await db.query.documents.findMany({
     where: and(...conditions),
+    with: {
+      taxReturn: true,
+    },
     orderBy: (docs, { desc }) => [desc(docs.uploadedAt)],
+  });
+
+  // Map to adjust isLocked based on payment status for Final Returns
+  return docs.map(doc => {
+    let isLocked = doc.isLocked;
+    
+    // If it's a final return and the associated return is paid, unlock it
+    if (doc.category === "Final Returns" && doc.taxReturn?.paymentStatus === "PAID") {
+      isLocked = false;
+    }
+    
+    return {
+      ...doc,
+      isLocked
+    };
   });
 }
 

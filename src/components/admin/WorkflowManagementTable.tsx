@@ -139,7 +139,7 @@ export function WorkflowManagementTable({ returns: initialReturns }: WorkflowMan
                     Client <ArrowUpDown size={12} />
                   </div>
                 </th>
-                <th className="px-6 py-5">Return Status (7 Steps)</th>
+                <th className="px-6 py-5">Return Status (5 Steps)</th>
                 <th className="px-6 py-5">Results (Fed/State)</th>
                 <th className="px-6 py-5">Financials</th>
                 <th className="px-6 py-5">Activity</th>
@@ -173,7 +173,7 @@ export function WorkflowManagementTable({ returns: initialReturns }: WorkflowMan
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex flex-col gap-2">
                       <div className="flex gap-1">
-                        {[1, 2, 3, 4, 5, 6, 7].map((s) => (
+                        {[1, 2, 3, 4, 5].map((s) => (
                           <div 
                             key={s}
                             title={getStepLabel(s)}
@@ -309,24 +309,21 @@ export function WorkflowManagementTable({ returns: initialReturns }: WorkflowMan
 function mapStatusToStep(status: string): number {
   switch (status) {
     case 'NOT_STARTED': return 1;
-    case 'IN_PROGRESS': return 3;
-    case 'ACTION_NEEDED': return 2;
-    case 'REVIEW': return 4;
-    case 'READY_FOR_SIGNATURE': return 5;
-    case 'FILED': return 7;
+    case 'IN_PROCESS': return 2;
+    case 'READY_FOR_SIGNATURE': return 3;
+    case 'AWAITING_PAYMENT': return 4;
+    case 'FILED': return 5;
     default: return 1;
   }
 }
 
 function getStepLabel(step: number): string {
   const steps = [
-    "Annual Update",
-    "Upload Docs",
-    "Tax Preparation",
-    "Tax Organizer",
-    "Review & File",
-    "Payment",
-    "Complete"
+    "Not Started",
+    "In Process",
+    "Ready for Signature",
+    "Awaiting Payment",
+    "Filed"
   ];
   return steps[step - 1] || "Unknown";
 }

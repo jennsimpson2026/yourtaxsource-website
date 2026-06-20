@@ -190,12 +190,12 @@ export default async function PortalDashboard() {
           </section>
         )}
 
-        {/* 7-Step Visual Timeline */}
+        {/* 6-Step Visual Timeline */}
         <section className="bg-white rounded-[2rem] p-8 md:p-12 border border-gray-100 shadow-sm">
           <div className="flex flex-col md:flex-row justify-between items-center mb-12 gap-4">
             <h3 className="text-2xl font-heading font-bold text-brand-black">Your Tax Filing Journey</h3>
             <div className="text-sm font-bold text-brand-purple bg-brand-purple/5 px-4 py-2 rounded-full">
-              Status: {currentReturn?.status?.replace('_', ' ') || 'Starting Soon'}
+              Status: {currentReturn?.status?.replace(/_/g, ' ') || 'Starting Soon'}
             </div>
           </div>
           
@@ -203,53 +203,41 @@ export default async function PortalDashboard() {
             {/* Progress Line */}
             <div className="absolute top-1/2 left-0 w-full h-0.5 bg-gray-100 -translate-y-1/2 hidden md:block"></div>
             
-            <div className="grid grid-cols-2 md:grid-cols-8 gap-8 relative z-10">
+            <div className="grid grid-cols-2 md:grid-cols-6 gap-8 relative z-10">
               <TimelineStep 
                 number={1} 
                 label="Annual Update" 
-                status={currentReturn?.status === 'IN_PROGRESS' || currentReturn?.status === 'ACTION_NEEDED' ? 'current' : 'completed'} 
+                status={currentReturn && currentReturn.status !== 'NOT_STARTED' ? 'completed' : 'current'} 
                 icon={<ClipboardCheck size={20} />}
               />
               <TimelineStep 
                 number={2} 
-                label="Engagement Letter" 
-                status={currentLetter?.status === 'SIGNED' ? 'completed' : (currentReturn && currentReturn.status !== 'NOT_STARTED' ? 'current' : 'pending')} 
-                icon={<PenTool size={20} />}
-              />
-              <TimelineStep 
-                number={3} 
                 label="Upload Docs" 
-                status={currentLetter?.status === 'SIGNED' ? 'current' : 'pending'} 
+                status={currentReturn?.status === 'IN_PROCESS' ? 'current' : (currentReturn && ['READY_FOR_SIGNATURE', 'AWAITING_PAYMENT', 'FILED'].includes(currentReturn.status) ? 'completed' : 'pending')} 
                 icon={<Upload size={20} />}
               />
               <TimelineStep 
-                number={4} 
+                number={3} 
                 label="Tax Preparation" 
-                status="pending" 
+                status={currentReturn?.status === 'IN_PROCESS' ? 'current' : (currentReturn && ['READY_FOR_SIGNATURE', 'AWAITING_PAYMENT', 'FILED'].includes(currentReturn.status) ? 'completed' : 'pending')} 
                 icon={<Lock size={20} />}
               />
               <TimelineStep 
+                number={4} 
+                label="Signature" 
+                status={currentReturn?.status === 'READY_FOR_SIGNATURE' ? 'current' : (currentReturn && ['AWAITING_PAYMENT', 'FILED'].includes(currentReturn.status) ? 'completed' : 'pending')} 
+                icon={<PenTool size={20} />}
+              />
+              <TimelineStep 
                 number={5} 
-                label="Tax Organizer" 
-                status="pending" 
-                icon={<FileText size={20} />}
-              />
-              <TimelineStep 
-                number={6} 
-                label="Review & File" 
-                status="pending" 
-                icon={<ShieldCheck size={20} />}
-              />
-              <TimelineStep 
-                number={7} 
                 label="Payment" 
-                status="pending" 
+                status={currentReturn?.status === 'AWAITING_PAYMENT' ? 'current' : (currentReturn?.status === 'FILED' ? 'completed' : 'pending')} 
                 icon={<CreditCard size={20} />}
               />
               <TimelineStep 
-                number={8} 
+                number={6} 
                 label="Complete" 
-                status="pending" 
+                status={currentReturn?.status === 'FILED' ? 'completed' : 'pending'} 
                 icon={<CheckCircle2 size={20} />}
               />
             </div>

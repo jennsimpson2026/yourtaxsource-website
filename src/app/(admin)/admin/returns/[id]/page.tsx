@@ -254,9 +254,9 @@ export default async function ReviewReturnPage({ params }: { params: Promise<{ i
                     className="w-full rounded-xl border border-white/10 p-3 text-sm bg-white/5 focus:bg-white focus:text-brand-navy transition-all focus:outline-none focus:ring-2 focus:ring-brand-orange/50 appearance-none cursor-pointer"
                   >
                     <option value="NOT_STARTED">Not Started</option>
-                    <option value="IN_PROGRESS">In Progress</option>
-                    <option value="REVIEW">Review</option>
+                    <option value="IN_PROCESS">In Process</option>
                     <option value="READY_FOR_SIGNATURE">Ready for Signature</option>
+                    <option value="AWAITING_PAYMENT">Awaiting Payment</option>
                     <option value="FILED">Filed</option>
                   </select>
                 </div>
@@ -363,10 +363,16 @@ export default async function ReviewReturnPage({ params }: { params: Promise<{ i
 }
 
 function InfoItem({ label, value }: { label: string, value: string }) {
+  let displayValue = value || 'N/A';
+  
+  if (label === "Phone Number" && value && value.length === 10) {
+    displayValue = `${value.slice(0, 3)}-${value.slice(3, 6)}-${value.slice(6)}`;
+  }
+
   return (
     <div>
       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">{label}</p>
-      <p className="text-sm text-brand-navy font-bold">{value || 'N/A'}</p>
+      <p className="text-sm text-brand-navy font-bold">{displayValue}</p>
     </div>
   );
 }
@@ -393,9 +399,9 @@ function BooleanItem({ label, value }: { label: string, value: boolean }) {
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
     'NOT_STARTED': 'bg-gray-100 text-gray-600 border-gray-200',
-    'IN_PROGRESS': 'bg-blue-100 text-brand-navy border-brand-navy/10',
-    'REVIEW': 'bg-orange-100 text-brand-orange border-brand-orange/10',
+    'IN_PROCESS': 'bg-blue-100 text-brand-navy border-brand-navy/10',
     'READY_FOR_SIGNATURE': 'bg-green-100 text-brand-green border-brand-green/10',
+    'AWAITING_PAYMENT': 'bg-orange-100 text-brand-orange border-brand-orange/10',
     'FILED': 'bg-gray-100 text-gray-400 border-gray-200',
   };
   

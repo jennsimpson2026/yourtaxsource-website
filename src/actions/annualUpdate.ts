@@ -61,7 +61,7 @@ export async function submitAnnualUpdate(data: any) {
       const [newReturn] = await db.insert(taxReturns).values({
         clientId: userId,
         year: currentYear,
-        status: "IN_PROGRESS",
+        status: "IN_PROCESS",
       }).returning();
       taxReturn = newReturn;
     }

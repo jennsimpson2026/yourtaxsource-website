@@ -57,7 +57,7 @@ export default async function AdminDashboard() {
 
   const outstandingFeesReturns = await db.query.taxReturns.findMany({
     where: and(
-      eq(taxReturns.status, "FILED"),
+      inArray(taxReturns.status, ["FILED", "AWAITING_PAYMENT", "READY_FOR_SIGNATURE"]),
       not(eq(taxReturns.paymentStatus, "PAID")),
       gt(taxReturns.taxPrepFee, 0)
     ),
@@ -269,9 +269,9 @@ function StatsCard({ icon, label, value, subtext }: { icon: React.ReactNode, lab
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
     'NOT_STARTED': 'bg-gray-100 text-gray-600 border-gray-200',
-    'IN_PROGRESS': 'bg-blue-100 text-brand-navy border-brand-navy/10',
-    'REVIEW': 'bg-orange-100 text-brand-orange border-brand-orange/10',
+    'IN_PROCESS': 'bg-blue-100 text-brand-navy border-brand-navy/10',
     'READY_FOR_SIGNATURE': 'bg-green-100 text-brand-green border-brand-green/10',
+    'AWAITING_PAYMENT': 'bg-orange-100 text-brand-orange border-brand-orange/10',
     'FILED': 'bg-gray-100 text-gray-400 border-gray-200',
   };
   
