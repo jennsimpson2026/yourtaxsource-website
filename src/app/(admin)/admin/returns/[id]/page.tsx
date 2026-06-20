@@ -126,7 +126,7 @@ export default async function ReviewReturnPage({ params }: { params: Promise<{ i
       </div>
 
       {/* Ready to File Notice */}
-      {ret.paymentStatus === "PAID" && ret.status !== "FILED" && (
+      {ret.paymentStatus?.toUpperCase() === "PAID" && ret.status?.toUpperCase() !== "FILED" && (
         <div className="bg-green-600 text-white p-6 rounded-2xl shadow-lg border-2 border-green-400 flex items-center justify-between animate-in fade-in slide-in-from-top-4 duration-500">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
@@ -417,6 +417,7 @@ function BooleanItem({ label, value }: { label: string, value: boolean }) {
 }
 
 function StatusBadge({ status }: { status: string }) {
+  const normalizedStatus = status?.toUpperCase();
   const styles: Record<string, string> = {
     'NOT_STARTED': 'bg-gray-100 text-gray-600 border-gray-200',
     'IN_PROCESS': 'bg-blue-100 text-brand-navy border-brand-navy/10',
@@ -426,13 +427,14 @@ function StatusBadge({ status }: { status: string }) {
   };
   
   return (
-    <span className={`px-4 py-2 text-xs font-black rounded-full border shadow-sm ${styles[status] || styles['NOT_STARTED']}`}>
-      {status.replace(/_/g, ' ')}
+    <span className={`px-4 py-2 text-xs font-black rounded-full border shadow-sm ${styles[normalizedStatus] || styles['NOT_STARTED']}`}>
+      {status?.replace(/_/g, ' ')}
     </span>
   );
 }
 
 function PaymentBadge({ status }: { status: string }) {
+  const normalizedStatus = status?.toUpperCase();
   const styles: Record<string, string> = {
     'UNPAID': 'bg-red-50 text-red-600 border-red-100',
     'PAID': 'bg-green-50 text-green-600 border-green-100',
@@ -440,7 +442,7 @@ function PaymentBadge({ status }: { status: string }) {
   };
   
   return (
-    <span className={`px-4 py-2 text-xs font-black rounded-xl border shadow-sm ${styles[status] || styles['UNPAID']}`}>
+    <span className={`px-4 py-2 text-xs font-black rounded-xl border shadow-sm ${styles[normalizedStatus] || styles['UNPAID']}`}>
       {status}
     </span>
   );
