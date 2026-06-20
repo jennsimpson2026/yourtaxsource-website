@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-import { createEngagementLetter } from "@/actions/engagement";
+import { createEngagementLetter, getEngagementLetterDownloadUrl } from "@/actions/engagement";
 
 export function EngagementLetterManager({ 
   returnId, 
@@ -25,6 +25,7 @@ export function EngagementLetterManager({
   existingLetter?: any;
 }) {
   const [loading, setLoading] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
@@ -38,6 +39,26 @@ export function EngagementLetterManager({
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDownload = async () => {
+    if (!existingLetter || existingLetter.status !== 'SIGNED') return;
+    
+    setDownloading(true);
+    setError(null);
+    try {
+      const result = await getEngagementLetterDownloadUrl(existingLetter.id);
+      if (result.error) {
+        throw new Error(result.error);
+      }
+      if (result.url) {
+        window.open(result.url, '_blank');
+      }
+    } catch (err: any) {
+      setError(err.message || "Failed to download letter");
+    } finally {
+      setDownloading(false);
     }
   };
 
@@ -96,14 +117,25 @@ export function EngagementLetterManager({
                 {loading ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
                 Regenerate
               </button>
-              <a 
-                href={`/portal/engagement-letter?id=${existingLetter.id}`}
-                target="_blank"
-                className="flex items-center justify-center gap-2 px-4 py-2.5 bg-brand-purple text-white rounded-xl text-xs font-bold hover:bg-opacity-90 transition-all"
-              >
-                <ExternalLink size={14} />
-                Preview
-              </a>
+              {existingLetter.status === 'SIGNED' ? (
+                <button 
+                  onClick={handleDownload}
+                  disabled={downloading}
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-brand-navy text-white rounded-xl text-xs font-bold hover:bg-opacity-90 transition-all disabled:opacity-50"
+                >
+                  {downloading ? <Loader2 size={14} className="animate-spin" /> : <ExternalLink size={14} />}
+                  View Signed
+                </button>
+              ) : (
+                <a 
+                  href={`/portal/engagement-letter?id=${existingLetter.id}`}
+                  target="_blank"
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-brand-purple text-white rounded-xl text-xs font-bold hover:bg-opacity-90 transition-all"
+                >
+                  <ExternalLink size={14} />
+                  Preview
+                </a>
+              )}
             </div>
           </div>
         ) : (

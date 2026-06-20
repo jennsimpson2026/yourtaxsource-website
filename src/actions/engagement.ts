@@ -205,6 +205,7 @@ export async function getEngagementLetterDownloadUrl(letterId: string) {
   if (!session) return { error: "Unauthorized" };
 
   const userId = (session.user as any).id;
+  const userRole = (session.user as any).role;
 
   const letter = await db.query.engagementLetters.findFirst({
     where: eq(engagementLetters.id, letterId),
@@ -213,8 +214,15 @@ export async function getEngagementLetterDownloadUrl(letterId: string) {
     }
   });
 
-  if (!letter || (letter.taxReturn as any).clientId !== userId) {
+  if (!letter) {
     return { error: "Letter not found" };
+  }
+
+  const isOwner = (letter.taxReturn as any).clientId === userId;
+  const isStaff = userRole === "ADMIN" || userRole === "STAFF";
+
+  if (!isOwner && !isStaff) {
+    return { error: "Unauthorized" };
   }
 
   if (!letter.s3Key) {
