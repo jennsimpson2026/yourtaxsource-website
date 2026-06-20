@@ -333,7 +333,7 @@ function StatsCard({ icon, label, value, subtext }: { icon: React.ReactNode, lab
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const normalizedStatus = status?.toUpperCase();
+  const normalizedStatus = status?.trim().toUpperCase();
   const styles: Record<string, string> = {
     'NOT_STARTED': 'bg-gray-100 text-gray-600 border-gray-200',
     'IN_PROCESS': 'bg-blue-100 text-brand-navy border-brand-navy/10',
