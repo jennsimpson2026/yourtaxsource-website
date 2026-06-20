@@ -1,7 +1,7 @@
 import React from "react";
 import { db } from "@/lib/db";
 import { users, taxReturns, questionnaires, invoices, documents } from "@/lib/db/schema";
-import { count, eq, desc, and, not, sql, gt } from "drizzle-orm";
+import { count, eq, desc, and, not, sql, gt, inArray } from "drizzle-orm";
 import Link from "next/link";
 import { 
   Users, 
