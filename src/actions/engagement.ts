@@ -96,6 +96,7 @@ export async function signEngagementLetter(
           action: "SIGN_ENGAGEMENT_LETTER_COMPLETE_SYNC",
           targetType: "ENGAGEMENT_LETTER",
           targetId: letterId,
+          status: "COMPLETED",
         });
 
         revalidatePath("/portal/resources");
