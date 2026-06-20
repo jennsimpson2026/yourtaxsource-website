@@ -80,6 +80,19 @@ export default function SignUpPage() {
                 className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-brand-black shadow-sm focus:border-brand-purple focus:outline-none focus:ring-1 focus:ring-brand-purple transition-all"
                 placeholder="john@example.com"
               />
+              <p className="mt-1 text-[10px] text-gray-500 italic">
+                If you do not have an email address, enter <a href="mailto:none@yts.com" className="text-brand-purple underline">none@yts.com</a>.
+              </p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-brand-black">Phone Number</label>
+              <input
+                name="phone"
+                type="tel"
+                required
+                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-brand-black shadow-sm focus:border-brand-purple focus:outline-none focus:ring-1 focus:ring-brand-purple transition-all"
+                placeholder="(555) 000-0000"
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-brand-black">Password</label>

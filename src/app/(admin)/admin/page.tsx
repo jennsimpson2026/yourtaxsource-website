@@ -18,6 +18,7 @@ import DocumentReviewQueue from "@/components/admin/DocumentReviewQueue";
 import { getDocumentReviewQueue } from "@/actions/documents";
 import WorkflowStatus from "@/components/admin/WorkflowStatus";
 import { SyncQboButton } from "@/components/admin/SyncQboButton";
+import { OutstandingFeesList } from "@/components/admin/OutstandingFeesList";
 
 export default async function AdminDashboard() {
   const clientCount = await db.select({ value: count() }).from(users).where(eq(users.role, "CLIENT"));
@@ -53,6 +54,35 @@ export default async function AdminDashboard() {
     orderBy: [desc(taxReturns.updatedAt)],
   });
 
+  const outstandingFeesReturns = await db.query.taxReturns.findMany({
+    where: and(
+      eq(taxReturns.status, "FILED"),
+      not(eq(taxReturns.paymentStatus, "PAID")),
+      sql`${taxReturns.taxPrepFee} > 0`
+    ),
+    with: {
+      client: true,
+      invoices: true,
+    },
+    orderBy: [desc(taxReturns.updatedAt)],
+  });
+
+  const outstandingFeesData = outstandingFeesReturns.map(ret => {
+    const totalPaid = ret.invoices
+      .filter(inv => inv.status === 'PAID')
+      .reduce((sum, inv) => sum + Number(inv.amount), 0);
+    
+    return {
+      id: ret.id,
+      clientName: (ret as any).client?.name || 'N/A',
+      year: ret.year,
+      taxPrepFee: Number(ret.taxPrepFee || 0),
+      amountPaid: totalPaid,
+      balanceDue: Math.max(0, Number(ret.taxPrepFee || 0) - totalPaid),
+      status: ret.status,
+    };
+  });
+
   const reviewQueue = await getDocumentReviewQueue();
 
   return (
@@ -84,9 +114,9 @@ export default async function AdminDashboard() {
         />
         <StatsCard 
           icon={<DollarSign className="text-brand-navy" size={24} />}
-          label="Unpaid Invoices"
+          label="Pending Payments"
           value={unpaidInvoices[0].value}
-          subtext="Awaiting Helcim payment"
+          subtext="Awaiting client payment"
         />
       </div>
 
@@ -149,6 +179,9 @@ export default async function AdminDashboard() {
               </div>
             )}
           </div>
+
+          {/* Outstanding Fees Section */}
+          <OutstandingFeesList fees={outstandingFeesData} />
 
           {/* Document Review Queue */}
           <DocumentReviewQueue initialDocuments={reviewQueue} />

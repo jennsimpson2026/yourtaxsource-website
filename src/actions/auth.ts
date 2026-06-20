@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { users, auditLogs, verificationTokens } from "@/lib/db/schema";
+import { users, auditLogs, verificationTokens, profiles } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
@@ -13,9 +13,10 @@ export async function signUp(formData: FormData) {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
   const name = formData.get("name") as string;
+  const phone = formData.get("phone") as string;
 
-  if (!email || !password) {
-    return { error: "Email and password are required" };
+  if (!email || !password || !name || !phone) {
+    return { error: "All fields are required" };
   }
 
   const existingUser = await db.query.users.findFirst({
@@ -29,11 +30,18 @@ export async function signUp(formData: FormData) {
   const hashedPassword = await bcrypt.hash(password, 10);
 
   try {
-    await db.insert(users).values({
-      email,
-      password: hashedPassword,
-      name,
-      role: "CLIENT", // Default role
+    await db.transaction(async (tx) => {
+      const [newUser] = await tx.insert(users).values({
+        email,
+        password: hashedPassword,
+        name,
+        role: "CLIENT",
+      }).returning();
+
+      await tx.insert(profiles).values({
+        userId: newUser.id,
+        phone,
+      });
     });
 
     return { success: true };

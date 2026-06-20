@@ -77,6 +77,7 @@ export const taxReturns = sqliteTable("tax_returns", {
   assignedStaffId: text("assigned_staff_id").references(() => users.id),
   federalResult: real("federal_result"),
   stateResults: text("state_results"), // JSON string
+  taxPrepFee: real("tax_prep_fee").default(0),
   manualRelease: integer("manual_release", { mode: "boolean" }).default(false).notNull(),
   isComplimentary: integer("is_complimentary", { mode: "boolean" }).default(false).notNull(),
   notes: text("notes"),

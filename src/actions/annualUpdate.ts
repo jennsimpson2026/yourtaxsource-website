@@ -1,16 +1,13 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { annualUpdates, documents, auditLogs, taxReturns } from "@/lib/db/schema";
+import { annualUpdates, documents, auditLogs, taxReturns, users, profiles } from "@/lib/db/schema";
 import { encrypt } from "@/lib/crypto";
 import { s3Client, BUCKET_NAME } from "@/lib/s3";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { auth } from "@/lib/auth";
 import { eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-import React from "react";
-import { renderToBuffer } from "@react-pdf/renderer";
-import { AnnualUpdatePDF } from "@/components/portal/AnnualUpdatePDF";
 
 export async function submitAnnualUpdate(data: any) {
   const session = await auth();
@@ -20,6 +17,38 @@ export async function submitAnnualUpdate(data: any) {
   const currentYear = new Date().getFullYear();
 
   try {
+    // 0. Update User and Profile information to keep it in sync
+    await db.transaction(async (tx) => {
+      await tx.update(users)
+        .set({ name: `${data.firstName} ${data.lastName}` })
+        .where(eq(users.id, userId));
+
+      const existingProfile = await tx.query.profiles.findFirst({
+        where: eq(profiles.userId, userId),
+      });
+
+      if (existingProfile) {
+        await tx.update(profiles)
+          .set({
+            phone: data.phone,
+            addressLine1: data.address,
+            city: data.city,
+            state: data.state,
+            zipCode: data.zip,
+          })
+          .where(eq(profiles.userId, userId));
+      } else {
+        await tx.insert(profiles).values({
+          userId,
+          phone: data.phone,
+          addressLine1: data.address,
+          city: data.city,
+          state: data.state,
+          zipCode: data.zip,
+        });
+      }
+    });
+
     // 1. Find or create the tax return record for this year
     let taxReturn = await db.query.taxReturns.findFirst({
       where: and(eq(taxReturns.clientId, userId), eq(taxReturns.year, currentYear)),
