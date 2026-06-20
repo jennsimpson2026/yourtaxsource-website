@@ -33,7 +33,6 @@ export default function AboutPage() {
                           src="/images/jenn-portrait-authentic.png"
                           alt="Jenn Simpson"
                           fill
-                          sizes="(max-width: 1024px) 100vw, 40vw"
                           className="object-cover object-top"
                         />
                   </div>
@@ -131,7 +130,6 @@ export default function AboutPage() {
                    src="/images/jenn-focused-office.png"
                    alt="Jenn at her desk in our office"
                    fill
-                   sizes="(max-width: 1024px) 100vw, 50vw"
                    className="object-contain"
                  />
               </div>

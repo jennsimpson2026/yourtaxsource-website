@@ -90,8 +90,8 @@ export default async function AdminDashboard() {
 
   const readyToFileReturns = await db.query.taxReturns.findMany({
     where: and(
-      sql`upper(trim(${taxReturns.paymentStatus})) = 'PAID'`,
-      not(sql`upper(trim(${taxReturns.status})) = 'FILED'`)
+      eq(taxReturns.paymentStatus, "PAID"),
+      not(eq(taxReturns.status, "FILED"))
     ),
     with: {
       client: true,

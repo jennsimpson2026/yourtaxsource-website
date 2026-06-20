@@ -5,9 +5,10 @@ import { notifyPortalInvitation, notifyAppointmentScheduled, sendEmail } from "@
 import { BookingDetails } from "@/lib/booking";
 import crypto from "crypto";
 
+const OFFICE_ADDRESS = "100 1/2 S Main St, Belmont, NC 28012";
+
 export const DEFAULT_ENGAGEMENT_LETTER_CONTENT = `
-YOUR TAX SOURCE
-Tax Preparation Engagement Agreement
+Dear Neighbor,
 
 This Engagement Agreement ("Agreement") is entered into between Your Tax Source ("Firm") and the undersigned client ("Client").
 
@@ -198,24 +199,33 @@ export async function onboardBookingClient(details: BookingDetails) {
     }
   }
 
-  // Determine if virtual or in-person
-  const isVirtual = details.onlineMeetingUrl || 
-                    details.location?.toLowerCase().includes("virtual") || 
-                    details.location?.toLowerCase().includes("teams") ||
-                    note.toLowerCase().includes("virtual") ||
-                    note.toLowerCase().includes("teams");
+  // Detect if virtual based on location or custom fields or onlineMeetingUrl
+  let isVirtual = !!details.onlineMeetingUrl || 
+                   details.location?.toLowerCase().includes("virtual") || 
+                   details.location?.toLowerCase().includes("teams");
 
-  const officeAddress = "100 1/2 S Main St, Belmont, NC 28012";
-  const finalLocation = isVirtual 
-    ? (details.onlineMeetingUrl || "Microsoft Teams (link in email)") 
-    : officeAddress;
+  if (!isVirtual && customFields) {
+    for (const value of Object.values(customFields)) {
+      if (typeof value === 'string') {
+        const lowerVal = value.toLowerCase();
+        if (lowerVal.includes("virtual") || lowerVal.includes("teams")) {
+          isVirtual = true;
+          break;
+        }
+      }
+    }
+  }
+
+  const meetingLocation = isVirtual 
+    ? (details.onlineMeetingUrl || "Virtual (Teams link to be provided)") 
+    : OFFICE_ADDRESS;
 
   await db.insert(appointments).values({
     userId: user.id,
     bookingId,
     startTime,
     endTime,
-    location: finalLocation,
+    location: meetingLocation,
     notes: note,
     status: "SCHEDULED",
   });
@@ -245,7 +255,7 @@ export async function onboardBookingClient(details: BookingDetails) {
       email: user.email,
       name: user.name || "Neighbor",
       startTime,
-      location: finalLocation,
+      location: meetingLocation,
     });
   }
 
@@ -266,7 +276,7 @@ export async function onboardBookingClient(details: BookingDetails) {
       <p><strong>Service:</strong> ${details.serviceType}</p>
       <p><strong>Time:</strong> ${startTime.toLocaleString()} - ${endTime.toLocaleString()}</p>
       <p><strong>Type:</strong> ${isVirtual ? "Virtual (Teams)" : "In-Person (Belmont Office)"}</p>
-      <p><strong>Location/Link:</strong> ${finalLocation}</p>
+      <p><strong>Location/Link:</strong> ${meetingLocation}</p>
       <hr />
       <h3>Tax Situation / Custom Fields:</h3>
       <pre>${note || "None provided"}</pre>

@@ -318,6 +318,18 @@
     "assigned_to": "agent-designer"
   },
   {
+    "id": "6d41b33e-be7c-41e5-bca7-66061115c6a2",
+    "title": "Fix Production Image Deployment",
+    "status": "in-progress",
+    "assigned_to": "agent-lead-engineer"
+  },
+  {
+    "id": "2ae3c980-8531-446d-a216-c6d10a4b13c9",
+    "title": "Fix Production Image Deployment (Urgent)",
+    "status": "in-progress",
+    "assigned_to": "agent-lead-engineer-2"
+  },
+  {
     "id": "ab7b9ce3-09d6-4979-8e16-391efb1076a1",
     "title": "Integrate Authentic Images from Google Drive (Urgent)",
     "status": "done",
@@ -354,153 +366,9 @@
     "assigned_to": "agent-lead-engineer-2"
   },
   {
-    "id": "19810e86-7e74-4e43-ae6b-a36694255e00",
-    "title": "Redeploy Production Site and Verify Images (Urgent)",
-    "status": "done",
-    "assigned_to": "agent-lead-engineer-2"
-  },
-  {
-    "id": "4e2f22f8-fe8f-4495-95bf-dce2117be34d",
-    "title": "Restore Vercel Secrets and Trigger Deployment",
-    "status": "done",
-    "assigned_to": "agent-lead-engineer-2"
-  },
-  {
-    "id": "0442edfc-2df8-44cb-be0d-09d00954d7bc",
-    "title": "Investigate Intuit Payments Integration",
-    "status": "done",
-    "assigned_to": "agent-lead-engineer-2"
-  },
-  {
-    "id": "a626b436-30e4-4394-9da4-96105e22bfae",
-    "title": "Portal & Admin UI/UX Refinement (Boutique Polish)",
-    "status": "review",
-    "assigned_to": "agent-designer"
-  },
-  {
-    "id": "80a0505a-22fd-4fb4-80cc-87ed14cadb0f",
-    "title": "Secure Portal Invitation & Onboarding Implementation",
-    "status": "done",
-    "assigned_to": "agent-lead-engineer"
-  },
-  {
-    "id": "bd768390-7ba6-41fd-be92-a76435e3defa",
-    "title": "Formal Engagement Letter Module (Viewing & Signing)",
-    "status": "done",
-    "assigned_to": "agent-lead-engineer"
-  },
-  {
-    "id": "0ae0ca83-9863-4212-8f10-d7199f3e9291",
-    "title": "Automated Client Reminder System (Email & SMS)",
-    "status": "done",
-    "assigned_to": "agent-lead-engineer-2"
-  },
-  {
-    "id": "6441addc-97c1-4fa4-bda7-370770a9c319",
-    "title": "Secure Password Reset Flow Implementation",
-    "status": "done",
-    "assigned_to": "agent-lead-engineer"
-  },
-  {
-    "id": "7381244d-f065-488e-b5b9-3359410f07e3",
-    "title": "Engagement Letter Module Implementation",
-    "status": "done",
-    "assigned_to": "agent-lead-engineer"
-  },
-  {
-    "id": "48d707aa-77a3-4f33-87c3-0c7c37a00338",
-    "title": "Secure Document Storage (AWS S3) Production Readiness",
-    "status": "done",
-    "assigned_to": "agent-lead-engineer-2"
-  },
-  {
-    "id": "b3609e66-6008-4cec-979f-f35a5d946271",
-    "title": "QuickBooks Online Integration (Phase 2)",
-    "status": "done",
-    "assigned_to": "agent-lead-engineer"
-  },
-  {
-    "id": "6ae13c5b-22b0-4e56-855b-4136c2411121",
-    "title": "Secure Client-Staff Messaging Module",
-    "status": "done",
-    "assigned_to": "agent-lead-engineer"
-  },
-  {
-    "id": "a98dd198-6204-4351-b62a-0f515908f981",
-    "title": "Automated Tax Season Scaling & Optimization",
-    "status": "done",
-    "assigned_to": "agent-lead-engineer"
-  },
-  {
-    "id": "7509937b-be24-4147-8622-f22e9c726007",
-    "title": "Admin Dashboard: Document Review & Approval Workflow",
-    "status": "done",
-    "assigned_to": "agent-lead-engineer-2"
-  },
-  {
-    "id": "0dad8d92-6062-4778-9099-ba1bfd39d63e",
-    "title": "Implement Background Job Strategy (Upstash Workflow)",
-    "status": "done",
-    "assigned_to": "agent-lead-engineer-2"
-  },
-  {
-    "id": "2f8e256c-c9e2-40dc-904c-6695172f470c",
-    "title": "Implement Intuit Payments (QuickBooks Payments) Integration",
-    "status": "done",
-    "assigned_to": "agent-lead-engineer-2"
-  },
-  {
-    "id": "d2bd02b2-f087-4a99-b648-6b111d17543d",
-    "title": "Fix Admin Access and Disable MFA Lock",
-    "status": "done",
-    "assigned_to": "agent-lead-engineer-2"
-  },
-  {
-    "id": "0b411343-fda0-4373-acb0-99aa8bb2b969",
-    "title": "Fix Build Failures and Seed Production Admin User",
-    "status": "done",
-    "assigned_to": "agent-lead-engineer"
-  },
-  {
-    "id": "35b79831-a475-4687-bcbd-a88aeb13bfea",
-    "title": "Implement Appointment Type Selection & Teams/Address Logic",
-    "status": "done",
-    "assigned_to": "agent-lead-engineer-2"
-  },
-  {
-    "id": "db6cc5fe-2316-428e-a48c-da0bd168efa3",
-    "title": "Portal Maintenance & Admin Fixes",
-    "status": "done",
-    "assigned_to": "agent-lead-engineer"
-  },
-  {
-    "id": "55e336c0-eab3-44a6-a39d-64421ffcdf49",
-    "title": "End-to-End Onboarding Flow Testing",
-    "status": "done",
-    "assigned_to": "agent-lead-engineer"
-  },
-  {
-    "id": "5b2afb93-58c7-4ce9-8f9d-aa14b0fb22d0",
-    "title": "Verify Real-Time Calendar Sync",
-    "status": "done",
-    "assigned_to": "agent-lead-engineer"
-  },
-  {
-    "id": "b27e450d-02f1-4a66-9e8d-99edd9ddc3fb",
-    "title": "Deploy Payment Workflow Fixes",
-    "status": "done",
-    "assigned_to": "agent-lead-engineer"
-  },
-  {
-    "id": "5e7a04b4-ff1e-41e8-a34b-7ad1524cdcbd",
-    "title": "Implement Resource Center & CMS",
-    "status": "review",
-    "assigned_to": "agent-lead-engineer-2"
-  },
-  {
-    "id": "14c4f5e8-6a9e-4fab-a298-072b88fda34c",
-    "title": "End-to-End Flow Verification (Booking to Portal)",
+    "id": "e63ee438-afce-4ec4-8445-ece23bb06fd6",
+    "title": "EMERGENCY: Fix Homepage AI Images",
     "status": "in-progress",
-    "assigned_to": "agent-lead-engineer"
+    "assigned_to": "80198a45-9188-4db0-86e1-a79c1ae0326a"
   }
 ]

@@ -72,7 +72,7 @@ export const taxReturns = sqliteTable("tax_returns", {
     .references(() => users.id)
     .notNull(),
   year: integer("year").notNull(),
-  status: text("status").default("NOT_STARTED").notNull(), // 'NOT_STARTED', 'IN_PROCESS', 'READY_FOR_SIGNATURE', 'AWAITING_PAYMENT', 'READY_TO_FILE', 'COMPLETED'
+  status: text("status").default("NOT_STARTED").notNull(), // 'NOT_STARTED', 'IN_PROCESS', 'READY_FOR_SIGNATURE', 'AWAITING_PAYMENT', 'FILED'
   paymentStatus: text("payment_status").default("UNPAID").notNull(),
   assignedStaffId: text("assigned_staff_id").references(() => users.id),
   federalResult: real("federal_result"),

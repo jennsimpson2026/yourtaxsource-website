@@ -27,7 +27,6 @@ export default function SignUpPage() {
           src="/images/jenn-meeting-clients.png"
           alt="Client Meeting"
           fill
-          sizes="50vw"
           className="h-full w-full object-cover"
           priority
         />

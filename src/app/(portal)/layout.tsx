@@ -18,24 +18,19 @@ export default async function PortalLayout({
 
   return (
     <div className="flex flex-col min-h-screen bg-brand-soft-gray">
-      <header className="bg-white/80 backdrop-blur-md border-b border-gray-100 p-4 sticky top-0 z-40">
+      <header className="bg-white border-b border-gray-100 p-4 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-10">
-            <Link href="/" className="flex items-center gap-2 group">
-              <div className="w-10 h-10 bg-brand-purple rounded-xl flex items-center justify-center shadow-lg shadow-brand-purple/20 transition-transform group-hover:scale-105">
-                 <span className="text-white font-serif font-bold text-xl">Y</span>
+            <Link href="/" className="flex items-center gap-2">
+              <div className="w-12 h-12 bg-brand-purple rounded-xl flex items-center justify-center shadow-sm">
+                 <span className="text-white font-bold text-xl">Y</span>
               </div>
-              <div className="flex flex-col leading-tight">
-                <span className="font-serif font-bold text-lg text-brand-black hidden sm:block">
-                  Your Tax Source
-                </span>
-                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-purple/60 hidden sm:block">
-                  Secure Portal
-                </span>
-              </div>
+              <span className="font-heading font-bold text-xl text-brand-black hidden sm:block">
+                Secure Client Portal
+              </span>
             </Link>
             
-            <nav className="hidden md:flex gap-6 lg:gap-8">
+            <nav className="hidden md:flex gap-8">
               <NavLink href="/portal" label="Dashboard" />
               <NavLink href="/portal/documents" label="Documents" />
               <NavLink href="/portal/messages" label="Messages" />
@@ -48,11 +43,20 @@ export default async function PortalLayout({
           </div>
           
           <div className="flex items-center gap-6">
+            <Link href="/" className="hidden md:block mr-4">
+              <Image 
+                src="/images/logo-long.png" 
+                alt="Your Tax Source Logo" 
+                width={120} 
+                height={32} 
+                className="h-16 w-auto object-contain"
+              />
+            </Link>
             <div className="hidden lg:flex flex-col text-right">
-              <span className="text-[9px] font-black text-brand-purple/40 uppercase tracking-widest leading-none mb-1">
-                {(session.user as any)?.role === "ADMIN" ? "Administrator" : (session.user as any)?.role === "STAFF" ? "Staff Member" : "Client Partner"}
+              <span className="text-xs font-bold text-brand-charcoal/40 uppercase tracking-widest leading-none mb-1">
+                {(session.user as any)?.role === "ADMIN" ? "Administrator" : (session.user as any)?.role === "STAFF" ? "Staff Member" : "Authenticated Client"}
               </span>
-              <span className="text-xs font-bold text-brand-black">{session.user?.email}</span>
+              <span className="text-sm font-bold text-brand-black">{session.user?.email}</span>
             </div>
             <SignOutButton />
           </div>
