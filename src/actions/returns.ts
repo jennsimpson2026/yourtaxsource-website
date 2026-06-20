@@ -92,6 +92,7 @@ export async function updateReturnDetails(returnId: string, data: {
 
   revalidatePath(`/admin/returns/${returnId}`);
   revalidatePath("/admin/returns");
+  revalidatePath("/admin");
 }
 
 export async function updateReturnStatus(returnId: string, status: string) {
@@ -126,6 +127,7 @@ export async function updateReturnStatus(returnId: string, status: string) {
 
   revalidatePath(`/admin/returns/${returnId}`);
   revalidatePath("/admin/returns");
+  revalidatePath("/admin");
 }
 
 export async function manualReleaseReturn(returnId: string) {

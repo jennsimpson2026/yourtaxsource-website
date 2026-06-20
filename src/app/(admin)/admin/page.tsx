@@ -36,9 +36,13 @@ export default async function AdminDashboard() {
     .from(questionnaires)
     .where(eq(questionnaires.isSubmitted, true));
 
-  const unpaidInvoices = await db.select({ value: count() })
-    .from(invoices)
-    .where(eq(invoices.status, "UNPAID"));
+  const pendingPaymentsCount = await db.select({ value: count() })
+    .from(taxReturns)
+    .where(and(
+      inArray(taxReturns.status, ["FILED", "AWAITING_PAYMENT", "READY_FOR_SIGNATURE"]),
+      not(eq(taxReturns.paymentStatus, "PAID")),
+      gt(taxReturns.taxPrepFee, 0)
+    ));
 
   const pendingDocsCount = await db.select({ value: count() })
     .from(documents)
@@ -116,7 +120,7 @@ export default async function AdminDashboard() {
         <StatsCard 
           icon={<DollarSign className="text-brand-navy" size={24} />}
           label="Pending Payments"
-          value={unpaidInvoices[0].value}
+          value={pendingPaymentsCount[0].value}
           subtext="Awaiting client payment"
         />
       </div>
@@ -217,16 +221,16 @@ export default async function AdminDashboard() {
                   </div>
                 </div>
               )}
-              {unpaidInvoices[0].value > 0 && (
+              {pendingPaymentsCount[0].value > 0 && (
                 <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-xl border border-blue-100">
                   <DollarSign className="text-blue-600 mt-0.5" size={16} />
                   <div>
                     <p className="text-xs font-bold text-brand-navy">Pending Payments</p>
-                    <p className="text-[10px] text-brand-charcoal/60 mt-0.5 font-medium">{unpaidInvoices[0].value} invoices awaiting payment.</p>
+                    <p className="text-[10px] text-brand-charcoal/60 mt-0.5 font-medium">{pendingPaymentsCount[0].value} returns awaiting payment.</p>
                   </div>
                 </div>
               )}
-              {pendingQuestionnaires[0].value === 0 && unpaidInvoices[0].value === 0 && (
+              {pendingQuestionnaires[0].value === 0 && pendingPaymentsCount[0].value === 0 && (
                 <div className="text-center py-6">
                    <CheckCircle2 className="mx-auto text-green-200 mb-2" size={32} />
                    <p className="text-xs text-gray-400 font-medium">You're all caught up!</p>
