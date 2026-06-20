@@ -83,12 +83,14 @@ export default async function ReviewReturnPage({ params }: { params: Promise<{ i
     const notes = formData.get("notes") as string;
     const federalResult = parseFloat(formData.get("federalResult") as string) || 0;
     const stateResult = parseFloat(formData.get("stateResult") as string) || 0;
+    const taxPrepFee = parseFloat(formData.get("taxPrepFee") as string) || 0;
 
     await updateReturnDetails(id, {
       status,
       paymentStatus,
       notes,
       federalResult,
+      taxPrepFee,
       stateResults: JSON.stringify({ primary: stateResult }),
     });
   }
@@ -143,6 +145,9 @@ export default async function ReviewReturnPage({ params }: { params: Promise<{ i
               <div className="p-8">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                   <div className="space-y-6">
+                    <InfoItem label="Client Name" value={(ret as any).client?.name || 'N/A'} />
+                    <InfoItem label="Email Address" value={(ret as any).client?.email || 'N/A'} />
+                    <InfoItem label="Phone Number" value={(ret as any).client?.profile?.phone || 'N/A'} />
                     <InfoItem label="Filing Status" value={displayData.filingStatus} />
                     <InfoItem label="Dependents" value={displayData.dependents || "N/A"} />
                     <InfoItem label="Address" value={`${displayData.address || (ret as any).client?.profile?.addressLine1 || 'N/A'}, ${displayData.city || (ret as any).client?.profile?.city || ''} ${displayData.state || (ret as any).client?.profile?.state || ''}`} />
@@ -189,14 +194,15 @@ export default async function ReviewReturnPage({ params }: { params: Promise<{ i
               {ret.documents.map((doc) => (
                 <div key={doc.id} className="p-5 flex items-center justify-between hover:bg-brand-cloud/30 transition-colors group">
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-brand-cloud rounded-xl flex items-center justify-center text-brand-navy border border-gray-100">
-                      <FileText size={20} />
-                    </div>
-                    <div>
-                      <DocumentDownloadButton documentId={doc.id} showLabel={true} fileName={doc.fileName} category={doc.category} fileSize={doc.fileSize} />
-                    </div>
+                  <div className="w-10 h-10 bg-brand-cloud rounded-xl flex items-center justify-center text-brand-navy border border-gray-100">
+                    <FileText size={20} />
                   </div>
-                </div>
+                  <div className="flex items-center gap-2">
+                    <DocumentDownloadButton documentId={doc.id} showLabel={true} fileName={doc.fileName} category={doc.category} fileSize={doc.fileSize} />
+                    <DocumentDeleteButton documentId={doc.id} fileName={doc.fileName} />
+                  </div>
+                  </div>
+
               ))}
 
               {otherDocuments.length > 0 && (
@@ -269,7 +275,7 @@ export default async function ReviewReturnPage({ params }: { params: Promise<{ i
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4">
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] ml-1">Federal Result ($)</label>
                   <input
@@ -303,6 +309,16 @@ export default async function ReviewReturnPage({ params }: { params: Promise<{ i
                         return 0;
                       }
                     })()}
+                    className="w-full rounded-xl border border-white/10 p-3 text-sm bg-white/5 focus:bg-white focus:text-brand-navy transition-all focus:outline-none focus:ring-2 focus:ring-brand-orange/50"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] ml-1">Tax Prep Fee ($)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    name="taxPrepFee"
+                    defaultValue={(ret as any).taxPrepFee || 0}
                     className="w-full rounded-xl border border-white/10 p-3 text-sm bg-white/5 focus:bg-white focus:text-brand-navy transition-all focus:outline-none focus:ring-2 focus:ring-brand-orange/50"
                   />
                 </div>

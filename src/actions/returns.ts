@@ -14,6 +14,7 @@ export async function updateReturnDetails(returnId: string, data: {
   notes?: string;
   federalResult?: number;
   stateResults?: any;
+  taxPrepFee?: number;
   manualRelease?: boolean;
   isComplimentary?: boolean;
 }) {
@@ -25,6 +26,7 @@ export async function updateReturnDetails(returnId: string, data: {
   if (data.paymentStatus) updateData.paymentStatus = data.paymentStatus;
   if (data.notes !== undefined) updateData.notes = data.notes;
   if (data.federalResult !== undefined) updateData.federalResult = data.federalResult;
+  if (data.taxPrepFee !== undefined) updateData.taxPrepFee = data.taxPrepFee;
   if (data.stateResults !== undefined) {
     updateData.stateResults = typeof data.stateResults === 'string' 
       ? data.stateResults 

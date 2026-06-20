@@ -65,7 +65,7 @@ export function WorkflowManagementTable({ returns: initialReturns }: WorkflowMan
       step: mapStatusToStep(r.status),
       fedResult: r.federalResult,
       stateResult: stateVal,
-      fee: r.invoices?.reduce((sum: number, inv: any) => sum + (inv.amount || 0), 0) || 0,
+      fee: r.taxPrepFee || r.invoices?.reduce((sum: number, inv: any) => sum + (inv.amount || 0), 0) || 0,
       balance: r.invoices?.filter((inv: any) => inv.status === 'UNPAID').reduce((sum: number, inv: any) => sum + (inv.amount || 0), 0) || 0,
       paymentStatus: r.paymentStatus,
       lastLogin: (r.client as any)?.lastLoginAt,
