@@ -1,3 +1,4 @@
+import React from "react";
 import { auth } from "@/lib/auth";
 
 import { redirect } from "next/navigation";
@@ -32,12 +33,16 @@ import {
 export default async function PortalDashboard() {
   const session = await auth();
 
+  if (!session?.user) {
+    redirect("/auth/login");
+  }
+
   // If the user is an admin or staff, redirect them to the admin hub
-  if (session?.user?.role === "ADMIN" || session?.user?.role === "STAFF") {
+  if (session.user.role === "ADMIN" || session.user.role === "STAFF") {
     redirect("/admin");
   }
 
-  const userId = (session?.user as any).id;
+  const userId = (session.user as any).id;
 
   const returns = await db.query.taxReturns.findMany({
     where: eq(taxReturns.clientId, userId),
