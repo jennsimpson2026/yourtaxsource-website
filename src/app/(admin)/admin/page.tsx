@@ -1,7 +1,7 @@
 import React from "react";
 import { db } from "@/lib/db";
 import { users, taxReturns, questionnaires, invoices, documents } from "@/lib/db/schema";
-import { count, eq, desc, and, not, sql } from "drizzle-orm";
+import { count, eq, desc, and, not, sql, gt } from "drizzle-orm";
 import Link from "next/link";
 import { 
   Users, 
@@ -59,7 +59,7 @@ export default async function AdminDashboard() {
     where: and(
       eq(taxReturns.status, "FILED"),
       not(eq(taxReturns.paymentStatus, "PAID")),
-      sql`${taxReturns.taxPrepFee} > 0`
+      gt(taxReturns.taxPrepFee, 0)
     ),
     with: {
       client: true,
