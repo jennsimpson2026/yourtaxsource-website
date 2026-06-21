@@ -1,11 +1,13 @@
-import { 
-  FileText, 
-  Globe, 
+import {
+  FileText,
+  Globe,
   ShieldCheck,
   ChevronRight,
   ArrowRight,
   Search,
-  BookOpen
+  BookOpen,
+  LayoutGrid,
+  CreditCard
 } from "lucide-react";
 import Link from "next/link";
 import { getPosts, getCategories } from "@/actions/resources";
@@ -133,8 +135,14 @@ function getCategoryIcon(slug: string) {
       return <Globe className="text-brand-purple" size={24} />;
     case 'faq':
       return <ShieldCheck className="text-brand-purple" size={24} />;
-    default:
+    case 'tax-organizers':
       return <BookOpen className="text-brand-purple" size={24} />;
+    case 'client-info':
+      return <LayoutGrid className="text-brand-purple" size={24} />;
+    case 'billing-info':
+      return <CreditCard className="text-brand-purple" size={24} />;
+    default:
+      return <FileText className="text-brand-purple" size={24} />;
   }
 }
 
@@ -146,7 +154,13 @@ function getCategoryDescription(slug: string) {
       return "Official IRS and State Department of Revenue links and payment portals.";
     case 'faq':
       return "Quick answers to common questions about our services and security.";
+    case 'tax-organizers':
+      return "Downloadable packets, forms, and organizers to streamline your tax preparation.";
+    case 'client-info':
+      return "Important information on how to work with us, upload documents, and track status.";
+    case 'billing-info':
+      return "Details on our service fees, payment methods, and billing policies.";
     default:
-      return "Tax planning strategies and insights for individuals and businesses.";
+      return "Essential tools and guides for your tax and financial planning needs.";
   }
 }
