@@ -82,6 +82,14 @@ async function restoreResources() {
         ]
       });
       console.log(`Created post: ${p.title}`);
+    } else {
+        // If it exists, make sure it has the right type and category
+        const categoryId = catMap[p.cat];
+        await client.execute({
+            sql: "UPDATE posts SET type = 'resource', category_id = ? WHERE slug = ?",
+            args: [categoryId, p.slug]
+        });
+        console.log(`Updated post: ${p.title}`);
     }
   }
 
