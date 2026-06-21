@@ -97,3 +97,29 @@ export default function WorkflowStatus() {
     </div>
   );
 }
+
+function StatusIcon({ status }: { status: string }) {
+  switch (status) {
+    case "successful":
+      return <CheckCircle2 className="text-green-500" size={18} />;
+    case "failed":
+      return <XCircle className="text-red-500" size={18} />;
+    case "running":
+      return <Loader2 className="animate-spin text-brand-purple" size={18} />;
+    default:
+      return <Clock className="text-gray-400" size={18} />;
+  }
+}
+
+function getStatusStyles(status: string) {
+  switch (status) {
+    case "successful":
+      return "bg-green-50 text-green-700 border-green-100";
+    case "failed":
+      return "bg-red-50 text-red-700 border-red-100";
+    case "running":
+      return "bg-purple-50 text-brand-purple border-purple-100";
+    default:
+      return "bg-gray-50 text-gray-700 border-gray-100";
+  }
+}
