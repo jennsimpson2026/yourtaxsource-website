@@ -89,7 +89,10 @@ export default async function AdminDashboard() {
   });
 
   const readyToFileReturns = await db.query.taxReturns.findMany({
-    where: eq(taxReturns.status, "READY_TO_FILE"),
+    where: and(
+      eq(taxReturns.status, "READY_TO_FILE"),
+      eq(taxReturns.paymentStatus, "PAID")
+    ),
     with: {
       client: true,
     },
@@ -337,7 +340,7 @@ function StatusBadge({ status }: { status: string }) {
     'READY_FOR_SIGNATURE': 'bg-green-100 text-brand-green border-brand-green/10',
     'AWAITING_PAYMENT': 'bg-orange-100 text-brand-orange border-brand-orange/10',
     'READY_TO_FILE': 'bg-purple-100 text-brand-purple border-brand-purple/10',
-    'COMPLETED': 'bg-gray-100 text-gray-400 border-gray-200',
+    'COMPLETED': 'bg-green-600 text-white border-green-700',
   };
   
   return (

@@ -15,6 +15,7 @@ import { BlogCMSTable } from "@/components/admin/BlogCMSTable";
 export default async function BlogCMSPage() {
   console.log("[BLOG_CMS] Loading BlogCMSPage...");
   const dbPosts = await db.query.posts.findMany({
+    where: eq(posts.type, "blog"),
     with: {
       category: true,
       author: true,

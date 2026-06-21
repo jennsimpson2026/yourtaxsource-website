@@ -1,12 +1,15 @@
 import { db } from "@/lib/db";
 import { posts, categories } from "@/lib/db/schema";
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, and } from "drizzle-orm";
 import Link from "next/link";
 import { ArrowRight, Calendar, User, Tag, ChevronRight } from "lucide-react";
 
 export default async function BlogPage() {
   const dbPosts = await db.query.posts.findMany({
-    where: eq(posts.status, "published"),
+    where: and(
+      eq(posts.status, "published"),
+      eq(posts.type, "blog")
+    ),
     with: {
       category: true,
       author: true,

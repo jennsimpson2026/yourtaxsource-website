@@ -5,7 +5,11 @@ import { eq } from "drizzle-orm";
 async function seedResources() {
   console.log("Seeding resources...");
 
-  const authorId = "bbb8d9fa-2a41-4caa-b968-a1db918cf588"; // jsimpson@yourtaxsource.com
+  const admin = await db.query.users.findFirst({
+    where: eq(users.role, "ADMIN"),
+  });
+
+  const authorId = admin?.id || "admin-1";
 
   // 1. Ensure Categories exist
   const resourceCategories = [
@@ -37,6 +41,7 @@ async function seedResources() {
       slug: "tax-appointment-checklist",
       content: "A master list of every document needed for a smooth filing experience.\n\n### Required Documents:\n- W-2s from all employers\n- 1099s for interest, dividends, and retirement distributions\n- 1099-NEC/K-1s for business or rental income\n- Health insurance statements (1095-A/B/C)\n- Mortgage interest statements (1098)\n- Charitable donation records",
       status: "published",
+      type: "resource",
       categoryId: categoryMap.get("checklists"),
       isFeatured: true,
       authorId,
@@ -47,6 +52,7 @@ async function seedResources() {
       slug: "2024-individual-checklist",
       content: "Standard checklist for families and single filers in 2024.",
       status: "published",
+      type: "resource",
       categoryId: categoryMap.get("checklists"),
       isFeatured: false,
       authorId,
@@ -60,6 +66,7 @@ async function seedResources() {
       slug: "irs-official-website",
       content: "The main hub for federal tax information and forms. [Visit IRS.gov](https://www.irs.gov)",
       status: "published",
+      type: "resource",
       categoryId: categoryMap.get("government-resources"),
       isFeatured: false,
       authorId,
@@ -70,6 +77,7 @@ async function seedResources() {
       slug: "irs-wheres-my-refund",
       content: "Track the status of your federal income tax refund. [Track Refund](https://www.irs.gov/refunds)",
       status: "published",
+      type: "resource",
       categoryId: categoryMap.get("government-resources"),
       isFeatured: false,
       authorId,
@@ -83,6 +91,7 @@ async function seedResources() {
       slug: "how-to-send-documents",
       content: "We use a secure, encrypted client portal. Once you sign up, you can upload your documents (photos of forms, PDFs, or spreadsheets) directly to our system from your phone or computer.",
       status: "published",
+      type: "resource",
       categoryId: categoryMap.get("faq"),
       isFeatured: false,
       authorId,
@@ -93,6 +102,7 @@ async function seedResources() {
       slug: "service-fees",
       content: "Our tax preparation fees vary based on the complexity of your return. Individual tax returns typically start at $125 for a basic/simple return.",
       status: "published",
+      type: "resource",
       categoryId: categoryMap.get("faq"),
       isFeatured: false,
       authorId,
@@ -108,6 +118,7 @@ async function seedResources() {
     });
 
     if (!existingPost) {
+      // @ts-ignore
       await db.insert(posts).values(postData);
       console.log(`Created post: ${postData.title}`);
     } else {

@@ -328,6 +328,7 @@ export const posts = sqliteTable("posts", {
   content: text("content").notNull(),
   featuredImageUrl: text("featured_image_url"),
   publishDate: integer("publish_date", { mode: "timestamp" }),
+  type: text("type").default("blog").notNull(), // 'blog', 'resource'
   status: text("status").default("draft").notNull(), // 'draft', 'published', 'scheduled'
   categoryId: text("category_id")
     .references(() => categories.id)

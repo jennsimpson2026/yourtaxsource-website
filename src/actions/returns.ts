@@ -21,18 +21,45 @@ export async function updateReturnDetails(returnId: string, data: {
   const session = await auth();
   if (!session?.user || (session.user as any).role === "CLIENT") throw new Error("Unauthorized");
 
+  // Fetch current state for atomicity
+  const currentReturn = await db.query.taxReturns.findFirst({
+    where: eq(taxReturns.id, returnId),
+  });
+  if (!currentReturn) throw new Error("Return not found");
+
   const updateData: any = { updatedAt: new Date() };
+  
   if (data.status) updateData.status = data.status;
-  
-  // Ensure paymentStatus is properly handled (especially transition to PAID)
-  if (data.paymentStatus) {
-    updateData.paymentStatus = data.paymentStatus;
-  }
-  
+  if (data.paymentStatus) updateData.paymentStatus = data.paymentStatus;
   if (data.notes !== undefined) updateData.notes = data.notes;
   if (data.federalResult !== undefined) updateData.federalResult = data.federalResult;
+  if (data.stateResults !== undefined) updateData.stateResults = data.stateResults;
   if (data.taxPrepFee !== undefined) updateData.taxPrepFee = data.taxPrepFee;
-  
+
+  // Automation: (AWAITING_PAYMENT or READY_FOR_SIGNATURE) + PAID = READY_TO_FILE
+  const finalPaymentStatus = data.paymentStatus || currentReturn.paymentStatus;
+  let finalStatus = data.status || currentReturn.status;
+
+  if (finalPaymentStatus === "PAID" && ["AWAITING_PAYMENT", "READY_FOR_SIGNATURE"].includes(finalStatus)) {
+    console.log(`[updateReturnDetails] Auto-transitioning return ${returnId} to READY_TO_FILE`);
+    finalStatus = "READY_TO_FILE";
+    updateData.status = "READY_TO_FILE";
+  }
+
+  // Support reverting: if moving back to UNPAID and currently READY_TO_FILE, move back to AWAITING_PAYMENT
+  if (finalPaymentStatus === "UNPAID" && finalStatus === "READY_TO_FILE") {
+    console.log(`[updateReturnDetails] Reverting READY_TO_FILE status to AWAITING_PAYMENT due to UNPAID payment status`);
+    finalStatus = "AWAITING_PAYMENT";
+    updateData.status = "AWAITING_PAYMENT";
+  }
+
+  // FORCE: If status is READY_TO_FILE but payment is UNPAID, force status back to AWAITING_PAYMENT
+  if (finalStatus === "READY_TO_FILE" && finalPaymentStatus === "UNPAID") {
+    console.log(`[updateReturnDetails] FORCING status back to AWAITING_PAYMENT because payment is UNPAID`);
+    finalStatus = "AWAITING_PAYMENT";
+    updateData.status = "AWAITING_PAYMENT";
+  }
+
   console.log(`[updateReturnDetails] Updating return ${returnId}`, updateData);
 
   const [updatedReturn] = await db.update(taxReturns)
@@ -41,18 +68,20 @@ export async function updateReturnDetails(returnId: string, data: {
     .returning();
 
   if (updatedReturn) {
-    console.log(`[updateReturnDetails] Successfully updated return ${returnId}. New status: ${updatedReturn.status}, Payment: ${updatedReturn.paymentStatus}`);
-    
-    // Automation: (AWAITING_PAYMENT or READY_FOR_SIGNATURE) + PAID = READY_TO_FILE
-    let targetStatus = updatedReturn.status;
-    if (updatedReturn.paymentStatus === "PAID" && ["AWAITING_PAYMENT", "READY_FOR_SIGNATURE"].includes(updatedReturn.status)) {
-      console.log(`[updateReturnDetails] Auto-transitioning return ${returnId} to READY_TO_FILE`);
-      const [autoUpdated] = await db.update(taxReturns)
-        .set({ status: "READY_TO_FILE" as any, updatedAt: new Date() })
-        .where(eq(taxReturns.id, returnId))
-        .returning();
-      if (autoUpdated) {
-        targetStatus = autoUpdated.status;
+    // 1. Ensure an invoice exists if taxPrepFee > 0 and no invoices exist
+    if (updatedReturn.taxPrepFee && Number(updatedReturn.taxPrepFee) > 0) {
+      const existingInvoices = await db.query.invoices.findMany({
+        where: eq(invoices.returnId, returnId),
+      });
+
+      if (existingInvoices.length === 0) {
+        console.log(`[updateReturnDetails] Creating initial UNPAID invoice for fee: ${updatedReturn.taxPrepFee}`);
+        await db.insert(invoices).values({
+          userId: updatedReturn.clientId,
+          returnId: returnId,
+          amount: updatedReturn.taxPrepFee,
+          status: "UNPAID",
+        });
       }
     }
 
@@ -64,16 +93,16 @@ export async function updateReturnDetails(returnId: string, data: {
     });
 
     if (client) {
-      if (data.status) {
-        await notifyStatusUpdate(client.email, client.profile?.phone || null, targetStatus);
+      if (data.status || updateData.status !== currentReturn.status) {
+        await notifyStatusUpdate(client.email, client.profile?.phone || null, updatedReturn.status);
       }
 
-      if (data.paymentStatus === "PAID" || data.manualRelease === true || data.isComplimentary === true) {
+      if (updatedReturn.paymentStatus === "PAID" || data.manualRelease === true || data.isComplimentary === true) {
         // Release documents on payment or manual release
         console.log(`[updateReturnDetails] Releasing documents for return ${returnId}`);
         await releaseReturnDocuments(returnId, (session.user as any).id);
 
-        if (data.paymentStatus === "PAID") {
+        if (updatedReturn.paymentStatus === "PAID") {
           const allInvoices = await db.query.invoices.findMany({
             where: eq(invoices.returnId, returnId),
           });

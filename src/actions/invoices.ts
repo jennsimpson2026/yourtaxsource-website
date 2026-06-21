@@ -82,3 +82,32 @@ export async function createInvoice(returnId: string, amount: number) {
   revalidatePath(`/admin/returns/${returnId}`);
   return invoice;
 }
+
+export async function deleteInvoice(invoiceId: string) {
+  const session = await auth();
+  if (!session?.user || (session.user as any).role !== "ADMIN") throw new Error("Unauthorized");
+
+  const invoice = await db.query.invoices.findFirst({
+    where: eq(invoices.id, invoiceId),
+  });
+
+  if (!invoice) throw new Error("Invoice not found");
+
+  await db.delete(invoices).where(eq(invoices.id, invoiceId));
+
+  await db.insert(auditLogs).values({
+    userId: (session.user as any).id,
+    action: "DELETE_INVOICE",
+    targetType: "INVOICE",
+    targetId: invoiceId,
+    metadata: JSON.stringify({ 
+      amount: invoice.amount, 
+      status: invoice.status,
+      returnId: invoice.returnId 
+    }),
+  });
+
+  revalidatePath(`/admin/returns/${invoice.returnId}`);
+  revalidatePath("/admin");
+  return { success: true };
+}

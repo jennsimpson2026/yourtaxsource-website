@@ -37,6 +37,7 @@ export default async function AdminLayout({
           <AdminNavLink href="/admin/users" icon={<Users size={20} />} label="Users" />
           <AdminNavLink href="/admin/returns" icon={<FileText size={20} />} label="Tax Returns" />
           <AdminNavLink href="/admin/messages" icon={<MessageSquare size={20} />} label="Messages" />
+          <AdminNavLink href="/admin/blog" icon={<FileText size={20} />} label="Blog CMS" />
           <AdminNavLink href="/admin/resources" icon={<BookOpen size={20} />} label="Resources CMS" />
           <AdminNavLink href="/admin/audit" icon={<ShieldCheck size={20} />} label="Audit Logs" />
           <AdminNavLink href="/admin/settings" icon={<Settings size={20} />} label="Settings" />

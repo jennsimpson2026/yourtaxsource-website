@@ -24,6 +24,7 @@ export async function createPost(data: {
   try {
     const [newPost] = await db.insert(posts).values({
       ...data,
+      type: "blog",
       authorId: (session.user as any).id,
       publishDate: data.status === "published" ? new Date() : null,
     }).returning();

@@ -30,6 +30,8 @@ export async function getPosts(options: {
     whereConditions.push(eq(posts.isFeatured, options.isFeatured));
   }
 
+  whereConditions.push(eq(posts.type, "resource"));
+
   return await db.query.posts.findMany({
     where: whereConditions.length > 0 ? and(...whereConditions) : undefined,
     orderBy: [desc(posts.publishDate), desc(posts.createdAt)],
@@ -61,6 +63,7 @@ export async function createPost(data: any) {
   try {
     const [newPost] = await db.insert(posts).values({
       ...data,
+      type: "resource",
       authorId: session.user.id,
       publishDate: data.status === 'published' ? new Date() : null,
     }).returning();
