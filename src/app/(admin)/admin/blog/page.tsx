@@ -1,7 +1,7 @@
 import React from "react";
 import { db } from "@/lib/db";
 import { posts, categories } from "@/lib/db/schema";
-import { desc } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { 
   Plus, 
   FileEdit, 
