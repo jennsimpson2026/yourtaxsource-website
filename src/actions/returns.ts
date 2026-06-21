@@ -43,6 +43,19 @@ export async function updateReturnDetails(returnId: string, data: {
   if (updatedReturn) {
     console.log(`[updateReturnDetails] Successfully updated return ${returnId}. New status: ${updatedReturn.status}, Payment: ${updatedReturn.paymentStatus}`);
     
+    // Automation: (AWAITING_PAYMENT or READY_FOR_SIGNATURE) + PAID = READY_TO_FILE
+    let targetStatus = updatedReturn.status;
+    if (updatedReturn.paymentStatus === "PAID" && ["AWAITING_PAYMENT", "READY_FOR_SIGNATURE"].includes(updatedReturn.status)) {
+      console.log(`[updateReturnDetails] Auto-transitioning return ${returnId} to READY_TO_FILE`);
+      const [autoUpdated] = await db.update(taxReturns)
+        .set({ status: "READY_TO_FILE" as any, updatedAt: new Date() })
+        .where(eq(taxReturns.id, returnId))
+        .returning();
+      if (autoUpdated) {
+        targetStatus = autoUpdated.status;
+      }
+    }
+
     const client = await db.query.users.findFirst({
       where: eq(users.id, updatedReturn.clientId),
       with: {
@@ -52,7 +65,7 @@ export async function updateReturnDetails(returnId: string, data: {
 
     if (client) {
       if (data.status) {
-        await notifyStatusUpdate(client.email, client.profile?.phone || null, data.status);
+        await notifyStatusUpdate(client.email, client.profile?.phone || null, targetStatus);
       }
 
       if (data.paymentStatus === "PAID" || data.manualRelease === true || data.isComplimentary === true) {
@@ -61,11 +74,16 @@ export async function updateReturnDetails(returnId: string, data: {
         await releaseReturnDocuments(returnId, (session.user as any).id);
 
         if (data.paymentStatus === "PAID") {
-          const unpaidInvoices = await db.query.invoices.findMany({
-            where: and(eq(invoices.returnId, returnId), eq(invoices.status, "UNPAID")),
+          const allInvoices = await db.query.invoices.findMany({
+            where: eq(invoices.returnId, returnId),
           });
           
-          let totalAmount = unpaidInvoices.reduce((sum, inv) => sum + Number(inv.amount), 0);
+          const unpaidInvoices = allInvoices.filter(inv => inv.status === "UNPAID");
+          const totalPaid = allInvoices
+            .filter(inv => inv.status === "PAID")
+            .reduce((sum, inv) => sum + Number(inv.amount), 0);
+          
+          let totalAmount = 0;
           
           // Mark invoices as paid if manual payment entry
           if (unpaidInvoices.length > 0) {
@@ -73,17 +91,24 @@ export async function updateReturnDetails(returnId: string, data: {
             await db.update(invoices)
               .set({ status: "PAID", paidAt: new Date() })
               .where(and(eq(invoices.returnId, returnId), eq(invoices.status, "UNPAID")));
-          } else if (Number(updatedReturn.taxPrepFee) > 0) {
-            // If no unpaid invoices but fee exists, create a paid invoice to satisfy balance logic
-            console.log(`[updateReturnDetails] Creating a PAID invoice for fee amount: ${updatedReturn.taxPrepFee}`);
-            await db.insert(invoices).values({
-              userId: updatedReturn.clientId,
-              returnId: returnId,
-              amount: Number(updatedReturn.taxPrepFee),
-              status: "PAID",
-              paidAt: new Date(),
-            });
-            totalAmount = Number(updatedReturn.taxPrepFee);
+            totalAmount = unpaidInvoices.reduce((sum, inv) => sum + Number(inv.amount), 0);
+          } else if (totalPaid < Number(updatedReturn.taxPrepFee)) {
+            // Only create a new PAID invoice if the total paid so far is less than the fee
+            const remainingToPay = Math.max(0, Number(updatedReturn.taxPrepFee) - totalPaid);
+            if (remainingToPay > 0) {
+              console.log(`[updateReturnDetails] Creating a PAID invoice for remaining balance: ${remainingToPay}`);
+              await db.insert(invoices).values({
+                userId: updatedReturn.clientId,
+                returnId: returnId,
+                amount: remainingToPay,
+                status: "PAID",
+                paidAt: new Date(),
+              });
+              totalAmount = remainingToPay;
+            }
+          } else {
+            console.log(`[updateReturnDetails] Return is already fully paid (Paid: ${totalPaid}, Fee: ${updatedReturn.taxPrepFee}). No new invoice created.`);
+            totalAmount = totalPaid;
           }
 
           try {

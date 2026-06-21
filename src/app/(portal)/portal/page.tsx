@@ -212,32 +212,32 @@ export default async function PortalDashboard() {
               />
               <TimelineStep 
                 number={2} 
-                label="Upload Docs" 
-                status={currentReturn?.status === 'IN_PROCESS' ? 'current' : (currentReturn && ['READY_FOR_SIGNATURE', 'AWAITING_PAYMENT', 'FILED'].includes(currentReturn.status) ? 'completed' : 'pending')} 
-                icon={<Upload size={20} />}
-              />
-              <TimelineStep 
-                number={3} 
-                label="Tax Preparation" 
-                status={currentReturn?.status === 'IN_PROCESS' ? 'current' : (currentReturn && ['READY_FOR_SIGNATURE', 'AWAITING_PAYMENT', 'FILED'].includes(currentReturn.status) ? 'completed' : 'pending')} 
+                label="Preparation" 
+                status={currentReturn?.status === 'IN_PROCESS' ? 'current' : (currentReturn && ['READY_FOR_SIGNATURE', 'AWAITING_PAYMENT', 'READY_TO_FILE', 'COMPLETED'].includes(currentReturn.status) ? 'completed' : 'pending')} 
                 icon={<Lock size={20} />}
               />
               <TimelineStep 
-                number={4} 
+                number={3} 
                 label="Signature" 
-                status={currentReturn?.status === 'READY_FOR_SIGNATURE' ? 'current' : (currentReturn && ['AWAITING_PAYMENT', 'FILED'].includes(currentReturn.status) ? 'completed' : 'pending')} 
+                status={currentReturn?.status === 'READY_FOR_SIGNATURE' ? 'current' : (currentReturn && ['AWAITING_PAYMENT', 'READY_TO_FILE', 'COMPLETED'].includes(currentReturn.status) ? 'completed' : 'pending')} 
                 icon={<PenTool size={20} />}
               />
               <TimelineStep 
-                number={5} 
+                number={4} 
                 label="Payment" 
-                status={currentReturn?.paymentStatus === 'PAID' ? 'completed' : (currentReturn?.status === 'AWAITING_PAYMENT' ? 'current' : 'pending')} 
+                status={currentReturn?.status === 'AWAITING_PAYMENT' ? 'current' : (currentReturn && ['READY_TO_FILE', 'COMPLETED'].includes(currentReturn.status) ? 'completed' : 'pending')} 
                 icon={<CreditCard size={20} />}
               />
               <TimelineStep 
+                number={5} 
+                label="Ready to File" 
+                status={currentReturn?.status === 'READY_TO_FILE' ? 'current' : (currentReturn?.status === 'COMPLETED' ? 'completed' : 'pending')} 
+                icon={<Zap size={20} />}
+              />
+              <TimelineStep 
                 number={6} 
-                label="Complete" 
-                status={currentReturn?.status === 'FILED' ? 'completed' : 'pending'} 
+                label="Completed" 
+                status={currentReturn?.status === 'COMPLETED' ? 'completed' : 'pending'} 
                 icon={<CheckCircle2 size={20} />}
               />
             </div>

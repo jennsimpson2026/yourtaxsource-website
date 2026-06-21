@@ -126,15 +126,15 @@ export default async function ReviewReturnPage({ params }: { params: Promise<{ i
       </div>
 
       {/* Ready to File Notice */}
-      {ret.paymentStatus?.trim().toUpperCase() === "PAID" && ret.status?.trim().toUpperCase() !== "FILED" && (
-        <div className="bg-green-600 text-white p-6 rounded-2xl shadow-lg border-2 border-green-400 flex items-center justify-between animate-in fade-in slide-in-from-top-4 duration-500">
+      {ret.status?.trim().toUpperCase() === "READY_TO_FILE" && (
+        <div className="bg-purple-600 text-white p-6 rounded-2xl shadow-lg border-2 border-purple-400 flex items-center justify-between animate-in fade-in slide-in-from-top-4 duration-500">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
               <CheckCircle2 size={28} />
             </div>
             <div>
               <h3 className="text-lg font-black uppercase tracking-tight">Ready to File</h3>
-              <p className="text-sm font-medium text-green-50 opacity-90">Payment has been received and all documents are signed. You can now file this return.</p>
+              <p className="text-sm font-medium text-purple-50 opacity-90">Payment has been received and all documents are signed. You can now file this return.</p>
             </div>
           </div>
           <div className="hidden md:block">
@@ -277,7 +277,8 @@ export default async function ReviewReturnPage({ params }: { params: Promise<{ i
                     <option value="IN_PROCESS">In Process</option>
                     <option value="READY_FOR_SIGNATURE">Ready for Signature</option>
                     <option value="AWAITING_PAYMENT">Awaiting Payment</option>
-                    <option value="FILED">Filed</option>
+                    <option value="READY_TO_FILE">Ready to File</option>
+                    <option value="COMPLETED">Completed</option>
                   </select>
                 </div>
                 
@@ -417,13 +418,14 @@ function BooleanItem({ label, value }: { label: string, value: boolean }) {
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const normalizedStatus = status?.trim().toUpperCase();
+  const normalizedStatus = status?.toUpperCase();
   const styles: Record<string, string> = {
     'NOT_STARTED': 'bg-gray-100 text-gray-600 border-gray-200',
     'IN_PROCESS': 'bg-blue-100 text-brand-navy border-brand-navy/10',
     'READY_FOR_SIGNATURE': 'bg-green-100 text-brand-green border-brand-green/10',
     'AWAITING_PAYMENT': 'bg-orange-100 text-brand-orange border-brand-orange/10',
-    'FILED': 'bg-gray-100 text-gray-400 border-gray-200',
+    'READY_TO_FILE': 'bg-purple-100 text-brand-purple border-brand-purple/10',
+    'COMPLETED': 'bg-gray-100 text-gray-400 border-gray-200',
   };
   
   return (
@@ -434,7 +436,7 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 function PaymentBadge({ status }: { status: string }) {
-  const normalizedStatus = status?.trim().toUpperCase();
+  const normalizedStatus = status?.toUpperCase();
   const styles: Record<string, string> = {
     'UNPAID': 'bg-red-50 text-red-600 border-red-100',
     'PAID': 'bg-green-50 text-green-600 border-green-100',

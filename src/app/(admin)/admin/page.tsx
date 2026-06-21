@@ -28,7 +28,7 @@ export default async function AdminDashboard() {
   const pendingReturns = await db.select({ value: count() })
     .from(taxReturns)
     .where(and(
-      not(eq(taxReturns.status, "FILED")),
+      not(eq(taxReturns.status, "COMPLETED")),
       not(eq(taxReturns.status, "NOT_STARTED"))
     ));
 
@@ -39,8 +39,8 @@ export default async function AdminDashboard() {
   const pendingPaymentsCount = await db.select({ value: count() })
     .from(taxReturns)
     .where(and(
-      inArray(taxReturns.status, ["FILED", "AWAITING_PAYMENT", "READY_FOR_SIGNATURE"]),
-      not(sql`upper(trim(${taxReturns.paymentStatus})) = 'PAID'`),
+      inArray(taxReturns.status, ["COMPLETED", "AWAITING_PAYMENT", "READY_FOR_SIGNATURE", "READY_TO_FILE"]),
+      not(eq(taxReturns.paymentStatus, "PAID")),
       gt(taxReturns.taxPrepFee, 0)
     ));
 
@@ -61,8 +61,8 @@ export default async function AdminDashboard() {
 
   const outstandingFeesReturns = await db.query.taxReturns.findMany({
     where: and(
-      inArray(taxReturns.status, ["FILED", "AWAITING_PAYMENT", "READY_FOR_SIGNATURE"]),
-      not(sql`upper(trim(${taxReturns.paymentStatus})) = 'PAID'`),
+      inArray(taxReturns.status, ["COMPLETED", "AWAITING_PAYMENT", "READY_FOR_SIGNATURE", "READY_TO_FILE"]),
+      not(eq(taxReturns.paymentStatus, "PAID")),
       gt(taxReturns.taxPrepFee, 0)
     ),
     with: {
@@ -89,10 +89,7 @@ export default async function AdminDashboard() {
   });
 
   const readyToFileReturns = await db.query.taxReturns.findMany({
-    where: and(
-      sql`upper(trim(${taxReturns.paymentStatus})) = 'PAID'`,
-      not(sql`upper(trim(${taxReturns.status})) = 'FILED'`)
-    ),
+    where: eq(taxReturns.status, "READY_TO_FILE"),
     with: {
       client: true,
     },
@@ -333,13 +330,14 @@ function StatsCard({ icon, label, value, subtext }: { icon: React.ReactNode, lab
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const normalizedStatus = status?.trim().toUpperCase();
+  const normalizedStatus = status?.toUpperCase();
   const styles: Record<string, string> = {
     'NOT_STARTED': 'bg-gray-100 text-gray-600 border-gray-200',
     'IN_PROCESS': 'bg-blue-100 text-brand-navy border-brand-navy/10',
     'READY_FOR_SIGNATURE': 'bg-green-100 text-brand-green border-brand-green/10',
     'AWAITING_PAYMENT': 'bg-orange-100 text-brand-orange border-brand-orange/10',
-    'FILED': 'bg-gray-100 text-gray-400 border-gray-200',
+    'READY_TO_FILE': 'bg-purple-100 text-brand-purple border-brand-purple/10',
+    'COMPLETED': 'bg-gray-100 text-gray-400 border-gray-200',
   };
   
   return (

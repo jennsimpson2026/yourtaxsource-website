@@ -5,7 +5,7 @@ This document outlines the database schema using SQLite syntax via Drizzle ORM.
 ## Enums (Handled as TEXT in SQLite)
 
 *   `user_role`: 'CLIENT', 'STAFF', 'ADMIN'
-*   `return_status`: 'NOT_STARTED', 'IN_PROGRESS', 'REVIEW', 'READY_FOR_SIGNATURE', 'READY_FOR_PAYMENT', 'FILED'
+*   `return_status`: 'NOT_STARTED', 'IN_PROCESS', 'READY_FOR_SIGNATURE', 'AWAITING_PAYMENT', 'READY_TO_FILE', 'COMPLETED'
 *   `document_category`: 'INTAKE', 'SUPPORTING', 'FINAL_RETURN', 'ID_VERIFICATION'
 *   `payment_status`: 'UNPAID', 'PARTIAL', 'PAID', 'VOID'
 

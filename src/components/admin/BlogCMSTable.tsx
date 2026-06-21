@@ -7,10 +7,13 @@ import {
   CheckCircle2,
   Clock,
   ExternalLink,
-  Plus
+  Plus,
+  Eye,
+  Send,
+  XCircle
 } from "lucide-react";
 import Link from "next/link";
-import { deletePost } from "@/actions/admin/blog";
+import { deletePost, updatePost } from "@/actions/admin/blog";
 import { useRouter } from "next/navigation";
 
 interface BlogCMSTableProps {
@@ -20,6 +23,7 @@ interface BlogCMSTableProps {
 export function BlogCMSTable({ initialPosts }: BlogCMSTableProps) {
   const [posts, setPosts] = useState(initialPosts);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  const [isUpdating, setIsUpdating] = useState<string | null>(null);
   const router = useRouter();
 
   const handleDelete = async (id: string) => {
@@ -35,6 +39,25 @@ export function BlogCMSTable({ initialPosts }: BlogCMSTableProps) {
       alert("Failed to delete post");
     } finally {
       setIsDeleting(null);
+    }
+  };
+
+  const handleToggleStatus = async (post: any) => {
+    const newStatus = post.status === 'published' ? 'draft' : 'published';
+    const actionLabel = newStatus === 'published' ? 'publish' : 'unpublish';
+    
+    if (!confirm(`Are you sure you want to ${actionLabel} this post?`)) return;
+    
+    setIsUpdating(post.id);
+    try {
+      await updatePost(post.id, { status: newStatus });
+      setPosts(posts.map(p => p.id === post.id ? { ...p, status: newStatus } : p));
+      router.refresh();
+    } catch (error) {
+      console.error(`Failed to ${actionLabel} post:`, error);
+      alert(`Failed to ${actionLabel} post`);
+    } finally {
+      setIsUpdating(null);
     }
   };
 
@@ -54,7 +77,11 @@ export function BlogCMSTable({ initialPosts }: BlogCMSTableProps) {
           {posts.map((post: any) => (
             <tr key={post.id} className="hover:bg-gray-50 transition-colors group">
               <td className="px-8 py-6">
-                <Link href={`/blog/${post.slug}`} target="_blank" className="font-bold text-brand-black group-hover:text-brand-purple transition-colors block max-w-md truncate flex items-center gap-2">
+                <Link 
+                  href={`/blog/${post.slug}${post.status === 'draft' ? '?preview=true' : ''}`} 
+                  target="_blank" 
+                  className="font-bold text-brand-black group-hover:text-brand-purple transition-colors block max-w-md truncate flex items-center gap-2"
+                >
                   {post.title} <ExternalLink size={14} className="opacity-0 group-hover:opacity-100 transition-opacity" />
                 </Link>
                 <span className="text-xs text-gray-400">{post.author?.name}</span>
@@ -73,8 +100,38 @@ export function BlogCMSTable({ initialPosts }: BlogCMSTableProps) {
               <td className="px-8 py-6 text-right">
                 <div className="flex justify-end gap-2">
                   <Link 
+                    href={`/blog/${post.slug}?preview=true`}
+                    target="_blank"
+                    className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-all"
+                    title="Preview"
+                  >
+                    <Eye size={18} />
+                  </Link>
+                  <button 
+                    onClick={() => handleToggleStatus(post)}
+                    disabled={isUpdating === post.id}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all font-bold text-[10px] uppercase tracking-widest border ${
+                      post.status === 'published' 
+                        ? 'text-orange-600 bg-orange-50 border-orange-200 hover:bg-orange-100' 
+                        : 'text-green-600 bg-green-50 border-green-200 hover:bg-green-100'
+                    }`}
+                  >
+                    {post.status === 'published' ? (
+                      <>
+                        <XCircle size={14} />
+                        Unpublish
+                      </>
+                    ) : (
+                      <>
+                        <Send size={14} />
+                        Publish
+                      </>
+                    )}
+                  </button>
+                  <Link 
                     href={`/admin/blog/edit/${post.id}`}
                     className="p-2 text-gray-400 hover:text-brand-purple hover:bg-brand-purple/5 rounded-lg transition-all"
+                    title="Edit"
                   >
                     <FileEdit size={18} />
                   </Link>
@@ -82,6 +139,7 @@ export function BlogCMSTable({ initialPosts }: BlogCMSTableProps) {
                     onClick={() => handleDelete(post.id)}
                     disabled={isDeleting === post.id}
                     className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all disabled:opacity-50"
+                    title="Delete"
                   >
                     <Trash2 size={18} />
                   </button>

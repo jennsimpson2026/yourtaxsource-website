@@ -57,6 +57,8 @@ export async function updatePost(id: string, data: Partial<{
     const updateData: any = { ...data, updatedAt: new Date() };
     if (data.status === "published") {
       updateData.publishDate = new Date();
+    } else if (data.status === "draft") {
+      updateData.publishDate = null;
     }
 
     const [updatedPost] = await db.update(posts)

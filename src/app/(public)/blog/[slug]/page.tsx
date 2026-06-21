@@ -14,11 +14,19 @@ export default async function BlogPostPage({
 }) {
   const { slug } = await params;
   const { preview } = await searchParams;
+  const isPreview = preview === "true" || preview === "1";
+
+  // Sanitize slug - handle leading/trailing slashes and decode URI
+  let cleanSlug = decodeURIComponent(slug);
+  if (cleanSlug.startsWith("/")) cleanSlug = cleanSlug.substring(1);
+  if (cleanSlug.endsWith("/")) cleanSlug = cleanSlug.substring(0, cleanSlug.length - 1);
+
+  console.log(`[BLOG_POST] Fetching post slug: "${cleanSlug}" (original: "${slug}"), isPreview: ${isPreview}`);
 
   const post = await db.query.posts.findFirst({
-    where: preview === "true" 
-      ? eq(posts.slug, slug)
-      : and(eq(posts.slug, slug), eq(posts.status, "published")),
+    where: isPreview 
+      ? eq(posts.slug, cleanSlug)
+      : and(eq(posts.slug, cleanSlug), eq(posts.status, "published")),
     with: {
       category: true,
       author: true,
@@ -26,6 +34,8 @@ export default async function BlogPostPage({
   });
 
   if (!post) {
+    console.warn(`[BLOG_POST] Post not found for slug: "${cleanSlug}"`);
+    // Try a case-insensitive fallback if possible
     notFound();
   }
 

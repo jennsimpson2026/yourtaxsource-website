@@ -139,7 +139,7 @@ export function WorkflowManagementTable({ returns: initialReturns }: WorkflowMan
                     Client <ArrowUpDown size={12} />
                   </div>
                 </th>
-                <th className="px-6 py-5">Return Status (5 Steps)</th>
+                <th className="px-6 py-5">Return Status (6 Steps)</th>
                 <th className="px-6 py-5">Results (Fed/State)</th>
                 <th className="px-6 py-5">Financials</th>
                 <th className="px-6 py-5">Activity</th>
@@ -173,7 +173,7 @@ export function WorkflowManagementTable({ returns: initialReturns }: WorkflowMan
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex flex-col gap-2">
                       <div className="flex gap-1">
-                        {[1, 2, 3, 4, 5].map((s) => (
+                        {[1, 2, 3, 4, 5, 6].map((s) => (
                           <div 
                             key={s}
                             title={getStepLabel(s)}
@@ -312,7 +312,8 @@ function mapStatusToStep(status: string): number {
     case 'IN_PROCESS': return 2;
     case 'READY_FOR_SIGNATURE': return 3;
     case 'AWAITING_PAYMENT': return 4;
-    case 'FILED': return 5;
+    case 'READY_TO_FILE': return 5;
+    case 'COMPLETED': return 6;
     default: return 1;
   }
 }
@@ -323,7 +324,8 @@ function getStepLabel(step: number): string {
     "In Process",
     "Ready for Signature",
     "Awaiting Payment",
-    "Filed"
+    "Ready to File",
+    "Completed"
   ];
   return steps[step - 1] || "Unknown";
 }
