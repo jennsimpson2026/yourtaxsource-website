@@ -11,51 +11,74 @@ import {
   CheckCircle2
 } from "lucide-react";
 import Link from "next/link";
+import { getPosts, getCategories } from "@/actions/resources";
 import { ResourcesFAQ } from "@/components/ResourcesFAQ";
 
-const RESOURCES = [
-  {
-    category: "Tax Checklists",
-    description: "Ensure you have everything ready before your appointment.",
-    icon: <FileText className="text-brand-purple" size={24} />,
-    items: [
-      { name: "Business Startup Checklist", type: "PDF", href: "/resources/business-startup-checklist" },
-      { name: "New Client Checklist", type: "PDF", href: "/resources/new-client-intake-checklist" },
-      { name: "Rental Property Tax Checklist", type: "PDF", href: "/resources/rental-property-income-expense-sheet" },
-      { name: "Self-Employed Tax Checklist", type: "PDF", href: "/resources/self-employed-freelancer-checklist" },
-      { name: "Tax Appointment Checklist", type: "PDF", href: "/resources/tax-preparation-checklist" },
-    ]
-  },
-  {
-    category: "Government Resources",
-    description: "Official resources for federal and state tax information.",
-    icon: <Globe className="text-brand-purple" size={24} />,
-    items: [
-      { name: "IRS.gov", type: "External", href: "https://www.irs.gov", isExternal: true },
-      { name: "Where’s My Refund?", type: "External", href: "https://www.irs.gov/refunds", isExternal: true },
-      { name: "IRS Where’s My Amended Return?", type: "External", href: "https://www.irs.gov/filing/ame-return-where-is-my-amended-return", isExternal: true },
-      { name: "Pay Federal Tax Balance", type: "External", href: "https://www.irs.gov/payments", isExternal: true },
-      { name: "NC DOR Where’s My Refund?", type: "External", href: "https://www.ncdor.gov/file-pay/refund-status", isExternal: true },
-      { name: "NC Pay Balance Due", type: "External", href: "https://www.ncdor.gov/file-pay/pay-online", isExternal: true },
-      { name: "SC Where’s My Refund?", type: "External", href: "https://dor.sc.gov/refund", isExternal: true },
-      { name: "SC Pay Balance Due", type: "External", href: "https://dor.sc.gov/pay", isExternal: true },
-    ]
-  },
-  {
-    category: "Helpful Forms",
-    description: "Commonly used tax and business forms for your reference.",
-    icon: <BookOpen className="text-brand-purple" size={24} />,
-    items: [
-      { name: "W-4", type: "PDF", href: "https://www.irs.gov/pub/irs-pdf/fw4.pdf", isExternal: true },
-      { name: "W-9", type: "PDF", href: "https://www.irs.gov/pub/irs-pdf/fw9.pdf", isExternal: true },
-      { name: "Form 1040", type: "PDF", href: "https://www.irs.gov/pub/irs-pdf/f1040.pdf", isExternal: true },
-      { name: "Form 1040-ES", type: "PDF", href: "https://www.irs.gov/pub/irs-pdf/f1040es.pdf", isExternal: true },
-      { name: "Penalty Abatement Form", type: "PDF", href: "https://www.irs.gov/payments/penalty-relief-due-to-first-time-penalty-abatement-or-other-administrative-waiver", isExternal: true },
-    ]
-  }
-];
+export default async function ResourcesPage() {
+  const categories = await getCategories();
+  const posts = await getPosts({ status: 'published' });
 
-export default function ResourcesPage() {
+  // Map to desired display categories
+  const checklistCat = categories.find(c => c.slug === 'checklists');
+  const govCat = categories.find(c => c.slug === 'government-resources');
+  const formsCat = categories.find(c => c.slug === 'helpful-forms' || c.slug === 'useful-forms');
+
+  // Helper to get items for a category
+  const getItems = (catId?: string) => {
+    if (!catId) return [];
+    return posts
+      .filter(p => p.categoryId === catId)
+      .map(p => {
+        // If there's a featuredImageUrl and it looks like a direct file/external link, use it.
+        // Otherwise, use the slug as the link (external if it starts with http, otherwise internal page).
+        const isDirectLink = p.featuredImageUrl?.startsWith('http');
+        const isExternalSlug = p.slug.startsWith('http');
+        
+        return {
+          name: p.title,
+          description: p.seoDescription || "",
+          type: catId === govCat?.id ? "External" : (isDirectLink ? "File" : "PDF"),
+          href: isDirectLink ? p.featuredImageUrl! : (isExternalSlug ? p.slug : `/resources/${p.slug}`),
+          isExternal: catId === govCat?.id || isDirectLink || isExternalSlug
+        };
+      });
+  };
+
+  const checklists = getItems(checklistCat?.id);
+  const governmentResources = getItems(govCat?.id);
+  const helpfulForms = getItems(formsCat?.id);
+
+  // Manual ordering for checklists: Tax Appointment Checklist at the top
+  const orderedChecklists = [...checklists].sort((a, b) => {
+    if (a.name.includes("Tax Appointment")) return -1;
+    if (b.name.includes("Tax Appointment")) return 1;
+    return a.name.localeCompare(b.name);
+  });
+
+  const displaySections = [
+    { 
+      title: "Tax Checklists", 
+      description: "Ensure you have everything ready before your appointment.", 
+      icon: <FileText className="text-brand-purple" size={24} />,
+      items: orderedChecklists,
+      slug: checklistCat?.slug
+    },
+    { 
+      title: "Government Resources", 
+      description: "Official resources for federal and state tax information.", 
+      icon: <Globe className="text-brand-purple" size={24} />,
+      items: governmentResources,
+      slug: govCat?.slug
+    },
+    { 
+      title: "Helpful Forms", 
+      description: "Commonly used tax and business forms for your reference.", 
+      icon: <BookOpen className="text-brand-purple" size={24} />,
+      items: helpfulForms,
+      slug: formsCat?.slug
+    }
+  ].filter(s => s.items.length > 0);
+
   return (
     <div className="flex flex-col">
       {/* Boutique Hero Section */}
@@ -80,22 +103,30 @@ export default function ResourcesPage() {
       <section className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-            {RESOURCES.map((group, idx) => (
+            {displaySections.map((section, idx) => (
               <div key={idx} className="flex flex-col">
                 <div className="flex items-center gap-4 mb-6">
                   <div className="w-12 h-12 bg-brand-soft-gray rounded-2xl flex items-center justify-center border border-gray-100">
-                    {group.icon}
+                    {section.icon}
                   </div>
                   <div>
-                    <h2 className="text-2xl font-heading font-bold text-brand-black">{group.category}</h2>
+                    <h2 className="text-2xl font-heading font-bold text-brand-black">{section.title}</h2>
                   </div>
                 </div>
-                <p className="text-brand-charcoal/60 mb-8 font-medium">{group.description}</p>
+                <p className="text-brand-charcoal/60 mb-8 font-medium">{section.description}</p>
                 <div className="space-y-4 flex-1">
-                  {group.items.map((item, itemIdx) => (
+                  {section.items.map((item, itemIdx) => (
                     <ResourceCard key={itemIdx} item={item} />
                   ))}
                 </div>
+                {section.items.length > 8 && (
+                  <Link 
+                    href={`/resources?category=${section.slug}`}
+                    className="mt-6 text-brand-purple font-bold flex items-center gap-2 hover:translate-x-1 transition-transform"
+                  >
+                    View more <ArrowRight size={16} />
+                  </Link>
+                )}
               </div>
             ))}
           </div>
@@ -193,6 +224,11 @@ function ResourceCard({ item }: { item: any }) {
       <div className="flex justify-between items-start gap-4">
         <div className="flex-1">
           <h4 className="font-bold text-brand-black group-hover:text-brand-purple transition-colors mb-1 line-clamp-1">{item.name}</h4>
+          {item.description && (
+            <p className="text-xs text-brand-charcoal/50 mb-2 line-clamp-2 leading-relaxed">
+              {item.description}
+            </p>
+          )}
           <div className="flex items-center gap-3">
             <span className="text-[10px] font-black uppercase tracking-widest text-brand-charcoal/40 bg-gray-50 px-2 py-0.5 rounded">
               {item.type}

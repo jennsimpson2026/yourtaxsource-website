@@ -13,6 +13,7 @@ export async function createResource(data: {
   categoryId: string;
   status: "draft" | "published";
   featuredImageUrl?: string;
+  seoDescription?: string;
 }) {
   console.log(`[RESOURCES_CMS] Creating resource: ${data.title}`);
   const session = await auth();
@@ -46,6 +47,7 @@ export async function updateResource(id: string, data: Partial<{
   categoryId: string;
   status: "draft" | "published";
   featuredImageUrl?: string;
+  seoDescription?: string;
 }>) {
   console.log(`[RESOURCES_CMS] Updating resource: ${id}`);
   const session = await auth();

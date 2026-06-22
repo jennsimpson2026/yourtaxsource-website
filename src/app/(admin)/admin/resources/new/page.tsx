@@ -25,6 +25,7 @@ export default function NewResourcePage() {
     categoryId: "",
     status: "draft" as "draft" | "published",
     featuredImageUrl: "",
+    seoDescription: "",
   });
 
   useEffect(() => {
@@ -117,6 +118,16 @@ export default function NewResourcePage() {
                 value={formData.title}
                 onChange={handleTitleChange}
                 className="w-full p-4 rounded-xl border border-gray-100 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-brand-purple/20 outline-none transition-all text-lg font-heading"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-brand-black mb-2">Short Description</label>
+              <input
+                type="text"
+                value={formData.seoDescription}
+                onChange={(e) => setFormData(prev => ({ ...prev, seoDescription: e.target.value }))}
+                placeholder="Appears under the title on the resources page..."
+                className="w-full p-4 rounded-xl border border-gray-100 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-brand-purple/20 outline-none transition-all"
               />
             </div>
             <div>

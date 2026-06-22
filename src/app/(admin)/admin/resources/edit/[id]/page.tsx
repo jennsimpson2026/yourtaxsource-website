@@ -29,6 +29,7 @@ export default function EditResourcePage() {
     categoryId: "",
     status: "draft" as "draft" | "published",
     featuredImageUrl: "",
+    seoDescription: "",
   });
 
   useEffect(() => {
@@ -48,6 +49,7 @@ export default function EditResourcePage() {
             categoryId: resource.categoryId,
             status: resource.status as any,
             featuredImageUrl: resource.featuredImageUrl || "",
+            seoDescription: resource.seoDescription || "",
           });
         }
       } catch (error) {
@@ -126,6 +128,16 @@ export default function EditResourcePage() {
                 value={formData.title}
                 onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
                 className="w-full p-4 rounded-xl border border-gray-100 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-brand-purple/20 outline-none transition-all text-lg font-heading"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-brand-black mb-2">Short Description</label>
+              <input
+                type="text"
+                value={formData.seoDescription}
+                onChange={(e) => setFormData(prev => ({ ...prev, seoDescription: e.target.value }))}
+                placeholder="Appears under the title on the resources page..."
+                className="w-full p-4 rounded-xl border border-gray-100 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-brand-purple/20 outline-none transition-all"
               />
             </div>
             <div>

@@ -1,0 +1,31 @@
+
+> your-tax-source@0.1.0 dev
+> next dev
+
+▲ Next.js 16.2.6 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://169.254.0.21:3000
+- Environments: .env.local, .env
+✓ Ready in 325ms
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+
+○ Compiling /resources ...
+ GET /resources 200 in 14.1s (next.js: 12.0s, application-code: 2.1s)
+○ Compiling / ...
+✓ Finished writing to filesystem cache in 77s
+ GET /resources 200 in 1650ms (next.js: 34ms, application-code: 1616ms)
+ GET / 200 in 87s (next.js: 18.5s, application-code: 69s)
+✓ Finished writing to filesystem cache in 100s
+ GET /resources 200 in 1719ms (next.js: 138ms, application-code: 1581ms)
+ GET /resources 200 in 3.6s (next.js: 148ms, application-code: 3.4s)
+ GET /resources 200 in 1171ms (next.js: 113ms, application-code: 1057ms)
+ GET /resources 200 in 2.0s (next.js: 78ms, application-code: 1931ms)
+ GET /resources 200 in 1461ms (next.js: 103ms, application-code: 1358ms)
+ GET /resources 200 in 2.9s (next.js: 95ms, application-code: 2.8s)
+ GET /resources 200 in 1850ms (next.js: 146ms, application-code: 1704ms)
+ GET /resources 200 in 3.8s (next.js: 74ms, application-code: 3.7s)
+ GET /resources 200 in 1426ms (next.js: 118ms, application-code: 1308ms)
+ GET /resources 200 in 3.8s (next.js: 263ms, application-code: 3.5s)
+ GET /resources 200 in 1524ms (next.js: 75ms, application-code: 1448ms)
+ GET /resources 200 in 3.1s (next.js: 293ms, application-code: 2.8s)
+○ Compiling /api/auth/[...nextauth] ...
