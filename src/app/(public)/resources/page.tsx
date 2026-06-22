@@ -16,6 +16,8 @@ import Link from "next/link";
 import { getPosts, getCategories } from "@/actions/resources";
 import { ResourcesFAQ } from "@/components/ResourcesFAQ";
 
+export const dynamic = 'force-dynamic';
+
 export default async function ResourcesPage() {
   const categories = await getCategories();
   const allPosts = await getPosts({ status: 'published' });
