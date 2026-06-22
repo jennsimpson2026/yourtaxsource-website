@@ -8,7 +8,8 @@ import {
   BookOpen,
   ExternalLink,
   Download,
-  CheckCircle2
+  CheckCircle2,
+  Info
 } from "lucide-react";
 import Link from "next/link";
 import { getPosts, getCategories } from "@/actions/resources";
@@ -16,44 +17,71 @@ import { ResourcesFAQ } from "@/components/ResourcesFAQ";
 
 export default async function ResourcesPage() {
   const categories = await getCategories();
-  const posts = await getPosts({ status: 'published' });
+  const allPosts = await getPosts({ status: 'published' });
 
   // Map to desired display categories
   const checklistCat = categories.find(c => c.slug === 'checklists');
   const govCat = categories.find(c => c.slug === 'government-resources');
   const formsCat = categories.find(c => c.slug === 'helpful-forms' || c.slug === 'useful-forms');
 
+  // Track which posts are assigned to sections
+  const assignedPostIds = new Set<string>();
+
   // Helper to get items for a category
-  const getItems = (catId?: string) => {
-    if (!catId) return [];
-    return posts
-      .filter(p => p.categoryId === catId)
+  const getItemsByCatSlug = (slug: string) => {
+    const cat = categories.find(c => c.slug === slug);
+    if (!cat) return [];
+    const items = allPosts
+      .filter(p => p.categoryId === cat.id)
       .map(p => {
-        // If there's a featuredImageUrl and it looks like a direct file/external link, use it.
-        // Otherwise, use the slug as the link (external if it starts with http, otherwise internal page).
+        assignedPostIds.add(p.id);
         const isDirectLink = p.featuredImageUrl?.startsWith('http');
         const isExternalSlug = p.slug.startsWith('http');
         
         return {
+          id: p.id,
           name: p.title,
           description: p.seoDescription || "",
-          type: catId === govCat?.id ? "External" : (isDirectLink ? "File" : "PDF"),
+          type: slug === 'government-resources' ? "External" : (isDirectLink ? "File" : "PDF"),
           href: isDirectLink ? p.featuredImageUrl! : (isExternalSlug ? p.slug : `/resources/${p.slug}`),
-          isExternal: catId === govCat?.id || isDirectLink || isExternalSlug
+          isExternal: slug === 'government-resources' || isDirectLink || isExternalSlug
         };
       });
+    return items;
   };
 
-  const checklists = getItems(checklistCat?.id);
-  const governmentResources = getItems(govCat?.id);
-  const helpfulForms = getItems(formsCat?.id);
+  const checklists = getItemsByCatSlug('checklists');
+  const governmentResources = getItemsByCatSlug('government-resources');
+  const helpfulForms = getItemsByCatSlug('helpful-forms');
+
+  // Any other resources not yet assigned (e.g. from FAQ or Small Business categories if marked as 'resource' type)
+  const remainingResources = allPosts
+    .filter(p => !assignedPostIds.has(p.id))
+    .map(p => {
+      const isDirectLink = p.featuredImageUrl?.startsWith('http');
+      const isExternalSlug = p.slug.startsWith('http');
+      return {
+        id: p.id,
+        name: p.title,
+        description: p.seoDescription || "",
+        type: isDirectLink ? "File" : "Info",
+        href: isDirectLink ? p.featuredImageUrl! : (isExternalSlug ? p.slug : `/resources/${p.slug}`),
+        isExternal: isDirectLink || isExternalSlug
+      };
+    });
 
   // Manual ordering for checklists: Tax Appointment Checklist at the top
   const orderedChecklists = [...checklists].sort((a, b) => {
-    if (a.name.includes("Tax Appointment")) return -1;
-    if (b.name.includes("Tax Appointment")) return 1;
+    const aName = a.name.toLowerCase();
+    const bName = b.name.toLowerCase();
+    const target = "tax appointment";
+    if (aName.includes(target) && !bName.includes(target)) return -1;
+    if (!aName.includes(target) && bName.includes(target)) return 1;
     return a.name.localeCompare(b.name);
   });
+
+  // Combine Helpful Forms with remaining resources to ensure everything is shown
+  const combinedFormsAndInfo = [...helpfulForms, ...remainingResources];
 
   const displaySections = [
     { 
@@ -71,10 +99,10 @@ export default async function ResourcesPage() {
       slug: govCat?.slug
     },
     { 
-      title: "Helpful Forms", 
-      description: "Commonly used tax and business forms for your reference.", 
+      title: "Helpful Forms & Info", 
+      description: "Commonly used tax forms and general guidance for our clients.", 
       icon: <BookOpen className="text-brand-purple" size={24} />,
-      items: helpfulForms,
+      items: combinedFormsAndInfo,
       slug: formsCat?.slug
     }
   ].filter(s => s.items.length > 0);
@@ -119,14 +147,6 @@ export default async function ResourcesPage() {
                     <ResourceCard key={itemIdx} item={item} />
                   ))}
                 </div>
-                {section.items.length > 8 && (
-                  <Link 
-                    href={`/resources?category=${section.slug}`}
-                    className="mt-6 text-brand-purple font-bold flex items-center gap-2 hover:translate-x-1 transition-transform"
-                  >
-                    View more <ArrowRight size={16} />
-                  </Link>
-                )}
               </div>
             ))}
           </div>
@@ -225,7 +245,7 @@ function ResourceCard({ item }: { item: any }) {
         <div className="flex-1">
           <h4 className="font-bold text-brand-black group-hover:text-brand-purple transition-colors mb-1 line-clamp-1">{item.name}</h4>
           {item.description && (
-            <p className="text-xs text-brand-charcoal/50 mb-2 line-clamp-2 leading-relaxed">
+            <p className="text-xs text-brand-charcoal/60 mb-2 line-clamp-2 leading-relaxed font-medium">
               {item.description}
             </p>
           )}
