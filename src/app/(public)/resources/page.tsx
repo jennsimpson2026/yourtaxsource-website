@@ -151,7 +151,7 @@ export default async function ResourcesPage() {
       <section className="pt-20 pb-12 text-center">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h1 className="text-5xl md:text-7xl font-heading font-bold text-brand-purple mb-6">
-            Resources Knowledge Center
+            Resources Knowledge Center - v3
           </h1>
           <p className="text-brand-charcoal/60 text-lg max-w-2xl mx-auto font-medium">
             Your one-stop hub for essential tax checklists, government resources,<br className="hidden md:block" />
