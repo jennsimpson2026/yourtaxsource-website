@@ -58,8 +58,10 @@ export default async function ResourcesPage() {
   const helpfulForms = getItemsByCatSlug('helpful-forms');
 
   // Any other resources not yet assigned (e.g. from FAQ or Small Business categories if marked as 'resource' type)
+  // Filtering out any remaining category headers if they exist
   const remainingResources = allPosts
     .filter(p => !assignedPostIds.has(p.id))
+    .filter(p => !['Government links', 'Helpful tax links', 'Downloadable packets/forms', 'Service fee/payment information', 'Upload/document instructions'].includes(p.title))
     .map(p => {
       const isDirectLink = p.featuredImageUrl?.startsWith('http');
       const isExternalSlug = p.slug.startsWith('http');
@@ -92,7 +94,7 @@ export default async function ResourcesPage() {
       description: "Stay prepared and organized with our comprehensive checklists for every stage of your tax journey.", 
       icon: <FileText className="text-brand-purple" size={24} />,
       items: orderedChecklists,
-      slug: checklistCat?.slug,
+      slug: 'checklists',
       buttonText: "View All Checklists"
     },
     { 
@@ -100,18 +102,48 @@ export default async function ResourcesPage() {
       description: "Official links to federal and state tax resources and helpful government websites.", 
       icon: <Globe className="text-brand-purple" size={24} />,
       items: governmentResources,
-      slug: govCat?.slug,
+      slug: 'government-resources',
       buttonText: "View All Resources"
     },
     { 
-      title: "Helpful Forms & Info", 
+      title: "Helpful Forms", 
       description: "Commonly used tax and business forms ready for download.", 
       icon: <BookOpen className="text-brand-purple" size={24} />,
-      items: combinedFormsAndInfo,
-      slug: formsCat?.slug,
+      items: helpfulForms,
+      slug: 'helpful-forms',
       buttonText: "View All Forms"
     }
   ].filter(s => s.items.length > 0);
+
+  const remainingSections = categories
+    .filter(c => !['checklists', 'government-resources', 'helpful-forms', 'useful-forms'].includes(c.slug))
+    .map(cat => {
+      const items = allPosts
+        .filter(p => p.categoryId === cat.id)
+        .map(p => {
+          const isDirectLink = p.featuredImageUrl?.startsWith('http');
+          const isExternalSlug = p.slug.startsWith('http');
+          return {
+            id: p.id,
+            name: p.title,
+            description: p.seoDescription || "",
+            type: (isDirectLink ? "File" : "PDF"),
+            href: isDirectLink ? p.featuredImageUrl! : (isExternalSlug ? p.slug : `/resources/${p.slug}`),
+            isExternal: isDirectLink || isExternalSlug
+          };
+        });
+      return {
+        title: cat.name,
+        description: "",
+        icon: <Info className="text-brand-purple" size={24} />,
+        items,
+        slug: cat.slug,
+        buttonText: `View All ${cat.name}`
+      };
+    })
+    .filter(s => s.items.length > 0);
+
+  const allDisplaySections = [...displaySections, ...remainingSections];
 
   return (
     <div className="flex flex-col bg-white">
@@ -132,7 +164,7 @@ export default async function ResourcesPage() {
       <section className="pb-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-            {displaySections.map((section, idx) => (
+            {allDisplaySections.map((section, idx) => (
               <div key={idx} className="flex flex-col h-full">
                 <div className="flex items-center gap-4 mb-6">
                   <div className="w-14 h-14 bg-brand-lavender/20 rounded-2xl flex items-center justify-center border border-brand-purple/10">
@@ -144,7 +176,7 @@ export default async function ResourcesPage() {
                   {section.description}
                 </p>
                 <div className="space-y-4 flex-1">
-                  {section.items.slice(0, 8).map((item, itemIdx) => (
+                  {section.items.map((item, itemIdx) => (
                     <ResourceCard key={itemIdx} item={item} sectionSlug={section.slug || ""} />
                   ))}
                 </div>
