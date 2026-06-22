@@ -1,7 +1,9 @@
 "use client";
 
-import { AlertCircle, FileText, ArrowRight, CreditCard, PenTool } from "lucide-react";
+import { AlertCircle, FileText, ArrowRight, CreditCard, PenTool, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
+import { markRequestComplete } from "@/actions/documents";
+import { useState } from "react";
 
 interface OpenRequestsProps {
   requests: any[];
@@ -10,7 +12,20 @@ interface OpenRequestsProps {
 }
 
 export function OpenRequests({ requests, unpaidInvoices = [], pendingLetters = [] }: OpenRequestsProps) {
+  const [loadingIds, setLoadingIds] = useState<string[]>([]);
+
   if (requests.length === 0 && unpaidInvoices.length === 0 && pendingLetters.length === 0) return null;
+
+  const handleMarkComplete = async (requestId: string) => {
+    setLoadingIds(prev => [...prev, requestId]);
+    try {
+      await markRequestComplete(requestId);
+    } catch (error) {
+      console.error("Failed to mark request as complete", error);
+    } finally {
+      setLoadingIds(prev => prev.filter(id => id !== requestId));
+    }
+  };
 
   return (
     <section className="bg-brand-orange/10 rounded-[2rem] p-8 md:p-10 border border-brand-orange/20 shadow-sm">
@@ -78,6 +93,8 @@ export function OpenRequests({ requests, unpaidInvoices = [], pendingLetters = [
         {/* Document Requests */}
         {requests.map((request) => {
           const metadata = JSON.parse(request.metadata || "{}");
+          const isLoading = loadingIds.includes(request.id);
+
           return (
             <div key={request.id} className="bg-white p-6 rounded-2xl shadow-sm border border-brand-orange/10 flex items-center justify-between group">
               <div className="flex items-center gap-4">
@@ -93,12 +110,23 @@ export function OpenRequests({ requests, unpaidInvoices = [], pendingLetters = [
                   </p>
                 </div>
               </div>
-              <Link 
-                href="/portal/documents"
-                className="text-brand-orange hover:translate-x-1 transition-transform"
-              >
-                <ArrowRight size={20} />
-              </Link>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => handleMarkComplete(request.id)}
+                  disabled={isLoading}
+                  className="flex items-center gap-1 text-[10px] font-bold text-green-600 hover:text-green-700 uppercase tracking-wider bg-green-50 px-3 py-1.5 rounded-full transition-all border border-green-100 disabled:opacity-50"
+                  title="Mark as completed"
+                >
+                  <CheckCircle2 size={12} className={isLoading ? "animate-pulse" : ""} />
+                  {isLoading ? "Wait..." : "Done"}
+                </button>
+                <Link 
+                  href="/portal/documents"
+                  className="text-brand-orange hover:translate-x-1 transition-transform p-1"
+                >
+                  <ArrowRight size={20} />
+                </Link>
+              </div>
             </div>
           );
         })}

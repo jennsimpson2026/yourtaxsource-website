@@ -14,6 +14,7 @@ export interface BookingDetails {
   clientEmail: string;
   serviceType: string;
   location?: string;
+  onlineMeetingUrl?: string;
   customFields?: Record<string, any>;
 }
 
@@ -108,6 +109,7 @@ export function mapGraphAppointmentToBookingDetails(appointment: any): BookingDe
     clientEmail: appointment.customerEmailAddress,
     serviceType: appointment.serviceName,
     location: appointment.locationName,
+    onlineMeetingUrl: appointment.onlineMeetingUrl,
     customFields
   };
 }

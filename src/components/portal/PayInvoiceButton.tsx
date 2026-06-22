@@ -8,12 +8,6 @@ interface PayInvoiceButtonProps {
   invoiceId: string;
 }
 
-declare global {
-  interface Window {
-    helcimPay: any;
-  }
-}
-
 export function PayInvoiceButton({ invoiceId }: PayInvoiceButtonProps) {
   const [loading, setLoading] = useState(false);
 

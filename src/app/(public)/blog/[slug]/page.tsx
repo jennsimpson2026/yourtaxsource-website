@@ -1,36 +1,60 @@
+import { db } from "@/lib/db";
+import { posts } from "@/lib/db/schema";
+import { eq, and, or } from "drizzle-orm";
+import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Calendar, User, Clock, Share2 } from "lucide-react";
 
-export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function BlogPostPage({ 
+  params,
+  searchParams
+}: { 
+  params: Promise<{ slug: string }>,
+  searchParams: Promise<{ preview?: string }>
+}) {
   const { slug } = await params;
-  // In a real app, we would fetch the post data based on the slug
-  const post = {
-    title: "5 Tax Planning Strategies for Small Business Owners in 2024",
-    content: `
-      <p>As we navigate through the 2024 tax year, small business owners face a unique set of challenges and opportunities. Proactive tax planning is not just about reducing your liability; it's about optimizing your financial health and ensuring your business is positioned for growth.</p>
-      
-      <h2>1. Maximize Section 179 Deductions</h2>
-      <p>Section 179 of the IRS tax code allows businesses to deduct the full purchase price of qualifying equipment and software purchased or financed during the tax year. This is a powerful incentive for businesses to invest in themselves.</p>
-      
-      <h2>2. Review Your Business Structure</h2>
-      <p>Is your business still operating under the most tax-efficient structure? As your revenue grows, transitioning from a Sole Proprietorship to an S-Corp or LLC could provide significant self-employment tax savings.</p>
-      
-      <h2>3. Implement a Robust Retirement Plan</h2>
-      <p>Contributing to a SEP IRA or Solo 401(k) not only helps you save for the future but also provides immediate tax deductions for your business. For 2024, contribution limits have increased, offering even more potential for savings.</p>
-      
-      <h2>4. Leverage the Qualified Business Income (QBI) Deduction</h2>
-      <p>Many small business owners and self-employed individuals can deduct up to 20% of their qualified business income from their total taxable income. Ensuring you meet the requirements for this deduction is essential.</p>
-      
-      <h2>5. Keep Immaculate Records</h2>
-      <p>The foundation of effective tax planning is good bookkeeping. By staying organized throughout the year, you avoid the year-end scramble and ensure you don't miss out on valuable deductions like home office expenses, mileage, and professional development.</p>
-    `,
-    date: "June 15, 2024",
-    author: "Jenn Simpson",
+  const { preview } = await searchParams;
+  const isPreview = preview === "true" || preview === "1";
+
+  // Sanitize slug - handle leading/trailing slashes and decode URI
+  let cleanSlug = decodeURIComponent(slug);
+  if (cleanSlug.startsWith("/")) cleanSlug = cleanSlug.substring(1);
+  if (cleanSlug.endsWith("/")) cleanSlug = cleanSlug.substring(0, cleanSlug.length - 1);
+
+  console.log(`[BLOG_POST] Fetching post slug: "${cleanSlug}" (original: "${slug}"), isPreview: ${isPreview}`);
+
+  const post = await db.query.posts.findFirst({
+    where: isPreview 
+      ? eq(posts.slug, cleanSlug)
+      : and(eq(posts.slug, cleanSlug), eq(posts.status, "published")),
+    with: {
+      category: true,
+      author: true,
+    }
+  });
+
+  if (!post) {
+    console.warn(`[BLOG_POST] Post not found for slug: "${cleanSlug}"`);
+    // Try a case-insensitive fallback if possible
+    notFound();
+  }
+
+  const displayPost = {
+    title: post.title,
+    content: post.content,
+    date: post.publishDate ? new Date(post.publishDate).toLocaleDateString() : new Date(post.createdAt).toLocaleDateString(),
+    author: (post as any).author?.name || "Jenn Simpson",
     authorTitle: "Founder & Lead Advisor",
-    category: "Small Business",
-    readTime: "6 min read",
-    image: "https://images.unsplash.com/photo-1454165833767-027ffea9e7a7?q=80&w=1200&auto=format&fit=crop"
+    category: (post as any).category?.name || "Uncategorized",
+    readTime: `${Math.ceil(post.content.split(/\s+/).length / 200)} min read`,
+    image: post.featuredImageUrl || "https://images.unsplash.com/photo-1454165833767-027ffea9e7a7?q=80&w=1200&auto=format&fit=crop"
   };
+
+  const relatedPosts = await db.query.posts.findMany({
+    where: and(eq(posts.status, "published"), eq(posts.categoryId, post.categoryId)),
+    limit: 2,
+    orderBy: (posts, { desc }) => [desc(posts.createdAt)]
+  });
 
   return (
     <div className="bg-white min-h-screen pb-20">
@@ -45,15 +69,15 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
             <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> Back to Blog
           </Link>
           <div className="inline-block bg-brand-purple text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest mb-6">
-            {post.category}
+            {displayPost.category}
           </div>
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-heading font-bold mb-8 leading-tight">
-            {post.title}
+            {displayPost.title}
           </h1>
           <div className="flex flex-wrap items-center gap-6 text-sm font-medium text-gray-400">
-            <span className="flex items-center gap-2"><Calendar size={18} className="text-brand-purple" /> {post.date}</span>
-            <span className="flex items-center gap-2"><Clock size={18} className="text-brand-purple" /> {post.readTime}</span>
-            <span className="flex items-center gap-2"><User size={18} className="text-brand-purple" /> {post.author}</span>
+            <span className="flex items-center gap-2"><Calendar size={18} className="text-brand-purple" /> {displayPost.date}</span>
+            <span className="flex items-center gap-2"><Clock size={18} className="text-brand-purple" /> {displayPost.readTime}</span>
+            <span className="flex items-center gap-2"><User size={18} className="text-brand-purple" /> {displayPost.author}</span>
           </div>
         </div>
       </section>
@@ -61,7 +85,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
       {/* Article Content */}
       <article className="max-w-4xl mx-auto px-4 -mt-10 relative z-20">
         <div className="rounded-[2.5rem] overflow-hidden shadow-2xl mb-12 border border-gray-100">
-          <img src={post.image} alt={post.title} className="w-full h-auto" />
+          <img src={displayPost.image} alt={displayPost.title} className="w-full h-auto" />
         </div>
         
         <div className="flex flex-col lg:flex-row gap-12">
@@ -73,17 +97,17 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                 prose-p:text-brand-charcoal/80 prose-p:leading-relaxed
                 prose-strong:text-brand-black prose-strong:font-bold
                 prose-li:text-brand-charcoal/80"
-              dangerouslySetInnerHTML={{ __html: post.content }}
+              dangerouslySetInnerHTML={{ __html: displayPost.content }}
             />
             
             <div className="mt-16 pt-10 border-t border-gray-100 flex flex-wrap justify-between items-center gap-6">
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-brand-purple/20">
-                  <img src="/jenn.jpg" alt={post.author} className="w-full h-full object-cover" />
+                  <img src="/jenn.jpg" alt={displayPost.author} className="w-full h-full object-cover" />
                 </div>
                 <div>
-                  <p className="font-bold text-brand-black">{post.author}</p>
-                  <p className="text-xs text-brand-charcoal/40 font-medium">{post.authorTitle}</p>
+                  <p className="font-bold text-brand-black">{displayPost.author}</p>
+                  <p className="text-xs text-brand-charcoal/40 font-medium">{displayPost.authorTitle}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -111,16 +135,15 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
             <div>
               <h4 className="text-lg font-heading font-bold text-brand-black mb-6">Related Articles</h4>
               <div className="space-y-6">
-                <RelatedPost 
-                  title="Understanding the New Clean Vehicle Credit" 
-                  date="June 10, 2024" 
-                  slug="clean-vehicle-credit-guide"
-                />
-                <RelatedPost 
-                  title="How to Keep Your Books Audit-Ready" 
-                  date="June 05, 2024" 
-                  slug="audit-ready-bookkeeping"
-                />
+                {relatedPosts.map(rel => (
+                  <RelatedPost 
+                    key={rel.id}
+                    title={rel.title} 
+                    date={rel.publishDate ? new Date(rel.publishDate).toLocaleDateString() : "Recently"} 
+                    slug={rel.slug}
+                  />
+                ))}
+                {relatedPosts.length === 0 && <p className="text-xs text-gray-400">No related articles found.</p>}
               </div>
             </div>
           </aside>

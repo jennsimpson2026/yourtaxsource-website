@@ -23,8 +23,8 @@ export default function ServicesPage() {
       <section className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-32">
           <ServiceDetail
-            id="individual"
-            title="Individual & Business Tax"
+            id="tax-prep"
+            title="Tax Preparation"
             subtitle="Minimize your liability, maximize your peace of mind."
             description="We take the stress out of tax season for individuals, families, and businesses. Our experts ensure you're taking advantage of every deduction and credit you deserve while maintaining total compliance."
             features={[
@@ -34,8 +34,25 @@ export default function ServicesPage() {
               "IRS Representation & Audit Support",
               "Prior Year Amendments"
             ]}
-            icon={<User className="w-12 h-12 text-brand-black" />}
+            icon={<Calculator className="w-12 h-12 text-brand-black" />}
             imageSrc="/images/jenn-prof-woman.png"
+            />
+
+            <ServiceDetail
+            id="tax-planning"
+            title="Tax Planning"
+            subtitle="Proactive strategies for your future."
+            description="Don't wait until tax season to think about your taxes. We help you plan throughout the year to minimize your tax liability and make the most of your income."
+            features={[
+              "Strategic Income Timing",
+              "Business Entity Optimization",
+              "Investment Tax Planning",
+              "Retirement Contribution Strategies",
+              "Charitable Giving Optimization"
+            ]}
+            icon={<TrendingUp className="w-12 h-12 text-brand-black" />}
+            imageSrc="/images/jenn-hero-authentic.png"
+            reverse
             />
 
             <ServiceDetail
@@ -52,28 +69,11 @@ export default function ServicesPage() {
             ]}
             icon={<Briefcase className="w-12 h-12 text-brand-black" />}
             imageSrc="/images/jenn-consultation-authentic.png"
-            reverse
-            />
-
-            <ServiceDetail
-            id="payroll"
-            title="Payroll Services"
-            subtitle="Reliable, compliant, and effort-free."
-            description="Managing payroll can be a headache. We provide robust payroll solutions that ensure your team is paid on time and your business stays compliant with all tax regulations."
-            features={[
-              "Automated Payroll Processing",
-              "Direct Deposit & Tax Filing",
-              "W-2 & 1099 Generation",
-              "Local, State, & Federal Compliance",
-              "Employee Self-Service Access"
-            ]}
-            icon={<Users className="w-12 h-12 text-brand-black" />}
-            imageSrc="/images/jenn-hero-authentic.png"
             />
 
             <ServiceDetail
             id="advisory"
-            title="Fractional Controller"
+            title="Fractional Controller / CFO"
             subtitle="Strategy for the road ahead."
             description="Gain the expertise of a high-level financial executive without the full-time cost. We provide strategic oversight, cash flow analysis, and financial planning to help your business reach the next level."
             features={[
@@ -86,6 +86,22 @@ export default function ServicesPage() {
             icon={<BarChart3 className="w-12 h-12 text-brand-black" />}
             imageSrc="/images/jenn-conf-presenter.png"
             reverse
+            />
+
+            <ServiceDetail
+            id="formation"
+            title="Business Formation & Advisory"
+            subtitle="Start your journey on the right foot."
+            description="Launching a new venture? We guide you through the process of selecting the right entity type, setting up your accounting systems, and establishing solid financial foundations."
+            features={[
+              "Entity Selection (LLC, S-Corp, etc.)",
+              "EIN & State Registration Support",
+              "Chart of Accounts Setup",
+              "Owner Compensation Planning",
+              "New Business Consultations"
+            ]}
+            icon={<Users className="w-12 h-12 text-brand-black" />}
+            imageSrc="/images/jenn-meeting-authentic.png"
             />
         </div>
       </section>

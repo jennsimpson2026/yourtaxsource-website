@@ -1,5 +1,5 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/lib/auth";
+
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -10,7 +10,7 @@ export default async function PortalLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
 
   if (!session) {
     redirect("/auth/login");
@@ -35,6 +35,10 @@ export default async function PortalLayout({
               <NavLink href="/portal/documents" label="Documents" />
               <NavLink href="/portal/messages" label="Messages" />
               <NavLink href="/portal/questionnaire" label="Intake Form" />
+              <NavLink href="/portal/resources" label="Resources" />
+              {((session?.user as any)?.role === "ADMIN" || (session?.user as any)?.role === "STAFF") && (
+                <NavLink href="/admin" label="Admin Hub" />
+              )}
             </nav>
           </div>
           
@@ -49,7 +53,9 @@ export default async function PortalLayout({
               />
             </Link>
             <div className="hidden lg:flex flex-col text-right">
-              <span className="text-xs font-bold text-brand-charcoal/40 uppercase tracking-widest leading-none mb-1">Authenticated Client</span>
+              <span className="text-xs font-bold text-brand-charcoal/40 uppercase tracking-widest leading-none mb-1">
+                {(session.user as any)?.role === "ADMIN" ? "Administrator" : (session.user as any)?.role === "STAFF" ? "Staff Member" : "Authenticated Client"}
+              </span>
               <span className="text-sm font-bold text-brand-black">{session.user?.email}</span>
             </div>
             <SignOutButton />

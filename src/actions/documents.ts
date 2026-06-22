@@ -7,7 +7,7 @@ import { PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
-import { eq, and, isNotNull, lt, sql, desc } from "drizzle-orm";
+import { eq, and, isNotNull, lt, sql, desc, not } from "drizzle-orm";
 import { notifyDocumentRequest, notifyDocumentUpload, notifyDocumentStatusUpdate } from "@/lib/notifications";
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 
@@ -38,6 +38,10 @@ export async function softDeleteDocument(documentId: string) {
   });
 
   revalidatePath("/portal/documents");
+  revalidatePath("/admin/returns");
+  if (doc.returnId) {
+    revalidatePath(`/admin/returns/${doc.returnId}`);
+  }
 }
 
 export async function permanentlyDeleteOldDocuments() {
@@ -154,35 +158,49 @@ export async function registerDocument(data: {
 
   const userId = (session.user as any).id;
 
-  const [doc] = await db.insert(documents).values({
-    userId,
-    returnId: data.returnId,
-    s3Key: data.s3Key,
-    fileName: data.fileName,
-    fileType: data.fileType,
-    fileSize: data.fileSize,
-    category: data.category,
-    taxYear: data.taxYear || new Date().getFullYear(),
-    // Default isLocked to true if it's a Final Return or provided by Staff
-    isLocked: data.category === "Final Returns" || (session.user as any).role !== "CLIENT",
-  }).returning();
+  console.log(`registerDocument: Registering file ${data.fileName} for userId ${userId}, returnId ${data.returnId}`);
 
-  await db.insert(auditLogs).values({
-    userId,
-    action: "UPLOAD_DOCUMENT",
-    targetType: "DOCUMENT",
-    targetId: doc.id,
-    metadata: JSON.stringify({ fileName: data.fileName }),
-  });
+  try {
+    const [doc] = await db.insert(documents).values({
+      userId,
+      returnId: data.returnId,
+      s3Key: data.s3Key,
+      fileName: data.fileName,
+      fileType: data.fileType,
+      fileSize: data.fileSize,
+      category: data.category,
+      taxYear: data.taxYear || new Date().getFullYear(),
+      // Default isLocked to true if it's a Final Return or provided by Staff
+      isLocked: data.category === "Final Returns" || (session.user as any).role !== "CLIENT",
+    }).returning();
 
-  // Notify staff if a client uploaded a document
-  if ((session.user as any).role === "CLIENT") {
-    const adminEmail = process.env.ADMIN_EMAIL || "Jsimpson@yourtaxsource.com";
-    await notifyDocumentUpload(adminEmail, session.user.name || session.user.email!, data.fileName);
+    console.log(`registerDocument: Created record with ID ${doc.id}`);
+
+    await db.insert(auditLogs).values({
+      userId,
+      action: "UPLOAD_DOCUMENT",
+      targetType: "DOCUMENT",
+      targetId: doc.id,
+      metadata: JSON.stringify({ fileName: data.fileName }),
+    });
+
+    // Notify staff if a client uploaded a document
+    if ((session.user as any).role === "CLIENT") {
+      const adminEmail = process.env.ADMIN_EMAIL || "Jsimpson@yourtaxsource.com";
+      await notifyDocumentUpload(adminEmail, session.user.name || session.user.email!, data.fileName);
+    }
+
+    revalidatePath("/portal/documents");
+    revalidatePath("/admin/returns");
+    if (data.returnId) {
+      revalidatePath(`/admin/returns/${data.returnId}`);
+    }
+    
+    return doc;
+  } catch (err) {
+    console.error("registerDocument: Failed to insert document record", err);
+    throw err;
   }
-
-  revalidatePath("/portal/documents");
-  return doc;
 }
 
 export async function getDownloadUrl(documentId: string) {
@@ -203,7 +221,18 @@ export async function getDownloadUrl(documentId: string) {
 
   // If client is the owner, check if the document is locked
   if (isOwner && !isStaff && doc.isLocked) {
-    throw new Error("Document is locked until payment is received.");
+    // If it's a final return, check if it's paid
+    if (doc.category === "Final Returns" && doc.returnId) {
+      const taxReturn = await db.query.taxReturns.findFirst({
+        where: eq(taxReturns.id, doc.returnId),
+      });
+      
+      if (taxReturn?.paymentStatus !== "PAID") {
+        throw new Error("This document is locked until your tax preparation fee is paid. Please visit the Payments section on your dashboard.");
+      }
+    } else {
+      throw new Error("This document is currently locked.");
+    }
   }
 
   const command = new GetObjectCommand({
@@ -230,16 +259,35 @@ export async function getUserDocuments(year?: number) {
   const userId = (session.user as any).id;
   const conditions = [
     eq(documents.userId, userId),
-    sql`${documents.deletedAt} IS NULL`
+    sql`${documents.deletedAt} IS NULL`,
+    not(eq(documents.category, "ADMIN_ONLY"))
   ];
 
   if (year) {
     conditions.push(eq(documents.taxYear, year));
   }
 
-  return db.query.documents.findMany({
+  const docs = await db.query.documents.findMany({
     where: and(...conditions),
+    with: {
+      taxReturn: true,
+    },
     orderBy: (docs, { desc }) => [desc(docs.uploadedAt)],
+  });
+
+  // Map to adjust isLocked based on payment status for Final Returns
+  return docs.map(doc => {
+    let isLocked = doc.isLocked;
+    
+    // If it's a final return and the associated return is paid, unlock it
+    if (doc.category === "Final Returns" && doc.taxReturn?.paymentStatus === "PAID") {
+      isLocked = false;
+    }
+    
+    return {
+      ...doc,
+      isLocked
+    };
   });
 }
 
@@ -324,9 +372,33 @@ export async function reviewDocument(documentId: string, status: "ACCEPTED" | "R
     );
   }
 
-  revalidatePath("/admin/admin/returns");
+  revalidatePath("/admin/returns");
   if (doc.returnId) {
-    revalidatePath(`/admin/admin/returns/${doc.returnId}`);
+    revalidatePath(`/admin/returns/${doc.returnId}`);
   }
   revalidatePath("/portal/documents");
+}
+
+export async function markRequestComplete(requestId: string) {
+  const session = await auth();
+  if (!session?.user) throw new Error("Unauthorized");
+
+  const log = await db.query.auditLogs.findFirst({
+    where: eq(auditLogs.id, requestId),
+  });
+
+  if (!log) throw new Error("Request not found");
+
+  // Security: Only target user or Admin can mark as complete
+  const isTargetUser = log.targetId === (session.user as any).id;
+  const isAdmin = (session.user as any).role === "ADMIN";
+
+  if (!isTargetUser && !isAdmin) throw new Error("Forbidden");
+
+  await db.update(auditLogs)
+    .set({ status: "COMPLETED" })
+    .where(eq(auditLogs.id, requestId));
+
+  revalidatePath("/portal");
+  revalidatePath("/admin/returns");
 }

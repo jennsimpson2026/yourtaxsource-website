@@ -28,10 +28,10 @@ export default function Home() {
                 Clean Books. Clear Numbers. <span className="text-brand-lavender italic border-b-4 border-brand-lavender/30">Confident Decisions.</span>
               </h1>
               <p className="text-xl text-brand-lavender mb-6 leading-relaxed max-w-xl">
-                Professional tax preparation, bookkeeping, payroll, and fractional controller services designed to help individuals and businesses stay compliant, organized, and financially confident.
+                Professional tax preparation, planning, bookkeeping, and fractional controller services designed to help individuals and businesses stay compliant, organized, and financially confident.
               </p>
               <p className="text-lg text-brand-lavender/80 mb-10 leading-relaxed max-w-xl">
-                Whether you're filing your annual tax return, running a small business, managing rental properties, or looking for stronger financial reporting, Your Tax Source is here to help.
+                Whether you're filing your annual tax return, running a small business, managing rental properties, or looking for stronger financial reporting, Your Tax Source is here to help. (Deployed v1.1)
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link
@@ -173,30 +173,36 @@ export default function Home() {
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <ServiceCard 
               icon={<Calculator className="w-8 h-8 text-brand-purple" />}
               title="Tax Preparation"
               description="Accurate and efficient filings for individuals and businesses, maximizing your savings."
-              href="/services#individual"
+              href="/services#tax-prep"
+            />
+            <ServiceCard 
+              icon={<TrendingUp className="w-8 h-8 text-brand-purple" />}
+              title="Tax Planning"
+              description="Proactive strategies to minimize your tax burden and plan for your financial future."
+              href="/services#tax-planning"
             />
             <ServiceCard 
               icon={<Briefcase className="w-8 h-8 text-brand-purple" />}
               title="Bookkeeping"
               description="Keep your financial records flawless and ready for tax time, all year round."
-              href="/services#business"
-            />
-            <ServiceCard 
-              icon={<Users className="w-8 h-8 text-brand-purple" />}
-              title="Payroll Services"
-              description="Reliable, compliant payroll solutions that take the administrative burden off your plate."
-              href="/services#business"
+              href="/services#bookkeeping"
             />
             <ServiceCard 
               icon={<BarChart3 className="w-8 h-8 text-brand-purple" />}
-              title="Fractional Controller"
+              title="Fractional Controller / CFO"
               description="High-level financial strategy and oversight to help your small business thrive."
               href="/services#advisory"
+            />
+            <ServiceCard 
+              icon={<Users className="w-8 h-8 text-brand-purple" />}
+              title="Business Formation"
+              description="Expert guidance on starting your business and selecting the right entity structure."
+              href="/services#formation"
             />
           </div>
         </div>

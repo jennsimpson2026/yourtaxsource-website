@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { createInvoice } from "@/actions/invoices";
+import { createInvoice, deleteInvoice } from "@/actions/invoices";
 import { manualSyncInvoice } from "@/actions/admin/qbo";
-import { CreditCard, Plus, Loader2, CheckCircle2, AlertCircle, RefreshCw } from "lucide-react";
+import { CreditCard, Plus, Loader2, CheckCircle2, AlertCircle, RefreshCw, Trash2 } from "lucide-react";
 
 interface InvoiceManagerProps {
   returnId: string;
@@ -47,6 +47,23 @@ export function InvoiceManager({ returnId, existingInvoices }: InvoiceManagerPro
     } catch (error) {
       console.error("QBO Sync Error:", error);
       alert("An unexpected error occurred during sync.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteInvoice = async (invoiceId: string) => {
+    if (!confirm("Are you sure you want to delete this invoice? This will be recorded in the audit log.")) return;
+    
+    setLoading(true);
+    try {
+      const result = await deleteInvoice(invoiceId);
+      if (result.success) {
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error("Error deleting invoice:", error);
+      alert("Failed to delete invoice.");
     } finally {
       setLoading(false);
     }
@@ -127,6 +144,14 @@ export function InvoiceManager({ returnId, existingInvoices }: InvoiceManagerPro
                       <RefreshCw size={10} className={loading ? "animate-spin" : ""} /> Sync QBO
                     </button>
                   )}
+                  <button
+                    onClick={() => handleDeleteInvoice(invoice.id)}
+                    disabled={loading}
+                    className="flex items-center gap-1 text-[10px] font-black text-red-500 hover:text-white hover:bg-red-500 uppercase bg-red-50 px-2 py-1 rounded-md transition-all disabled:opacity-50"
+                    title="Delete Invoice"
+                  >
+                    <Trash2 size={12} />
+                  </button>
                   {invoice.status === 'PAID' ? (
                     <span className="flex items-center gap-1 text-[10px] font-black text-green-600 uppercase bg-green-50 px-2 py-1 rounded-md">
                       <CheckCircle2 size={12} /> Paid

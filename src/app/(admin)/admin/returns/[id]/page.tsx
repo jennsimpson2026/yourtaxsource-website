@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
-import { taxReturns, users, questionnaires, auditLogs, invoices } from "@/lib/db/schema";
-import { eq, desc, and } from "drizzle-orm";
+import { taxReturns, users, questionnaires, auditLogs, invoices, documents } from "@/lib/db/schema";
+import { eq, desc, and, isNull } from "drizzle-orm";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { 
@@ -21,6 +21,8 @@ import { updateReturnDetails } from "@/actions/returns";
 import { DocumentRequestTool } from "@/components/admin/DocumentRequestTool";
 import { CommunicationLog } from "@/components/admin/CommunicationLog";
 import { DocumentDownloadButton } from "@/components/admin/DocumentDownloadButton";
+import { DocumentDeleteButton } from "@/components/admin/DocumentDeleteButton";
+import { EngagementLetterManager } from "@/components/admin/EngagementLetterManager";
 import { InvoiceManager } from "@/components/admin/InvoiceManager";
 
 export default async function ReviewReturnPage({ params }: { params: Promise<{ id: string }> }) {
@@ -35,6 +37,8 @@ export default async function ReviewReturnPage({ params }: { params: Promise<{ i
       },
       documents: true,
       questionnaire: true,
+      annualUpdate: true,
+      engagementLetters: true,
       invoices: {
         orderBy: [desc(invoices.createdAt)],
       },
@@ -45,6 +49,23 @@ export default async function ReviewReturnPage({ params }: { params: Promise<{ i
     notFound();
   }
 
+  console.log(`[ADMIN_RETURN] Loading return ${id} for client ${ret.clientId}`);
+  // Fetch ALL documents for this client to ensure visibility of generic uploads
+  const allClientDocuments = await db.query.documents.findMany({
+    where: and(
+      eq(documents.userId, ret.clientId),
+      isNull(documents.deletedAt)
+    ),
+    orderBy: [desc(documents.uploadedAt)],
+  });
+  console.log(`[ADMIN_RETURN] Found ${allClientDocuments.length} total documents for client`);
+
+  // Filter out documents already in ret.documents (linked to this return)
+  // to avoid duplicates, although we might just want to show the full list
+  const otherDocuments = allClientDocuments.filter(
+    doc => doc.returnId !== id
+  );
+
   // Fetch communication logs for this client
   const logs = await db.query.auditLogs.findMany({
     where: eq(auditLogs.targetId, ret.clientId),
@@ -52,17 +73,25 @@ export default async function ReviewReturnPage({ params }: { params: Promise<{ i
   });
 
   const questionnaireData = ret.questionnaire?.data ? JSON.parse(ret.questionnaire.data) : null;
+  const annualUpdateData = ret.annualUpdate?.taxInfo ? JSON.parse(ret.annualUpdate.taxInfo) : null;
+  const displayData = questionnaireData || annualUpdateData;
 
   async function handleUpdateReturn(formData: FormData) {
     "use server";
     const status = formData.get("status") as string;
     const paymentStatus = formData.get("paymentStatus") as string;
     const notes = formData.get("notes") as string;
+    const federalResult = parseFloat(formData.get("federalResult") as string) || 0;
+    const stateResult = parseFloat(formData.get("stateResult") as string) || 0;
+    const taxPrepFee = parseFloat(formData.get("taxPrepFee") as string) || 0;
 
     await updateReturnDetails(id, {
       status,
       paymentStatus,
       notes,
+      federalResult,
+      taxPrepFee,
+      stateResults: JSON.stringify({ primary: stateResult }),
     });
   }
 
@@ -96,6 +125,26 @@ export default async function ReviewReturnPage({ params }: { params: Promise<{ i
         </div>
       </div>
 
+      {/* Ready to File Notice */}
+      {ret.status?.trim().toUpperCase() === "READY_TO_FILE" && (
+        <div className="bg-purple-600 text-white p-6 rounded-2xl shadow-lg border-2 border-purple-400 flex items-center justify-between animate-in fade-in slide-in-from-top-4 duration-500">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+              <CheckCircle2 size={28} />
+            </div>
+            <div>
+              <h3 className="text-lg font-black uppercase tracking-tight">Ready to File</h3>
+              <p className="text-sm font-medium text-purple-50 opacity-90">Payment has been received and all documents are signed. You can now file this return.</p>
+            </div>
+          </div>
+          <div className="hidden md:block">
+            <span className="text-[10px] font-black bg-white/20 px-3 py-1.5 rounded-full uppercase tracking-widest border border-white/30">
+              Action Required
+            </span>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
           {/* Intake Questionnaire */}
@@ -112,25 +161,28 @@ export default async function ReviewReturnPage({ params }: { params: Promise<{ i
               )}
             </div>
             
-            {questionnaireData ? (
+            {displayData ? (
               <div className="p-8">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                   <div className="space-y-6">
-                    <InfoItem label="Filing Status" value={questionnaireData.filingStatus} />
-                    <InfoItem label="Dependents" value={questionnaireData.dependents} />
-                    <InfoItem label="Address" value={`${(ret as any).client?.profile?.addressLine1 || 'N/A'}, ${(ret as any).client?.profile?.city || ''} ${(ret as any).client?.profile?.state || ''}`} />
+                    <InfoItem label="Client Name" value={(ret as any).client?.name || 'N/A'} />
+                    <InfoItem label="Email Address" value={(ret as any).client?.email || 'N/A'} />
+                    <InfoItem label="Phone Number" value={(ret as any).client?.profile?.phone || 'N/A'} />
+                    <InfoItem label="Filing Status" value={displayData.filingStatus} />
+                    <InfoItem label="Dependents" value={displayData.dependents || "N/A"} />
+                    <InfoItem label="Address" value={`${displayData.address || (ret as any).client?.profile?.addressLine1 || 'N/A'}, ${displayData.city || (ret as any).client?.profile?.city || ''} ${displayData.state || (ret as any).client?.profile?.state || ''}`} />
                   </div>
                   <div className="space-y-6">
-                    <BooleanItem label="W-2 Income" value={questionnaireData.hasW2} />
-                    <BooleanItem label="1099 Income" value={questionnaireData.has1099} />
-                    <BooleanItem label="Small Business" value={questionnaireData.hasBusiness} />
+                    <BooleanItem label="W-2 Income" value={displayData.hasW2 || displayData.hasW2s} />
+                    <BooleanItem label="1099 Income" value={displayData.has1099 || displayData.has1099s} />
+                    <BooleanItem label="Small Business" value={displayData.hasBusiness || displayData.startedBusiness} />
                   </div>
                 </div>
                 
-                {questionnaireData.notes && (
+                {displayData.notes && (
                   <div className="mt-8 p-4 bg-brand-cloud rounded-xl border border-gray-100">
                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Client Notes</p>
-                    <p className="text-sm text-brand-charcoal/80 leading-relaxed font-medium">{questionnaireData.notes}</p>
+                    <p className="text-sm text-brand-charcoal/80 leading-relaxed font-medium">{displayData.notes}</p>
                   </div>
                 )}
               </div>
@@ -149,31 +201,53 @@ export default async function ReviewReturnPage({ params }: { params: Promise<{ i
                 Client Documents
               </h2>
               <span className="text-xs font-bold text-brand-charcoal/40 uppercase tracking-widest">
-                {ret.documents.length} Files
+                {allClientDocuments.length} Total Files
               </span>
             </div>
             
             <div className="divide-y divide-gray-50">
-              {ret.documents.length > 0 ? (
-                ret.documents.map((doc) => (
-                  <div key={doc.id} className="p-5 flex items-center justify-between hover:bg-brand-cloud/30 transition-colors group">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 bg-brand-cloud rounded-xl flex items-center justify-center text-brand-navy border border-gray-100">
-                        <FileText size={20} />
-                      </div>
-                      <div>
-                        <p className="text-sm font-bold text-brand-navy group-hover:text-brand-orange transition-colors line-clamp-1">{doc.fileName}</p>
-                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">
-                          {doc.category} • {(doc.fileSize / 1024 / 1024).toFixed(2)} MB
-                        </p>
-                      </div>
+              {ret.documents.length > 0 && (
+                <div className="px-6 py-3 bg-blue-50/30 text-[10px] font-black text-brand-navy uppercase tracking-widest">
+                  Documents for this return
+                </div>
+              )}
+              {ret.documents.map((doc) => (
+                <div key={doc.id} className="p-5 flex items-center justify-between hover:bg-brand-cloud/30 transition-colors group">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 bg-brand-cloud rounded-xl flex items-center justify-center text-brand-navy border border-gray-100">
+                      <FileText size={20} />
                     </div>
-                    <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                       <DocumentDownloadButton documentId={doc.id} />
+                    <div className="flex items-center gap-2">
+                      <DocumentDownloadButton documentId={doc.id} showLabel={true} fileName={doc.fileName} category={doc.category} fileSize={doc.fileSize} />
+                      <DocumentDeleteButton documentId={doc.id} fileName={doc.fileName} />
                     </div>
                   </div>
-                ))
-              ) : (
+                </div>
+              ))}
+
+              {otherDocuments.length > 0 && (
+                <>
+                  <div className="px-6 py-3 bg-gray-50/50 text-[10px] font-black text-gray-400 uppercase tracking-widest border-t border-gray-100">
+                    Other client documents
+                  </div>
+                  {otherDocuments.map((doc) => (
+                    <div key={doc.id} className="p-5 flex items-center justify-between hover:bg-brand-cloud/30 transition-colors group">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 bg-brand-cloud rounded-xl flex items-center justify-center text-brand-navy border border-gray-100">
+                          <FileText size={20} />
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <DocumentDownloadButton documentId={doc.id} showLabel={true} fileName={doc.fileName} category={doc.category} fileSize={doc.fileSize} />
+                          <DocumentDeleteButton documentId={doc.id} fileName={doc.fileName} />
+                        </div>
+                        {doc.taxYear && <span className="text-[10px] text-gray-400 ml-2 font-bold">FY {doc.taxYear}</span>}
+                      </div>
+                    </div>
+                  ))}
+                </>
+              )}
+
+              {allClientDocuments.length === 0 && (
                 <div className="p-12 text-center text-gray-400 font-medium italic">
                   No documents uploaded yet.
                 </div>
@@ -191,32 +265,84 @@ export default async function ReviewReturnPage({ params }: { params: Promise<{ i
               Workflow
             </h2>
             <form action={handleUpdateReturn} className="space-y-6">
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] ml-1">Return Status</label>
-                <select
-                  name="status"
-                  defaultValue={ret.status}
-                  className="w-full rounded-xl border border-white/10 p-3 text-sm bg-white/5 focus:bg-white focus:text-brand-navy transition-all focus:outline-none focus:ring-2 focus:ring-brand-orange/50 appearance-none cursor-pointer"
-                >
-                  <option value="NOT_STARTED">Not Started</option>
-                  <option value="IN_PROGRESS">In Progress</option>
-                  <option value="REVIEW">Review</option>
-                  <option value="READY_FOR_SIGNATURE">Ready for Signature</option>
-                  <option value="FILED">Filed</option>
-                </select>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] ml-1">Return Status</label>
+                  <select
+                    name="status"
+                    defaultValue={ret.status}
+                    className="w-full rounded-xl border border-white/10 p-3 text-sm bg-white/5 focus:bg-white focus:text-brand-navy transition-all focus:outline-none focus:ring-2 focus:ring-brand-orange/50 appearance-none cursor-pointer"
+                  >
+                    <option value="NOT_STARTED">Not Started</option>
+                    <option value="IN_PROCESS">In Process</option>
+                    <option value="READY_FOR_SIGNATURE">Ready for Signature</option>
+                    <option value="AWAITING_PAYMENT">Awaiting Payment</option>
+                    <option value="READY_TO_FILE">Ready to File</option>
+                    <option value="COMPLETED">Completed</option>
+                  </select>
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] ml-1">Payment Status</label>
+                  <select
+                    name="paymentStatus"
+                    defaultValue={ret.paymentStatus}
+                    className="w-full rounded-xl border border-white/10 p-3 text-sm bg-white/5 focus:bg-white focus:text-brand-navy transition-all focus:outline-none focus:ring-2 focus:ring-brand-orange/50 appearance-none cursor-pointer"
+                  >
+                    <option value="UNPAID">Unpaid</option>
+                    <option value="PAID">Paid</option>
+                    <option value="VOID">Void</option>
+                  </select>
+                </div>
               </div>
-              
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] ml-1">Payment Status</label>
-                <select
-                  name="paymentStatus"
-                  defaultValue={ret.paymentStatus}
-                  className="w-full rounded-xl border border-white/10 p-3 text-sm bg-white/5 focus:bg-white focus:text-brand-navy transition-all focus:outline-none focus:ring-2 focus:ring-brand-orange/50 appearance-none cursor-pointer"
-                >
-                  <option value="UNPAID">Unpaid</option>
-                  <option value="PAID">Paid</option>
-                  <option value="VOID">Void</option>
-                </select>
+
+              <div className="grid grid-cols-1 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] ml-1">Federal Result ($)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    name="federalResult"
+                    defaultValue={ret.federalResult || 0}
+                    className="w-full rounded-xl border border-white/10 p-3 text-sm bg-white/5 focus:bg-white focus:text-brand-navy transition-all focus:outline-none focus:ring-2 focus:ring-brand-orange/50"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] ml-1">State Result ($)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    name="stateResult"
+                    defaultValue={(() => {
+                      if (!ret.stateResults) return 0;
+                      try {
+                        let parsed = typeof ret.stateResults === 'string' ? JSON.parse(ret.stateResults) : ret.stateResults;
+                        // Handle double stringification
+                        if (typeof parsed === 'string') {
+                          parsed = JSON.parse(parsed);
+                        }
+                        if (typeof parsed === 'object' && parsed !== null) {
+                          return parsed.primary || 0;
+                        }
+                        return 0;
+                      } catch (e) {
+                        console.error("Error parsing stateResults:", e);
+                        return 0;
+                      }
+                    })()}
+                    className="w-full rounded-xl border border-white/10 p-3 text-sm bg-white/5 focus:bg-white focus:text-brand-navy transition-all focus:outline-none focus:ring-2 focus:ring-brand-orange/50"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] ml-1">Tax Prep Fee ($)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    name="taxPrepFee"
+                    defaultValue={(ret as any).taxPrepFee || 0}
+                    className="w-full rounded-xl border border-white/10 p-3 text-sm bg-white/5 focus:bg-white focus:text-brand-navy transition-all focus:outline-none focus:ring-2 focus:ring-brand-orange/50"
+                  />
+                </div>
               </div>
 
               <div className="space-y-2">
@@ -236,6 +362,13 @@ export default async function ReviewReturnPage({ params }: { params: Promise<{ i
             </form>
           </div>
 
+          {/* Engagement Letter */}
+          <EngagementLetterManager 
+            returnId={ret.id} 
+            clientId={ret.clientId} 
+            existingLetter={ret.engagementLetters[0]} 
+          />
+
           {/* Document Request Tool */}
           <DocumentRequestTool clientId={ret.clientId} returnId={ret.id} />
 
@@ -251,10 +384,16 @@ export default async function ReviewReturnPage({ params }: { params: Promise<{ i
 }
 
 function InfoItem({ label, value }: { label: string, value: string }) {
+  let displayValue = value || 'N/A';
+  
+  if (label === "Phone Number" && value && value.length === 10) {
+    displayValue = `${value.slice(0, 3)}-${value.slice(3, 6)}-${value.slice(6)}`;
+  }
+
   return (
     <div>
       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">{label}</p>
-      <p className="text-sm text-brand-navy font-bold">{value || 'N/A'}</p>
+      <p className="text-sm text-brand-navy font-bold">{displayValue}</p>
     </div>
   );
 }
@@ -279,22 +418,25 @@ function BooleanItem({ label, value }: { label: string, value: boolean }) {
 }
 
 function StatusBadge({ status }: { status: string }) {
+  const normalizedStatus = status?.toUpperCase();
   const styles: Record<string, string> = {
     'NOT_STARTED': 'bg-gray-100 text-gray-600 border-gray-200',
-    'IN_PROGRESS': 'bg-blue-100 text-brand-navy border-brand-navy/10',
-    'REVIEW': 'bg-orange-100 text-brand-orange border-brand-orange/10',
+    'IN_PROCESS': 'bg-blue-100 text-brand-navy border-brand-navy/10',
     'READY_FOR_SIGNATURE': 'bg-green-100 text-brand-green border-brand-green/10',
-    'FILED': 'bg-gray-100 text-gray-400 border-gray-200',
+    'AWAITING_PAYMENT': 'bg-orange-100 text-brand-orange border-brand-orange/10',
+    'READY_TO_FILE': 'bg-purple-100 text-brand-purple border-brand-purple/10',
+    'COMPLETED': 'bg-green-600 text-white border-green-700',
   };
   
   return (
-    <span className={`px-4 py-2 text-xs font-black rounded-full border shadow-sm ${styles[status] || styles['NOT_STARTED']}`}>
-      {status.replace(/_/g, ' ')}
+    <span className={`px-4 py-2 text-xs font-black rounded-full border shadow-sm ${styles[normalizedStatus] || styles['NOT_STARTED']}`}>
+      {status?.replace(/_/g, ' ')}
     </span>
   );
 }
 
 function PaymentBadge({ status }: { status: string }) {
+  const normalizedStatus = status?.toUpperCase();
   const styles: Record<string, string> = {
     'UNPAID': 'bg-red-50 text-red-600 border-red-100',
     'PAID': 'bg-green-50 text-green-600 border-green-100',
@@ -302,7 +444,7 @@ function PaymentBadge({ status }: { status: string }) {
   };
   
   return (
-    <span className={`px-4 py-2 text-xs font-black rounded-xl border shadow-sm ${styles[status] || styles['UNPAID']}`}>
+    <span className={`px-4 py-2 text-xs font-black rounded-xl border shadow-sm ${styles[normalizedStatus] || styles['UNPAID']}`}>
       {status}
     </span>
   );

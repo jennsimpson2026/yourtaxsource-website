@@ -1,12 +1,11 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { annualUpdates, documents, auditLogs, taxReturns } from "@/lib/db/schema";
+import { annualUpdates, documents, auditLogs, taxReturns, users, profiles } from "@/lib/db/schema";
 import { encrypt } from "@/lib/crypto";
 import { s3Client, BUCKET_NAME } from "@/lib/s3";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 import { eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import React from "react";
@@ -14,13 +13,45 @@ import { renderToBuffer } from "@react-pdf/renderer";
 import { AnnualUpdatePDF } from "@/components/portal/AnnualUpdatePDF";
 
 export async function submitAnnualUpdate(data: any) {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session?.user) throw new Error("Unauthorized");
 
   const userId = (session.user as any).id;
   const currentYear = new Date().getFullYear();
 
   try {
+    // 0. Update User and Profile information to keep it in sync
+    await db.transaction(async (tx) => {
+      await tx.update(users)
+        .set({ name: `${data.firstName} ${data.lastName}` })
+        .where(eq(users.id, userId));
+
+      const existingProfile = await tx.query.profiles.findFirst({
+        where: eq(profiles.userId, userId),
+      });
+
+      if (existingProfile) {
+        await tx.update(profiles)
+          .set({
+            phone: data.phone,
+            addressLine1: data.address,
+            city: data.city,
+            state: data.state,
+            zipCode: data.zip,
+          })
+          .where(eq(profiles.userId, userId));
+      } else {
+        await tx.insert(profiles).values({
+          userId,
+          phone: data.phone,
+          addressLine1: data.address,
+          city: data.city,
+          state: data.state,
+          zipCode: data.zip,
+        });
+      }
+    });
+
     // 1. Find or create the tax return record for this year
     let taxReturn = await db.query.taxReturns.findFirst({
       where: and(eq(taxReturns.clientId, userId), eq(taxReturns.year, currentYear)),
@@ -30,7 +61,7 @@ export async function submitAnnualUpdate(data: any) {
       const [newReturn] = await db.insert(taxReturns).values({
         clientId: userId,
         year: currentYear,
-        status: "IN_PROGRESS",
+        status: "IN_PROCESS",
       }).returning();
       taxReturn = newReturn;
     }
@@ -137,6 +168,29 @@ export async function submitAnnualUpdate(data: any) {
       targetId: updateId,
       metadata: JSON.stringify({ fileName, s3Key }),
     });
+
+    // 9. Notify Admin (Jenn) via Email
+    try {
+      const { sendEmail } = await import("@/lib/notifications");
+      await sendEmail({
+        to: process.env.ADMIN_EMAIL || "jsimpson@yourtaxsource.com",
+        subject: `[Annual Update] ${data.firstName} ${data.lastName} - 2024`,
+        html: `
+          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+            <h2 style="color: #6d28d9;">New Annual Update Submitted</h2>
+            <p><strong>Client:</strong> ${data.firstName} ${data.lastName}</p>
+            <p><strong>Tax Year:</strong> ${currentYear}</p>
+            <p><strong>Filing Status:</strong> ${data.filingStatus}</p>
+            <p>A summary PDF has been generated and saved to the client's documents under "Admin Only".</p>
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${process.env.NEXTAUTH_URL}/admin/returns/${taxReturn.id}" style="background-color: #6d28d9; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">Review Return</a>
+            </div>
+          </div>
+        `,
+      });
+    } catch (emailError) {
+      console.error("Failed to send admin notification email:", emailError);
+    }
 
     revalidatePath("/portal");
     revalidatePath(`/admin/returns/${taxReturn.id}`);

@@ -14,20 +14,53 @@ export async function updateReturnDetails(returnId: string, data: {
   notes?: string;
   federalResult?: number;
   stateResults?: any;
+  taxPrepFee?: number;
   manualRelease?: boolean;
   isComplimentary?: boolean;
 }) {
   const session = await auth();
   if (!session?.user || (session.user as any).role === "CLIENT") throw new Error("Unauthorized");
 
+  // Fetch current state for atomicity
+  const currentReturn = await db.query.taxReturns.findFirst({
+    where: eq(taxReturns.id, returnId),
+  });
+  if (!currentReturn) throw new Error("Return not found");
+
   const updateData: any = { updatedAt: new Date() };
+  
   if (data.status) updateData.status = data.status;
   if (data.paymentStatus) updateData.paymentStatus = data.paymentStatus;
   if (data.notes !== undefined) updateData.notes = data.notes;
   if (data.federalResult !== undefined) updateData.federalResult = data.federalResult;
-  if (data.stateResults !== undefined) updateData.stateResults = JSON.stringify(data.stateResults);
-  if (data.manualRelease !== undefined) updateData.manualRelease = data.manualRelease;
-  if (data.isComplimentary !== undefined) updateData.isComplimentary = data.isComplimentary;
+  if (data.stateResults !== undefined) updateData.stateResults = data.stateResults;
+  if (data.taxPrepFee !== undefined) updateData.taxPrepFee = data.taxPrepFee;
+
+  // Automation: (AWAITING_PAYMENT or READY_FOR_SIGNATURE) + PAID = READY_TO_FILE
+  const finalPaymentStatus = data.paymentStatus || currentReturn.paymentStatus;
+  let finalStatus = data.status || currentReturn.status;
+
+  if (finalPaymentStatus === "PAID" && ["AWAITING_PAYMENT", "READY_FOR_SIGNATURE"].includes(finalStatus)) {
+    console.log(`[updateReturnDetails] Auto-transitioning return ${returnId} to READY_TO_FILE`);
+    finalStatus = "READY_TO_FILE";
+    updateData.status = "READY_TO_FILE";
+  }
+
+  // Support reverting: if moving back to UNPAID and currently READY_TO_FILE, move back to AWAITING_PAYMENT
+  if (finalPaymentStatus === "UNPAID" && finalStatus === "READY_TO_FILE") {
+    console.log(`[updateReturnDetails] Reverting READY_TO_FILE status to AWAITING_PAYMENT due to UNPAID payment status`);
+    finalStatus = "AWAITING_PAYMENT";
+    updateData.status = "AWAITING_PAYMENT";
+  }
+
+  // FORCE: If status is READY_TO_FILE but payment is UNPAID, force status back to AWAITING_PAYMENT
+  if (finalStatus === "READY_TO_FILE" && finalPaymentStatus === "UNPAID") {
+    console.log(`[updateReturnDetails] FORCING status back to AWAITING_PAYMENT because payment is UNPAID`);
+    finalStatus = "AWAITING_PAYMENT";
+    updateData.status = "AWAITING_PAYMENT";
+  }
+
+  console.log(`[updateReturnDetails] Updating return ${returnId}`, updateData);
 
   const [updatedReturn] = await db.update(taxReturns)
     .set(updateData)
@@ -35,6 +68,23 @@ export async function updateReturnDetails(returnId: string, data: {
     .returning();
 
   if (updatedReturn) {
+    // 1. Ensure an invoice exists if taxPrepFee > 0 and no invoices exist
+    if (updatedReturn.taxPrepFee && Number(updatedReturn.taxPrepFee) > 0) {
+      const existingInvoices = await db.query.invoices.findMany({
+        where: eq(invoices.returnId, returnId),
+      });
+
+      if (existingInvoices.length === 0) {
+        console.log(`[updateReturnDetails] Creating initial UNPAID invoice for fee: ${updatedReturn.taxPrepFee}`);
+        await db.insert(invoices).values({
+          userId: updatedReturn.clientId,
+          returnId: returnId,
+          amount: updatedReturn.taxPrepFee,
+          status: "UNPAID",
+        });
+      }
+    }
+
     const client = await db.query.users.findFirst({
       where: eq(users.id, updatedReturn.clientId),
       with: {
@@ -43,34 +93,63 @@ export async function updateReturnDetails(returnId: string, data: {
     });
 
     if (client) {
-      if (data.status) {
-        await notifyStatusUpdate(client.email, client.profile?.phone || null, data.status);
+      if (data.status || updateData.status !== currentReturn.status) {
+        await notifyStatusUpdate(client.email, client.profile?.phone || null, updatedReturn.status);
       }
 
-      if (data.paymentStatus === "PAID" || data.manualRelease === true || data.isComplimentary === true) {
+      if (updatedReturn.paymentStatus === "PAID" || data.manualRelease === true || data.isComplimentary === true) {
         // Release documents on payment or manual release
+        console.log(`[updateReturnDetails] Releasing documents for return ${returnId}`);
         await releaseReturnDocuments(returnId, (session.user as any).id);
 
-        if (data.paymentStatus === "PAID") {
-          const unpaidInvoices = await db.query.invoices.findMany({
-            where: and(eq(invoices.returnId, returnId), eq(invoices.status, "UNPAID")),
+        if (updatedReturn.paymentStatus === "PAID") {
+          const allInvoices = await db.query.invoices.findMany({
+            where: eq(invoices.returnId, returnId),
           });
           
-          const totalAmount = unpaidInvoices.reduce((sum, inv) => sum + Number(inv.amount), 0);
+          const unpaidInvoices = allInvoices.filter(inv => inv.status === "UNPAID");
+          const totalPaid = allInvoices
+            .filter(inv => inv.status === "PAID")
+            .reduce((sum, inv) => sum + Number(inv.amount), 0);
+          
+          let totalAmount = 0;
           
           // Mark invoices as paid if manual payment entry
           if (unpaidInvoices.length > 0) {
+            console.log(`[updateReturnDetails] Marking ${unpaidInvoices.length} invoices as PAID`);
             await db.update(invoices)
               .set({ status: "PAID", paidAt: new Date() })
               .where(and(eq(invoices.returnId, returnId), eq(invoices.status, "UNPAID")));
+            totalAmount = unpaidInvoices.reduce((sum, inv) => sum + Number(inv.amount), 0);
+          } else if (totalPaid < Number(updatedReturn.taxPrepFee)) {
+            // Only create a new PAID invoice if the total paid so far is less than the fee
+            const remainingToPay = Math.max(0, Number(updatedReturn.taxPrepFee) - totalPaid);
+            if (remainingToPay > 0) {
+              console.log(`[updateReturnDetails] Creating a PAID invoice for remaining balance: ${remainingToPay}`);
+              await db.insert(invoices).values({
+                userId: updatedReturn.clientId,
+                returnId: returnId,
+                amount: remainingToPay,
+                status: "PAID",
+                paidAt: new Date(),
+              });
+              totalAmount = remainingToPay;
+            }
+          } else {
+            console.log(`[updateReturnDetails] Return is already fully paid (Paid: ${totalPaid}, Fee: ${updatedReturn.taxPrepFee}). No new invoice created.`);
+            totalAmount = totalPaid;
           }
 
-          await notifyAdminPaymentReceived({
-            clientName: client.name || "Client",
-            amount: totalAmount,
-            method: "Manual Entry (Admin)",
-            invoiceReference: `Return ${updatedReturn.year}`,
-          });
+          try {
+            await notifyAdminPaymentReceived({
+              clientName: client.name || "Client",
+              amount: totalAmount,
+              method: "Manual Entry (Admin)",
+              invoiceReference: `Return ${updatedReturn.year}`,
+            });
+          } catch (notifErr) {
+            console.error("[updateReturnDetails] Notification failed but proceeding:", notifErr);
+          }
         }
       }
     }
@@ -86,6 +165,7 @@ export async function updateReturnDetails(returnId: string, data: {
 
   revalidatePath(`/admin/returns/${returnId}`);
   revalidatePath("/admin/returns");
+  revalidatePath("/admin");
 }
 
 export async function updateReturnStatus(returnId: string, status: string) {
@@ -120,6 +200,7 @@ export async function updateReturnStatus(returnId: string, status: string) {
 
   revalidatePath(`/admin/returns/${returnId}`);
   revalidatePath("/admin/returns");
+  revalidatePath("/admin");
 }
 
 export async function manualReleaseReturn(returnId: string) {

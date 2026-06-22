@@ -106,7 +106,8 @@ const styles = StyleSheet.create({
   },
   signatureLine: {
     fontSize: 16,
-    fontFamily: 'Times-Italic',
+    fontFamily: 'Helvetica',
+    fontStyle: 'italic',
     color: '#111827',
     marginBottom: 5,
   },

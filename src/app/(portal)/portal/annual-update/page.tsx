@@ -1,5 +1,5 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/lib/auth";
+
 import { redirect } from "next/navigation";
 import { AnnualUpdateForm } from "@/components/portal/AnnualUpdateForm";
 import Link from "next/link";
@@ -7,7 +7,7 @@ import { ArrowLeft } from "lucide-react";
 import { Phase2ComingSoon } from "@/components/portal/Phase2ComingSoon";
 
 export default async function AnnualUpdatePage() {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
 
   if (!session) {
     redirect("/auth/login");

@@ -156,6 +156,7 @@ export function AnnualUpdateForm() {
                 <label className="text-sm font-bold text-brand-charcoal uppercase tracking-widest">First Name</label>
                 <input 
                   type="text" 
+                  required
                   value={formData.firstName}
                   onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                   className="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 focus:ring-2 focus:ring-brand-purple/20 focus:border-brand-purple transition-all outline-none"
@@ -166,10 +167,36 @@ export function AnnualUpdateForm() {
                 <label className="text-sm font-bold text-brand-charcoal uppercase tracking-widest">Last Name</label>
                 <input 
                   type="text" 
+                  required
                   value={formData.lastName}
                   onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                   className="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 focus:ring-2 focus:ring-brand-purple/20 focus:border-brand-purple transition-all outline-none"
                   placeholder="Simpson"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-brand-charcoal uppercase tracking-widest">Email Address</label>
+                <input 
+                  type="email" 
+                  required
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 focus:ring-2 focus:ring-brand-purple/20 focus:border-brand-purple transition-all outline-none"
+                  placeholder="jenn@example.com"
+                />
+                <p className="mt-1 text-[10px] text-gray-500 italic">
+                  If you do not have an email address, enter <a href="mailto:none@yts.com" className="text-brand-purple underline">none@yts.com</a>.
+                </p>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-brand-charcoal uppercase tracking-widest">Phone Number</label>
+                <input 
+                  type="tel" 
+                  required
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 focus:ring-2 focus:ring-brand-purple/20 focus:border-brand-purple transition-all outline-none"
+                  placeholder="(555) 000-0000"
                 />
               </div>
               <div className="space-y-2">

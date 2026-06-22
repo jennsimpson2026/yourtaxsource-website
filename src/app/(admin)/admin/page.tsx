@@ -1,6 +1,7 @@
+import React from "react";
 import { db } from "@/lib/db";
 import { users, taxReturns, questionnaires, invoices, documents } from "@/lib/db/schema";
-import { count, eq, desc, and, not, sql } from "drizzle-orm";
+import { count, eq, desc, and, not, sql, gt, inArray } from "drizzle-orm";
 import Link from "next/link";
 import { 
   Users, 
@@ -18,6 +19,7 @@ import DocumentReviewQueue from "@/components/admin/DocumentReviewQueue";
 import { getDocumentReviewQueue } from "@/actions/documents";
 import WorkflowStatus from "@/components/admin/WorkflowStatus";
 import { SyncQboButton } from "@/components/admin/SyncQboButton";
+import { OutstandingFeesList } from "@/components/admin/OutstandingFeesList";
 
 export default async function AdminDashboard() {
   const clientCount = await db.select({ value: count() }).from(users).where(eq(users.role, "CLIENT"));
@@ -26,7 +28,7 @@ export default async function AdminDashboard() {
   const pendingReturns = await db.select({ value: count() })
     .from(taxReturns)
     .where(and(
-      not(eq(taxReturns.status, "FILED")),
+      not(eq(taxReturns.status, "COMPLETED")),
       not(eq(taxReturns.status, "NOT_STARTED"))
     ));
 
@@ -34,9 +36,13 @@ export default async function AdminDashboard() {
     .from(questionnaires)
     .where(eq(questionnaires.isSubmitted, true));
 
-  const unpaidInvoices = await db.select({ value: count() })
-    .from(invoices)
-    .where(eq(invoices.status, "UNPAID"));
+  const pendingPaymentsCount = await db.select({ value: count() })
+    .from(taxReturns)
+    .where(and(
+      inArray(taxReturns.status, ["COMPLETED", "AWAITING_PAYMENT", "READY_FOR_SIGNATURE", "READY_TO_FILE"]),
+      not(eq(taxReturns.paymentStatus, "PAID")),
+      gt(taxReturns.taxPrepFee, 0)
+    ));
 
   const pendingDocsCount = await db.select({ value: count() })
     .from(documents)
@@ -50,6 +56,46 @@ export default async function AdminDashboard() {
       client: true,
     },
     limit: 5,
+    orderBy: [desc(taxReturns.updatedAt)],
+  });
+
+  const outstandingFeesReturns = await db.query.taxReturns.findMany({
+    where: and(
+      inArray(taxReturns.status, ["COMPLETED", "AWAITING_PAYMENT", "READY_FOR_SIGNATURE", "READY_TO_FILE"]),
+      not(eq(taxReturns.paymentStatus, "PAID")),
+      gt(taxReturns.taxPrepFee, 0)
+    ),
+    with: {
+      client: true,
+      invoices: true,
+    },
+    orderBy: [desc(taxReturns.updatedAt)],
+  });
+
+  const outstandingFeesData = outstandingFeesReturns.map(ret => {
+    const totalPaid = ret.invoices
+      .filter(inv => inv.status === 'PAID')
+      .reduce((sum, inv) => sum + Number(inv.amount), 0);
+    
+    return {
+      id: ret.id,
+      clientName: (ret as any).client?.name || 'N/A',
+      year: ret.year,
+      taxPrepFee: Number(ret.taxPrepFee || 0),
+      amountPaid: totalPaid,
+      balanceDue: Math.max(0, Number(ret.taxPrepFee || 0) - totalPaid),
+      status: ret.status,
+    };
+  });
+
+  const readyToFileReturns = await db.query.taxReturns.findMany({
+    where: and(
+      eq(taxReturns.status, "READY_TO_FILE"),
+      eq(taxReturns.paymentStatus, "PAID")
+    ),
+    with: {
+      client: true,
+    },
     orderBy: [desc(taxReturns.updatedAt)],
   });
 
@@ -71,10 +117,10 @@ export default async function AdminDashboard() {
           subtext="Registered users"
         />
         <StatsCard 
-          icon={<FileText className="text-brand-orange" size={24} />}
-          label="Active Returns"
-          value={pendingReturns[0].value}
-          subtext="In progress / Review"
+          icon={<CheckCircle2 className="text-green-600" size={24} />}
+          label="Ready to File"
+          value={readyToFileReturns.length}
+          subtext="Paid & waiting"
         />
         <StatsCard 
           icon={<FileSearch className="text-purple-600" size={24} />}
@@ -84,15 +130,57 @@ export default async function AdminDashboard() {
         />
         <StatsCard 
           icon={<DollarSign className="text-brand-navy" size={24} />}
-          label="Unpaid Invoices"
-          value={unpaidInvoices[0].value}
-          subtext="Awaiting Helcim payment"
+          label="Pending Payments"
+          value={pendingPaymentsCount[0].value}
+          subtext="Awaiting client payment"
         />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main Content Area */}
         <div className="lg:col-span-2 space-y-8">
+          {/* Ready to File Priority Section */}
+          {readyToFileReturns.length > 0 && (
+            <div className="bg-green-50 rounded-2xl shadow-sm border border-green-100 overflow-hidden">
+              <div className="p-6 border-b border-green-100 flex justify-between items-center bg-green-100/30">
+                <h2 className="text-lg font-bold text-green-900 flex items-center gap-2">
+                  <CheckCircle2 size={20} className="text-green-600" />
+                  Ready to File (Priority)
+                </h2>
+                <span className="bg-green-600 text-white text-[10px] font-black px-2 py-1 rounded-full uppercase tracking-tighter">
+                  Action Required
+                </span>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-green-100">
+                  <tbody className="divide-y divide-green-50">
+                    {readyToFileReturns.map((ret) => (
+                      <tr key={ret.id} className="hover:bg-green-100/30 transition-colors group">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="font-bold text-green-900">
+                            {(ret as any).client?.name || "N/A"}
+                          </div>
+                          <div className="text-xs text-green-700/60 font-medium">{(ret as any).client?.email}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-green-800 font-medium">
+                          {ret.year} Return
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right">
+                          <Link 
+                            href={`/admin/returns/${ret.id}`} 
+                            className="inline-flex items-center gap-1 text-xs font-bold bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-all shadow-sm hover:shadow-green-200"
+                          >
+                            Open Return
+                          </Link>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
           {/* Recent Activity Table */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <div className="p-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
@@ -150,6 +238,9 @@ export default async function AdminDashboard() {
             )}
           </div>
 
+          {/* Outstanding Fees Section */}
+          <OutstandingFeesList fees={outstandingFeesData} />
+
           {/* Document Review Queue */}
           <DocumentReviewQueue initialDocuments={reviewQueue} />
         </div>
@@ -174,6 +265,15 @@ export default async function AdminDashboard() {
               Attention Needed
             </h3>
             <div className="space-y-4">
+              {readyToFileReturns.length > 0 && (
+                <div className="flex items-start gap-3 p-3 bg-green-50 rounded-xl border border-green-100">
+                  <CheckCircle2 className="text-green-600 mt-0.5" size={16} />
+                  <div>
+                    <p className="text-xs font-bold text-brand-navy">Ready to File</p>
+                    <p className="text-[10px] text-brand-charcoal/60 mt-0.5 font-medium">{readyToFileReturns.length} returns are paid and awaiting filing.</p>
+                  </div>
+                </div>
+              )}
               {pendingQuestionnaires[0].value > 0 && (
                 <div className="flex items-start gap-3 p-3 bg-brand-orange/5 rounded-xl border border-brand-orange/10">
                   <Activity className="text-brand-orange mt-0.5" size={16} />
@@ -183,16 +283,16 @@ export default async function AdminDashboard() {
                   </div>
                 </div>
               )}
-              {unpaidInvoices[0].value > 0 && (
+              {pendingPaymentsCount[0].value > 0 && (
                 <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-xl border border-blue-100">
                   <DollarSign className="text-blue-600 mt-0.5" size={16} />
                   <div>
                     <p className="text-xs font-bold text-brand-navy">Pending Payments</p>
-                    <p className="text-[10px] text-brand-charcoal/60 mt-0.5 font-medium">{unpaidInvoices[0].value} invoices awaiting payment.</p>
+                    <p className="text-[10px] text-brand-charcoal/60 mt-0.5 font-medium">{pendingPaymentsCount[0].value} returns awaiting payment.</p>
                   </div>
                 </div>
               )}
-              {pendingQuestionnaires[0].value === 0 && unpaidInvoices[0].value === 0 && (
+              {readyToFileReturns.length === 0 && pendingQuestionnaires[0].value === 0 && pendingPaymentsCount[0].value === 0 && (
                 <div className="text-center py-6">
                    <CheckCircle2 className="mx-auto text-green-200 mb-2" size={32} />
                    <p className="text-xs text-gray-400 font-medium">You're all caught up!</p>
@@ -233,17 +333,19 @@ function StatsCard({ icon, label, value, subtext }: { icon: React.ReactNode, lab
 }
 
 function StatusBadge({ status }: { status: string }) {
+  const normalizedStatus = status?.toUpperCase();
   const styles: Record<string, string> = {
     'NOT_STARTED': 'bg-gray-100 text-gray-600 border-gray-200',
-    'IN_PROGRESS': 'bg-blue-100 text-brand-navy border-brand-navy/10',
-    'REVIEW': 'bg-orange-100 text-brand-orange border-brand-orange/10',
+    'IN_PROCESS': 'bg-blue-100 text-brand-navy border-brand-navy/10',
     'READY_FOR_SIGNATURE': 'bg-green-100 text-brand-green border-brand-green/10',
-    'FILED': 'bg-gray-100 text-gray-400 border-gray-200',
+    'AWAITING_PAYMENT': 'bg-orange-100 text-brand-orange border-brand-orange/10',
+    'READY_TO_FILE': 'bg-purple-100 text-brand-purple border-brand-purple/10',
+    'COMPLETED': 'bg-green-600 text-white border-green-700',
   };
   
   return (
-    <span className={`px-2.5 py-1 text-[10px] font-bold rounded-full border ${styles[status] || styles['NOT_STARTED']}`}>
-      {status.replace(/_/g, ' ')}
+    <span className={`px-2.5 py-1 text-[10px] font-bold rounded-full border ${styles[normalizedStatus] || styles['NOT_STARTED']}`}>
+      {status?.replace(/_/g, ' ')}
     </span>
   );
 }

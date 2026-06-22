@@ -33,9 +33,17 @@ export async function POST(req: Request) {
           .set({ status: "PAID", paidAt: new Date() })
           .where(eq(invoices.id, invoice.id));
 
-        await db.update(taxReturns)
-          .set({ paymentStatus: "PAID" })
-          .where(eq(taxReturns.id, invoice.returnId));
+        const [updatedReturn] = await db.update(taxReturns)
+          .set({ paymentStatus: "PAID", updatedAt: new Date() })
+          .where(eq(taxReturns.id, invoice.returnId))
+          .returning();
+
+        if (updatedReturn && ["AWAITING_PAYMENT", "READY_FOR_SIGNATURE"].includes(updatedReturn.status)) {
+          console.log(`[HelcimWebhook] Auto-transitioning return ${updatedReturn.id} to READY_TO_FILE`);
+          await db.update(taxReturns)
+            .set({ status: "READY_TO_FILE" as any, updatedAt: new Date() })
+            .where(eq(taxReturns.id, updatedReturn.id));
+        }
 
         // Release documents on payment
         await releaseReturnDocuments(invoice.returnId);

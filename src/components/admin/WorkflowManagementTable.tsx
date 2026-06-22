@@ -42,22 +42,36 @@ export function WorkflowManagementTable({ returns: initialReturns }: WorkflowMan
   const [selectedReturns, setSelectedReturns] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Map the DB returns to our workflow format (mocking missing fields for UI design)
-  const workflowReturns: WorkflowReturn[] = initialReturns.map(r => ({
-    id: r.id,
-    clientName: r.client?.name || "N/A",
-    clientEmail: r.client?.email || "N/A",
-    year: r.year,
-    status: r.status,
-    step: mapStatusToStep(r.status),
-    fedResult: (r as any).fedResult || (Math.random() > 0.5 ? Math.floor(Math.random() * 5000) : -Math.floor(Math.random() * 2000)),
-    stateResult: (r as any).stateResult || (Math.random() > 0.5 ? Math.floor(Math.random() * 1000) : -Math.floor(Math.random() * 500)),
-    fee: (r as any).fee || 450,
-    balance: r.paymentStatus === 'PAID' ? 0 : 450,
-    paymentStatus: r.paymentStatus,
-    lastLogin: new Date(Date.now() - Math.random() * 1000000000).toISOString(),
-    downloaded: Math.random() > 0.5
-  }));
+  // Map the DB returns to our workflow format
+  const workflowReturns: WorkflowReturn[] = initialReturns.map(r => {
+    let stateVal = 0;
+    if (r.stateResults) {
+      try {
+        let parsed = typeof r.stateResults === 'string' ? JSON.parse(r.stateResults) : r.stateResults;
+        // Handle double stringification
+        if (typeof parsed === 'string') {
+          parsed = JSON.parse(parsed);
+        }
+        stateVal = Object.values(parsed).reduce((sum: any, val: any) => sum + (parseFloat(val) || 0), 0) as number;
+      } catch (e) {}
+    }
+
+    return {
+      id: r.id,
+      clientName: r.client?.name || "N/A",
+      clientEmail: r.client?.email || "N/A",
+      year: r.year,
+      status: r.status,
+      step: mapStatusToStep(r.status),
+      fedResult: r.federalResult,
+      stateResult: stateVal,
+      fee: r.taxPrepFee || r.invoices?.reduce((sum: number, inv: any) => sum + (inv.amount || 0), 0) || 0,
+      balance: r.invoices?.filter((inv: any) => inv.status === 'UNPAID').reduce((sum: number, inv: any) => sum + (inv.amount || 0), 0) || 0,
+      paymentStatus: r.paymentStatus,
+      lastLogin: (r.client as any)?.lastLoginAt,
+      downloaded: !!(r as any).downloadedAt // This would need to be tracked in audit logs or a column
+    };
+  });
 
   const toggleSelectAll = () => {
     if (selectedReturns.length === workflowReturns.length) {
@@ -125,7 +139,7 @@ export function WorkflowManagementTable({ returns: initialReturns }: WorkflowMan
                     Client <ArrowUpDown size={12} />
                   </div>
                 </th>
-                <th className="px-6 py-5">Return Status (7 Steps)</th>
+                <th className="px-6 py-5">Return Status (6 Steps)</th>
                 <th className="px-6 py-5">Results (Fed/State)</th>
                 <th className="px-6 py-5">Financials</th>
                 <th className="px-6 py-5">Activity</th>
@@ -159,7 +173,7 @@ export function WorkflowManagementTable({ returns: initialReturns }: WorkflowMan
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex flex-col gap-2">
                       <div className="flex gap-1">
-                        {[1, 2, 3, 4, 5, 6, 7].map((s) => (
+                        {[1, 2, 3, 4, 5, 6].map((s) => (
                           <div 
                             key={s}
                             title={getStepLabel(s)}
@@ -295,24 +309,23 @@ export function WorkflowManagementTable({ returns: initialReturns }: WorkflowMan
 function mapStatusToStep(status: string): number {
   switch (status) {
     case 'NOT_STARTED': return 1;
-    case 'IN_PROGRESS': return 3;
-    case 'ACTION_NEEDED': return 2;
-    case 'REVIEW': return 4;
-    case 'READY_FOR_SIGNATURE': return 5;
-    case 'FILED': return 7;
+    case 'IN_PROCESS': return 2;
+    case 'READY_FOR_SIGNATURE': return 3;
+    case 'AWAITING_PAYMENT': return 4;
+    case 'READY_TO_FILE': return 5;
+    case 'COMPLETED': return 6;
     default: return 1;
   }
 }
 
 function getStepLabel(step: number): string {
   const steps = [
-    "Annual Update",
-    "Upload Docs",
-    "Tax Preparation",
-    "Tax Organizer",
-    "Review & File",
-    "Payment",
-    "Complete"
+    "Not Started",
+    "In Process",
+    "Ready for Signature",
+    "Awaiting Payment",
+    "Ready to File",
+    "Completed"
   ];
   return steps[step - 1] || "Unknown";
 }
