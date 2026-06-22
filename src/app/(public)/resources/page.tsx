@@ -154,8 +154,7 @@ export default async function ResourcesPage() {
             Resources Knowledge Center
           </h1>
           <p className="text-brand-charcoal/60 text-lg max-w-2xl mx-auto font-medium">
-            Your one-stop hub for essential tax checklists, government resources,<br className="hidden md:block" />
-            and helpful forms to keep you organized and informed.
+            Your one-stop hub for essential tax checklists, government resources,
           </p>
         </div>
       </section>
@@ -363,7 +362,7 @@ function ResourceCard({ item, sectionSlug }: { item: any; sectionSlug: string })
             )}
           </div>
           {item.description && (
-            <p className="text-xs text-brand-charcoal/60 line-clamp-2 leading-relaxed font-medium">
+            <p className="text-xs text-brand-charcoal/60 leading-relaxed font-medium mt-1">
               {item.description}
             </p>
           )}

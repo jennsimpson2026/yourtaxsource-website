@@ -82,24 +82,17 @@ export const Navbar = () => {
             </div>
 
             <div className="hidden sm:flex items-center gap-3 md:gap-4">
-              <Link 
-                href="/auth/login" 
-                className="text-brand-purple font-black hover:text-brand-black transition-colors text-[10px] uppercase tracking-widest flex items-center gap-1.5"
-              >
-                Login
-              </Link>
               <BookingButton 
                 label="Book"
                 className="bg-brand-purple text-white px-4 py-2 rounded-lg font-black hover:bg-[#5a3a74] transition-all shadow-md text-[10px] uppercase tracking-widest flex items-center gap-1.5"
               />
+              <Link 
+                href="/portal" 
+                className="bg-brand-black text-white px-4 py-2 rounded-lg font-black hover:bg-brand-purple transition-all shadow-md flex items-center gap-2 text-[10px] uppercase tracking-widest whitespace-nowrap"
+              >
+                Client Portal
+              </Link>
             </div>
-
-            <Link 
-              href="/portal" 
-              className="bg-brand-black text-white px-4 py-2 rounded-lg font-black hover:bg-brand-purple transition-all shadow-md flex items-center gap-2 text-[10px] uppercase tracking-widest whitespace-nowrap"
-            >
-              Portal
-            </Link>
           </div>
         </div>
       </div>
@@ -170,22 +163,6 @@ export const Navbar = () => {
               >
                 <LayoutDashboard size={20} />
                 Client Portal
-              </Link>
-              <Link 
-                href="/auth/signup" 
-                onClick={() => setIsOpen(false)}
-                className="flex items-center gap-3 p-4 rounded-2xl bg-brand-purple text-white font-bold hover:bg-[#5a3a74] transition-all"
-              >
-                <UserPlus size={20} />
-                Start Intake
-              </Link>
-              <Link 
-                href="/auth/login" 
-                onClick={() => setIsOpen(false)}
-                className="flex items-center gap-3 p-4 rounded-2xl border border-brand-purple/20 text-brand-purple font-bold hover:bg-brand-purple/5 transition-all"
-              >
-                <LogIn size={20} />
-                Login
               </Link>
             </div>
           </div>
