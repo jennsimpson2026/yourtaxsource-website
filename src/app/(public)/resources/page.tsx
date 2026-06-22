@@ -6,48 +6,56 @@ import {
   ArrowRight,
   Search,
   BookOpen,
-  LayoutGrid,
-  CreditCard,
-  CheckCircle2,
   ExternalLink,
-  Download
+  Download,
+  CheckCircle2
 } from "lucide-react";
 import Link from "next/link";
-import { getPosts, getCategories } from "@/actions/resources";
 import { ResourcesFAQ } from "@/components/ResourcesFAQ";
 
-export default async function ResourcesPage() {
-  const categories = await getCategories();
-  const posts = await getPosts({ status: 'published' });
+const RESOURCES = [
+  {
+    category: "Tax Checklists",
+    description: "Ensure you have everything ready before your appointment.",
+    icon: <FileText className="text-brand-purple" size={24} />,
+    items: [
+      { name: "Business Startup Checklist", type: "PDF", href: "/resources/business-startup-checklist" },
+      { name: "New Client Checklist", type: "PDF", href: "/resources/new-client-intake-checklist" },
+      { name: "Rental Property Tax Checklist", type: "PDF", href: "/resources/rental-property-income-expense-sheet" },
+      { name: "Self-Employed Tax Checklist", type: "PDF", href: "/resources/self-employed-freelancer-checklist" },
+      { name: "Tax Appointment Checklist", type: "PDF", href: "/resources/tax-preparation-checklist" },
+    ]
+  },
+  {
+    category: "Government Resources",
+    description: "Official resources for federal and state tax information.",
+    icon: <Globe className="text-brand-purple" size={24} />,
+    items: [
+      { name: "IRS.gov", type: "External", href: "https://www.irs.gov", isExternal: true },
+      { name: "Where’s My Refund?", type: "External", href: "https://www.irs.gov/refunds", isExternal: true },
+      { name: "IRS Where’s My Amended Return?", type: "External", href: "https://www.irs.gov/filing/ame-return-where-is-my-amended-return", isExternal: true },
+      { name: "Pay Federal Tax Balance", type: "External", href: "https://www.irs.gov/payments", isExternal: true },
+      { name: "NC DOR Where’s My Refund?", type: "External", href: "https://www.ncdor.gov/file-pay/refund-status", isExternal: true },
+      { name: "NC Pay Balance Due", type: "External", href: "https://www.ncdor.gov/file-pay/pay-online", isExternal: true },
+      { name: "SC Where’s My Refund?", type: "External", href: "https://dor.sc.gov/refund", isExternal: true },
+      { name: "SC Pay Balance Due", type: "External", href: "https://dor.sc.gov/pay", isExternal: true },
+    ]
+  },
+  {
+    category: "Helpful Forms",
+    description: "Commonly used tax and business forms for your reference.",
+    icon: <BookOpen className="text-brand-purple" size={24} />,
+    items: [
+      { name: "W-4", type: "PDF", href: "https://www.irs.gov/pub/irs-pdf/fw4.pdf", isExternal: true },
+      { name: "W-9", type: "PDF", href: "https://www.irs.gov/pub/irs-pdf/fw9.pdf", isExternal: true },
+      { name: "Form 1040", type: "PDF", href: "https://www.irs.gov/pub/irs-pdf/f1040.pdf", isExternal: true },
+      { name: "Form 1040-ES", type: "PDF", href: "https://www.irs.gov/pub/irs-pdf/f1040es.pdf", isExternal: true },
+      { name: "Penalty Abatement Form", type: "PDF", href: "https://www.irs.gov/payments/penalty-relief-due-to-first-time-penalty-abatement-or-other-administrative-waiver", isExternal: true },
+    ]
+  }
+];
 
-  // Map database categories to the desired Boutique sections
-  const checklistCat = categories.find(c => c.slug === 'checklists' || c.name.includes('Checklist'));
-  const govCat = categories.find(c => c.slug === 'government-resources' || c.name.includes('Government'));
-  const formsCat = categories.find(c => c.slug === 'helpful-forms' || c.slug === 'useful-forms' || c.name.includes('Forms'));
-
-  const displayCategories = [
-    { cat: checklistCat, label: "Checklists", slug: "checklists" },
-    { cat: govCat, label: "Government Resources", slug: "government-resources" },
-    { cat: formsCat, label: "Helpful Forms", slug: "helpful-forms" }
-  ].filter(item => item.cat);
-
-  const groupedResources = displayCategories.map(item => {
-    const category = item.cat!;
-    const categoryPosts = posts.filter(post => post.categoryId === category.id);
-    return {
-      category: category.name,
-      slug: category.slug,
-      description: getCategoryDescription(category.slug),
-      icon: getCategoryIcon(category.slug),
-      items: categoryPosts.map(post => ({
-        name: post.title,
-        type: category.slug === 'government-resources' ? "External" : "PDF",
-        href: `/resources/${post.slug}`,
-        isExternal: category.slug === 'government-resources'
-      }))
-    };
-  }).filter(group => group.items.length > 0);
-
+export default function ResourcesPage() {
   return (
     <div className="flex flex-col">
       {/* Boutique Hero Section */}
@@ -72,38 +80,24 @@ export default async function ResourcesPage() {
       <section className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-            {groupedResources.length > 0 ? (
-              groupedResources.map((group, idx) => (
-                <div key={idx} className="flex flex-col">
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className="w-12 h-12 bg-brand-soft-gray rounded-2xl flex items-center justify-center border border-gray-100">
-                      {group.icon}
-                    </div>
-                    <div>
-                      <h2 className="text-2xl font-heading font-bold text-brand-black">{group.category}</h2>
-                    </div>
+            {RESOURCES.map((group, idx) => (
+              <div key={idx} className="flex flex-col">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-12 h-12 bg-brand-soft-gray rounded-2xl flex items-center justify-center border border-gray-100">
+                    {group.icon}
                   </div>
-                  <p className="text-brand-charcoal/60 mb-8 font-medium">{group.description}</p>
-                  <div className="space-y-4 flex-1">
-                    {group.items.slice(0, 5).map((item, itemIdx) => (
-                      <ResourceCard key={itemIdx} item={item} />
-                    ))}
+                  <div>
+                    <h2 className="text-2xl font-heading font-bold text-brand-black">{group.category}</h2>
                   </div>
-                  {group.items.length > 5 && (
-                    <Link 
-                      href={`/resources?category=${group.slug}`}
-                      className="mt-6 text-brand-purple font-bold flex items-center gap-2 hover:translate-x-1 transition-transform"
-                    >
-                      View all <ArrowRight size={16} />
-                    </Link>
-                  )}
                 </div>
-              ))
-            ) : (
-              <div className="col-span-3 text-center py-12 bg-gray-50 rounded-3xl border border-dashed border-gray-200">
-                <p className="text-gray-400 font-medium">No resources found. Check back soon.</p>
+                <p className="text-brand-charcoal/60 mb-8 font-medium">{group.description}</p>
+                <div className="space-y-4 flex-1">
+                  {group.items.map((item, itemIdx) => (
+                    <ResourceCard key={itemIdx} item={item} />
+                  ))}
+                </div>
               </div>
-            )}
+            ))}
           </div>
         </div>
       </section>
@@ -222,38 +216,4 @@ function BenefitItem({ label }: { label: string }) {
       <span className="text-sm font-bold text-brand-charcoal/80">{label}</span>
     </div>
   );
-}
-
-function getCategoryIcon(slug: string) {
-  switch (slug) {
-    case 'checklists':
-      return <FileText className="text-brand-purple" size={24} />;
-    case 'government-resources':
-      return <Globe className="text-brand-purple" size={24} />;
-    case 'faq':
-      return <ShieldCheck className="text-brand-purple" size={24} />;
-    case 'tax-organizers':
-    case 'helpful-forms':
-    case 'useful-forms':
-      return <BookOpen className="text-brand-purple" size={24} />;
-    default:
-      return <FileText className="text-brand-purple" size={24} />;
-  }
-}
-
-function getCategoryDescription(slug: string) {
-  switch (slug) {
-    case 'checklists':
-      return "Ensure you have everything ready before your appointment.";
-    case 'government-resources':
-      return "Official resources for federal and state tax information.";
-    case 'faq':
-      return "Quick answers to common questions about our services.";
-    case 'tax-organizers':
-    case 'helpful-forms':
-    case 'useful-forms':
-      return "Commonly used tax and business forms for your reference.";
-    default:
-      return "Essential tools and guides for your tax and financial planning needs.";
-  }
 }
