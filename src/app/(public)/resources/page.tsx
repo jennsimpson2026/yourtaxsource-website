@@ -33,7 +33,7 @@ export default async function ResourcesPage() {
 
   const groupedResources = displayCategories.map(item => {
     const category = item.cat!;
-    const categoryPosts = posts.filter(post => post.category_id === category.id || post.categoryId === category.id);
+    const categoryPosts = posts.filter(post => post.categoryId === category.id);
     return {
       category: category.name,
       slug: category.slug,
