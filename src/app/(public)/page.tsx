@@ -31,7 +31,7 @@ export default function Home() {
                 Professional tax preparation, planning, bookkeeping, and fractional controller services designed to help individuals and businesses stay compliant, organized, and financially confident.
               </p>
               <p className="text-lg text-brand-lavender/80 mb-10 leading-relaxed max-w-xl">
-                Whether you're filing your annual tax return, running a small business, managing rental properties, or looking for stronger financial reporting, Your Tax Source is here to help. (Deployed v1.1)
+                Whether you're filing your annual tax return, running a small business, managing rental properties, or looking for stronger financial reporting, Your Tax Source is here to help.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link
