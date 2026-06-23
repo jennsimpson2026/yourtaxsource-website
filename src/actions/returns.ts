@@ -40,22 +40,27 @@ export async function updateReturnDetails(returnId: string, data: {
   const finalPaymentStatus = data.paymentStatus || currentReturn.paymentStatus;
   let finalStatus = data.status || currentReturn.status;
 
-  if (finalPaymentStatus === "PAID" && ["AWAITING_PAYMENT", "READY_FOR_SIGNATURE"].includes(finalStatus)) {
+  // Verify full payment before allowing READY_TO_FILE
+  const allInvoices = await db.query.invoices.findMany({
+    where: eq(invoices.returnId, returnId),
+  });
+  
+  const totalPaid = allInvoices
+    .filter(inv => inv.status === "PAID")
+    .reduce((sum, inv) => sum + Number(inv.amount), 0);
+  
+  const taxPrepFee = data.taxPrepFee !== undefined ? data.taxPrepFee : Number(currentReturn.taxPrepFee || 0);
+  const isFullyPaid = totalPaid >= taxPrepFee || data.paymentStatus === "PAID";
+
+  if (isFullyPaid && ["AWAITING_PAYMENT", "READY_FOR_SIGNATURE"].includes(finalStatus)) {
     console.log(`[updateReturnDetails] Auto-transitioning return ${returnId} to READY_TO_FILE`);
     finalStatus = "READY_TO_FILE";
     updateData.status = "READY_TO_FILE";
   }
 
-  // Support reverting: if moving back to UNPAID and currently READY_TO_FILE, move back to AWAITING_PAYMENT
-  if (finalPaymentStatus === "UNPAID" && finalStatus === "READY_TO_FILE") {
-    console.log(`[updateReturnDetails] Reverting READY_TO_FILE status to AWAITING_PAYMENT due to UNPAID payment status`);
-    finalStatus = "AWAITING_PAYMENT";
-    updateData.status = "AWAITING_PAYMENT";
-  }
-
-  // FORCE: If status is READY_TO_FILE but payment is UNPAID, force status back to AWAITING_PAYMENT
-  if (finalStatus === "READY_TO_FILE" && finalPaymentStatus === "UNPAID") {
-    console.log(`[updateReturnDetails] FORCING status back to AWAITING_PAYMENT because payment is UNPAID`);
+  // FORCE: If status is READY_TO_FILE but balance is due, force status back to AWAITING_PAYMENT
+  if (finalStatus === "READY_TO_FILE" && totalPaid < taxPrepFee && data.paymentStatus !== "PAID") {
+    console.log(`[updateReturnDetails] FORCING status back to AWAITING_PAYMENT because balance is due (${totalPaid}/${taxPrepFee})`);
     finalStatus = "AWAITING_PAYMENT";
     updateData.status = "AWAITING_PAYMENT";
   }

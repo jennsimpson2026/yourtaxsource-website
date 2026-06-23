@@ -27,17 +27,12 @@ export default async function ResourcesPage() {
   const govCat = categories.find(c => c.slug === 'government-resources');
   const formsCat = categories.find(c => c.slug === 'helpful-forms' || c.slug === 'useful-forms');
 
-  // Track which posts are assigned to sections
-  const assignedPostIds = new Set<string>();
-
   // Helper to get items for a category
-  const getItemsByCatSlug = (slug: string) => {
-    const cat = categories.find(c => c.slug === slug);
-    if (!cat) return [];
-    const items = allPosts
-      .filter(p => p.categoryId === cat.id)
+  const getItemsByCatId = (id: string | undefined) => {
+    if (!id) return [];
+    return allPosts
+      .filter(p => p.categoryId === id)
       .map(p => {
-        assignedPostIds.add(p.id);
         const isDirectLink = p.featuredImageUrl?.startsWith('http');
         const isExternalSlug = p.slug.startsWith('http');
         
@@ -45,37 +40,18 @@ export default async function ResourcesPage() {
           id: p.id,
           name: p.title,
           description: p.seoDescription || "",
-          type: slug === 'government-resources' ? "External" : (isDirectLink ? "File" : "PDF"),
+          type: (p.categoryId === govCat?.id) ? "External" : (isDirectLink ? "File" : "PDF"),
           href: isDirectLink ? p.featuredImageUrl! : (isExternalSlug ? p.slug : `/resources/${p.slug}`),
-          isExternal: slug === 'government-resources' || isDirectLink || isExternalSlug
+          isExternal: (p.categoryId === govCat?.id) || isDirectLink || isExternalSlug
         };
       });
-    return items;
   };
 
-  const checklists = getItemsByCatSlug('checklists');
-  const governmentResources = getItemsByCatSlug('government-resources');
-  const helpfulForms = getItemsByCatSlug('helpful-forms');
+  const checklists = getItemsByCatId(checklistCat?.id);
+  const governmentResources = getItemsByCatId(govCat?.id);
+  const helpfulForms = getItemsByCatId(formsCat?.id);
 
-  // Any other resources not yet assigned (e.g. from FAQ or Small Business categories if marked as 'resource' type)
-  // Filtering out any remaining category headers if they exist
-  const remainingResources = allPosts
-    .filter(p => !assignedPostIds.has(p.id))
-    .filter(p => !['Government links', 'Helpful tax links', 'Downloadable packets/forms', 'Service fee/payment information', 'Upload/document instructions'].includes(p.title))
-    .map(p => {
-      const isDirectLink = p.featuredImageUrl?.startsWith('http');
-      const isExternalSlug = p.slug.startsWith('http');
-      return {
-        id: p.id,
-        name: p.title,
-        description: p.seoDescription || "",
-        type: isDirectLink ? "File" : "Info",
-        href: isDirectLink ? p.featuredImageUrl! : (isExternalSlug ? p.slug : `/resources/${p.slug}`),
-        isExternal: isDirectLink || isExternalSlug
-      };
-    });
-
-  // Manual ordering for checklists: Tax Appointment Checklist at the top
+  // Manual ordering for checklists
   const orderedChecklists = [...checklists].sort((a, b) => {
     const aName = a.name.toLowerCase();
     const bName = b.name.toLowerCase();
@@ -84,9 +60,6 @@ export default async function ResourcesPage() {
     if (!aName.includes(target) && bName.includes(target)) return 1;
     return a.name.localeCompare(b.name);
   });
-
-  // Combine Helpful Forms with remaining resources to ensure everything is shown
-  const combinedFormsAndInfo = [...helpfulForms, ...remainingResources];
 
   const displaySections = [
     { 
@@ -115,36 +88,6 @@ export default async function ResourcesPage() {
     }
   ].filter(s => s.items.length > 0);
 
-  const remainingSections = categories
-    .filter(c => !['checklists', 'government-resources', 'helpful-forms', 'useful-forms'].includes(c.slug))
-    .map(cat => {
-      const items = allPosts
-        .filter(p => p.categoryId === cat.id)
-        .map(p => {
-          const isDirectLink = p.featuredImageUrl?.startsWith('http');
-          const isExternalSlug = p.slug.startsWith('http');
-          return {
-            id: p.id,
-            name: p.title,
-            description: p.seoDescription || "",
-            type: (isDirectLink ? "File" : "PDF"),
-            href: isDirectLink ? p.featuredImageUrl! : (isExternalSlug ? p.slug : `/resources/${p.slug}`),
-            isExternal: isDirectLink || isExternalSlug
-          };
-        });
-      return {
-        title: cat.name,
-        description: "",
-        icon: <Info className="text-brand-purple" size={24} />,
-        items,
-        slug: cat.slug,
-        buttonText: `View All ${cat.name}`
-      };
-    })
-    .filter(s => s.items.length > 0);
-
-  const allDisplaySections = [...displaySections, ...remainingSections];
-
   return (
     <div className="flex flex-col bg-white">
       {/* Boutique Header Section */}
@@ -154,7 +97,8 @@ export default async function ResourcesPage() {
             Resources Knowledge Center
           </h1>
           <p className="text-brand-charcoal/60 text-lg max-w-2xl mx-auto font-medium">
-            Your one-stop hub for essential tax checklists, government resources,
+            Your one-stop hub for essential tax checklists, government resources,<br className="hidden md:block" />
+            and helpful forms to keep you organized and informed.
           </p>
         </div>
       </section>
@@ -163,7 +107,7 @@ export default async function ResourcesPage() {
       <section className="pb-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-            {allDisplaySections.map((section, idx) => (
+            {displaySections.map((section, idx) => (
               <div key={idx} className="flex flex-col h-full">
                 <div className="flex items-center gap-4 mb-6">
                   <div className="w-14 h-14 bg-brand-lavender/20 rounded-2xl flex items-center justify-center border border-brand-purple/10">

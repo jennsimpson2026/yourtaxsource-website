@@ -70,7 +70,7 @@ export function EditBlogPostForm({ post, categories }: { post: any, categories: 
         <div className="flex gap-3">
           <button 
             type="button"
-            onClick={() => window.open(`/blog/${formData.slug}?preview=true`, "_blank")}
+            onClick={() => window.open(`/blog/${formData.slug}?preview=true&id=${post.id}`, "_blank")}
             className="px-6 py-3 rounded-xl font-bold border border-gray-200 hover:bg-gray-50 transition-all flex items-center gap-2"
           >
             <Eye size={18} /> Preview

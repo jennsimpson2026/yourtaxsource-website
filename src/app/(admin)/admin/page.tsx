@@ -88,15 +88,25 @@ export default async function AdminDashboard() {
     };
   });
 
-  const readyToFileReturns = await db.query.taxReturns.findMany({
+  const dbReadyToFileReturns = await db.query.taxReturns.findMany({
     where: and(
       eq(taxReturns.status, "READY_TO_FILE"),
       eq(taxReturns.paymentStatus, "PAID")
     ),
     with: {
       client: true,
+      invoices: true,
     },
     orderBy: [desc(taxReturns.updatedAt)],
+  });
+
+  // Filter to ensure balance is actually zero (extra safety)
+  const readyToFileReturns = dbReadyToFileReturns.filter(ret => {
+    const totalPaid = ret.invoices
+      .filter(inv => inv.status === 'PAID')
+      .reduce((sum, inv) => sum + Number(inv.amount), 0);
+    const balanceDue = Math.max(0, Number(ret.taxPrepFee || 0) - totalPaid);
+    return balanceDue <= 0;
   });
 
   const reviewQueue = await getDocumentReviewQueue();

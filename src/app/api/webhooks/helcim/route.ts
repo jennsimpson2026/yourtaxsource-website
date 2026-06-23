@@ -33,16 +33,33 @@ export async function POST(req: Request) {
           .set({ status: "PAID", paidAt: new Date() })
           .where(eq(invoices.id, invoice.id));
 
-        const [updatedReturn] = await db.update(taxReturns)
-          .set({ paymentStatus: "PAID", updatedAt: new Date() })
-          .where(eq(taxReturns.id, invoice.returnId))
-          .returning();
+        const allInvoices = await db.query.invoices.findMany({
+          where: eq(invoices.returnId, invoice.returnId),
+        });
 
-        if (updatedReturn && ["AWAITING_PAYMENT", "READY_FOR_SIGNATURE"].includes(updatedReturn.status)) {
-          console.log(`[HelcimWebhook] Auto-transitioning return ${updatedReturn.id} to READY_TO_FILE`);
+        const totalPaid = allInvoices
+          .filter(inv => inv.status === "PAID")
+          .reduce((sum, inv) => sum + Number(inv.amount), 0);
+
+        const taxReturn = await db.query.taxReturns.findFirst({
+          where: eq(taxReturns.id, invoice.returnId),
+        });
+
+        const isFullyPaid = taxReturn && totalPaid >= Number(taxReturn.taxPrepFee);
+
+        if (isFullyPaid) {
           await db.update(taxReturns)
-            .set({ status: "READY_TO_FILE" as any, updatedAt: new Date() })
-            .where(eq(taxReturns.id, updatedReturn.id));
+            .set({ paymentStatus: "PAID", updatedAt: new Date() })
+            .where(eq(taxReturns.id, invoice.returnId));
+
+          if (taxReturn && ["AWAITING_PAYMENT", "READY_FOR_SIGNATURE"].includes(taxReturn.status)) {
+            console.log(`[HelcimWebhook] Auto-transitioning return ${taxReturn.id} to READY_TO_FILE`);
+            await db.update(taxReturns)
+              .set({ status: "READY_TO_FILE" as any, updatedAt: new Date() })
+              .where(eq(taxReturns.id, taxReturn.id));
+          }
+        } else {
+          console.log(`[HelcimWebhook] Return ${invoice.returnId} partially paid (${totalPaid}/${taxReturn?.taxPrepFee}). No auto-transition.`);
         }
 
         // Release documents on payment

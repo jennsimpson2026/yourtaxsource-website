@@ -10,10 +10,10 @@ export default async function BlogPostPage({
   searchParams
 }: { 
   params: Promise<{ slug: string }>,
-  searchParams: Promise<{ preview?: string }>
+  searchParams: Promise<{ preview?: string, id?: string }>
 }) {
   const { slug } = await params;
-  const { preview } = await searchParams;
+  const { preview, id } = await searchParams;
   const isPreview = preview === "true" || preview === "1";
 
   // Sanitize slug - handle leading/trailing slashes and decode URI
@@ -21,12 +21,15 @@ export default async function BlogPostPage({
   if (cleanSlug.startsWith("/")) cleanSlug = cleanSlug.substring(1);
   if (cleanSlug.endsWith("/")) cleanSlug = cleanSlug.substring(0, cleanSlug.length - 1);
 
-  console.log(`[BLOG_POST] Fetching post slug: "${cleanSlug}" (original: "${slug}"), isPreview: ${isPreview}`);
+  console.log(`[BLOG_POST] Fetching post slug: "${cleanSlug}" (original: "${slug}"), id: "${id}", isPreview: ${isPreview}`);
 
   const post = await db.query.posts.findFirst({
-    where: isPreview 
-      ? eq(posts.slug, cleanSlug)
-      : and(eq(posts.slug, cleanSlug), eq(posts.status, "published")),
+    where: id 
+      ? eq(posts.id, id as string)
+      : (isPreview 
+          ? eq(posts.slug, cleanSlug)
+          : and(eq(posts.slug, cleanSlug), eq(posts.status, "published"))
+        ),
     with: {
       category: true,
       author: true,
