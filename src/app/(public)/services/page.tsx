@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { User, Briefcase, TrendingUp, Calculator, CheckCircle2, Users, BarChart3 } from "lucide-react";
+import { User, Briefcase, TrendingUp, Calculator, CheckCircle2, Users, BarChart3, Clock } from "lucide-react";
 import { BookingButton } from "@/components/BookingButton";
 
 export default function ServicesPage() {
@@ -35,7 +35,7 @@ export default function ServicesPage() {
               "Prior Year Amendments"
             ]}
             icon={<Calculator className="w-12 h-12 text-brand-black" />}
-            imageSrc="/images/jenn-prof-woman.png"
+            imageSrc="/images/jenn-hero-desk.png"
             />
 
             <ServiceDetail

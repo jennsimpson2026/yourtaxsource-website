@@ -30,7 +30,7 @@ export default function AboutPage() {
                   <div className="absolute inset-0 bg-brand-purple rounded-[3rem] rotate-3 scale-95 opacity-10 blur-xl"></div>
                   <div className="relative aspect-[4/5] w-full rounded-[3rem] overflow-hidden shadow-2xl border-4 border-white">
                         <Image
-                          src="/images/jenn-portrait-authentic.png"
+                          src="/images/jenn-office-work.png"
                           alt="Jenn Simpson"
                           fill
                           className="object-cover object-top"
@@ -127,10 +127,10 @@ export default function AboutPage() {
               </div>
               <div className="lg:w-1/2 relative aspect-[4/3] w-full rounded-3xl overflow-hidden shadow-xl border-8 border-brand-soft-gray bg-brand-soft-gray">
                  <Image
-                   src="/images/jenn-focused-office.png"
-                   alt="Jenn at her desk in our office"
+                   src="/images/jenn-consultation-office.png"
+                   alt="Our Boutique Office"
                    fill
-                   className="object-contain"
+                   className="object-cover object-top"
                  />
               </div>
            </div>

@@ -1,10 +1,14 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { posts, categories, users } from "@/lib/db/schema";
+import { posts, categories, users, auditLogs } from "@/lib/db/schema";
 import { eq, desc, and, sql } from "drizzle-orm";
-import { auth } from "@/lib/auth";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+import { s3Client, BUCKET_NAME } from "@/lib/s3";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 export async function getCategories() {
   return await db.query.categories.findMany();
@@ -53,10 +57,30 @@ export async function getPostBySlug(slug: string) {
   });
 }
 
+// Resource Specific Actions
+export async function getResourceUploadUrl(fileName: string, fileType: string) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user || (session.user as any).role === "CLIENT") {
+    throw new Error("Unauthorized");
+  }
+
+  const s3Key = `resources/${Date.now()}-${fileName}`;
+
+  const command = new PutObjectCommand({
+    Bucket: BUCKET_NAME,
+    Key: s3Key,
+    ContentType: fileType,
+  });
+
+  const uploadUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
+
+  return { uploadUrl, s3Key };
+}
+
 // Admin Actions
-export async function createPost(data: any) {
-  const session = await auth();
-  if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'STAFF')) {
+export async function createResource(data: any) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user || ((session.user as any).role !== 'ADMIN' && (session.user as any).role !== 'STAFF')) {
     throw new Error("Unauthorized");
   }
 
@@ -64,22 +88,30 @@ export async function createPost(data: any) {
     const [newPost] = await db.insert(posts).values({
       ...data,
       type: "resource",
-      authorId: session.user.id,
+      authorId: (session.user as any).id,
       publishDate: data.status === 'published' ? new Date() : null,
     }).returning();
+
+    await db.insert(auditLogs).values({
+      userId: (session.user as any).id,
+      action: "CREATE_RESOURCE",
+      targetType: "POST",
+      targetId: newPost.id,
+      metadata: JSON.stringify({ title: data.title }),
+    });
 
     revalidatePath("/resources");
     revalidatePath("/admin/resources");
     return { success: true, post: newPost };
   } catch (error) {
-    console.error("Create post error:", error);
-    return { error: "Failed to create post" };
+    console.error("Create resource error:", error);
+    return { error: "Failed to create resource" };
   }
 }
 
-export async function updatePost(id: string, data: any) {
-  const session = await auth();
-  if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'STAFF')) {
+export async function updateResource(id: string, data: any) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user || ((session.user as any).role !== 'ADMIN' && (session.user as any).role !== 'STAFF')) {
     throw new Error("Unauthorized");
   }
 
@@ -93,19 +125,27 @@ export async function updatePost(id: string, data: any) {
       .where(eq(posts.id, id))
       .returning();
 
+    await db.insert(auditLogs).values({
+      userId: (session.user as any).id,
+      action: "UPDATE_RESOURCE",
+      targetType: "POST",
+      targetId: id,
+      metadata: JSON.stringify({ title: data.title }),
+    });
+
     revalidatePath("/resources");
     revalidatePath(`/resources/${updatedPost.slug}`);
     revalidatePath("/admin/resources");
     return { success: true, post: updatedPost };
   } catch (error) {
-    console.error("Update post error:", error);
-    return { error: "Failed to update post" };
+    console.error("Update resource error:", error);
+    return { error: "Failed to update resource" };
   }
 }
 
 export async function deletePost(id: string) {
-  const session = await auth();
-  if (!session || session.user.role !== 'ADMIN') {
+  const session = await getServerSession(authOptions);
+  if (!session?.user || (session.user as any).role !== 'ADMIN') {
     throw new Error("Unauthorized");
   }
 
@@ -121,8 +161,8 @@ export async function deletePost(id: string) {
 }
 
 export async function createCategory(data: any) {
-  const session = await auth();
-  if (!session || session.user.role !== 'ADMIN') {
+  const session = await getServerSession(authOptions);
+  if (!session?.user || (session.user as any).role !== 'ADMIN') {
     throw new Error("Unauthorized");
   }
 
@@ -137,8 +177,8 @@ export async function createCategory(data: any) {
 }
 
 export async function updateCategory(id: string, data: any) {
-  const session = await auth();
-  if (!session || session.user.role !== 'ADMIN') {
+  const session = await getServerSession(authOptions);
+  if (!session?.user || (session.user as any).role !== 'ADMIN') {
     throw new Error("Unauthorized");
   }
 
@@ -156,8 +196,8 @@ export async function updateCategory(id: string, data: any) {
 }
 
 export async function deleteCategory(id: string) {
-  const session = await auth();
-  if (!session || session.user.role !== 'ADMIN') {
+  const session = await getServerSession(authOptions);
+  if (!session?.user || (session.user as any).role !== 'ADMIN') {
     throw new Error("Unauthorized");
   }
 

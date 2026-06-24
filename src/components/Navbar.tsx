@@ -32,6 +32,7 @@ export const Navbar = () => {
     { name: "Pricing", href: "/pricing" },
     { name: "About", href: "/about" },
     { name: "Resources", href: "/resources" },
+    { name: "Blog", href: "/blog" },
     { name: "FAQ", href: "/faq" },
     { name: "Contact", href: "/contact" },
   ];
@@ -163,6 +164,14 @@ export const Navbar = () => {
               >
                 <LayoutDashboard size={20} />
                 Client Portal
+              </Link>
+              <Link 
+                href="/auth/signup" 
+                onClick={() => setIsOpen(false)}
+                className="flex items-center gap-3 p-4 rounded-2xl bg-brand-purple text-white font-bold hover:bg-[#5a3a74] transition-all"
+              >
+                <UserPlus size={20} />
+                Start Intake
               </Link>
             </div>
           </div>
