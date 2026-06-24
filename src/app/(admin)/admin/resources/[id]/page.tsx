@@ -1,10 +1,20 @@
 import { db } from "@/lib/db";
-import { categories } from "@/lib/db/schema";
+import { posts, categories } from "@/lib/db/schema";
 import { ResourceForm } from "@/components/admin/ResourceForm";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { eq } from "drizzle-orm";
+import { notFound } from "next/navigation";
 
-export default async function NewResourcePage() {
+export default async function EditResourcePage({ params }: { params: { id: string } }) {
+  const resource = await db.query.posts.findFirst({
+    where: eq(posts.id, params.id),
+  });
+
+  if (!resource) {
+    notFound();
+  }
+
   const allCategories = await db.select().from(categories);
 
   return (
@@ -17,12 +27,12 @@ export default async function NewResourcePage() {
           <ArrowLeft size={20} />
         </Link>
         <div>
-          <h1 className="text-3xl font-heading font-bold text-brand-black">Add New Resource</h1>
-          <p className="text-brand-charcoal/60 text-sm">Create a new checklist, template, or guide for your clients.</p>
+          <h1 className="text-3xl font-heading font-bold text-brand-black">Edit Resource</h1>
+          <p className="text-brand-charcoal/60 text-sm">Update the details or file for this resource.</p>
         </div>
       </div>
 
-      <ResourceForm categories={allCategories} />
+      <ResourceForm initialData={resource} categories={allCategories} />
     </div>
   );
 }
