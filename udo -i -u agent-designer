@@ -1,0 +1,1367 @@
+[33mcommit 6f79bb66c96385133fa20b988c6c5867768f116c[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m
+Author: Designer Agent <agent-designer@e2b.local>
+Date:   Wed Jun 24 00:46:40 2026 +0000
+
+    feat: navbar unification, resource cms with s3 upload, and dynamic resources page
+
+[1mdiff --git a/src/actions/resources.ts b/src/actions/resources.ts[m
+[1mindex 7e2a656..fb81318 100644[m
+[1m--- a/src/actions/resources.ts[m
+[1m+++ b/src/actions/resources.ts[m
+[36m@@ -1,10 +1,14 @@[m
+ "use server";[m
+ [m
+ import { db } from "@/lib/db";[m
+[31m-import { posts, categories, users } from "@/lib/db/schema";[m
+[32m+[m[32mimport { posts, categories, users, auditLogs } from "@/lib/db/schema";[m
+ import { eq, desc, and, sql } from "drizzle-orm";[m
+[31m-import { auth } from "@/lib/auth";[m
+[32m+[m[32mimport { getServerSession } from "next-auth";[m
+[32m+[m[32mimport { authOptions } from "@/lib/auth";[m
+ import { revalidatePath } from "next/cache";[m
+[32m+[m[32mimport { s3Client, BUCKET_NAME } from "@/lib/s3";[m
+[32m+[m[32mimport { PutObjectCommand } from "@aws-sdk/client-s3";[m
+[32m+[m[32mimport { getSignedUrl } from "@aws-sdk/s3-request-presigner";[m
+ [m
+ export async function getCategories() {[m
+   return await db.query.categories.findMany();[m
+[36m@@ -53,10 +57,30 @@[m [mexport async function getPostBySlug(slug: string) {[m
+   });[m
+ }[m
+ [m
+[32m+[m[32m// Resource Specific Actions[m
+[32m+[m[32mexport async function getResourceUploadUrl(fileName: string, fileType: string) {[m
+[32m+[m[32m  const session = await getServerSession(authOptions);[m
+[32m+[m[32m  if (!session?.user || (session.user as any).role === "CLIENT") {[m
+[32m+[m[32m    throw new Error("Unauthorized");[m
+[32m+[m[32m  }[m
+[32m+[m
+[32m+[m[32m  const s3Key = `resources/${Date.now()}-${fileName}`;[m
+[32m+[m
+[32m+[m[32m  const command = new PutObjectCommand({[m
+[32m+[m[32m    Bucket: BUCKET_NAME,[m
+[32m+[m[32m    Key: s3Key,[m
+[32m+[m[32m    ContentType: fileType,[m
+[32m+[m[32m  });[m
+[32m+[m
+[32m+[m[32m  const uploadUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });[m
+[32m+[m
+[32m+[m[32m  return { uploadUrl, s3Key };[m
+[32m+[m[32m}[m
+[32m+[m
+ // Admin Actions[m
+[31m-export async function createPost(data: any) {[m
+[31m-  const session = await auth();[m
+[31m-  if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'STAFF')) {[m
+[32m+[m[32mexport async function createResource(data: any) {[m
+[32m+[m[32m  const session = await getServerSession(authOptions);[m
+[32m+[m[32m  if (!session?.user || ((session.user as any).role !== 'ADMIN' && (session.user as any).role !== 'STAFF')) {[m
+     throw new Error("Unauthorized");[m
+   }[m
+ [m
+[36m@@ -64,22 +88,30 @@[m [mexport async function createPost(data: any) {[m
+     const [newPost] = await db.insert(posts).values({[m
+       ...data,[m
+       type: "resource",[m
+[31m-      authorId: session.user.id,[m
+[32m+[m[32m      authorId: (session.user as any).id,[m
+       publishDate: data.status === 'published' ? new Date() : null,[m
+     }).returning();[m
+ [m
+[32m+[m[32m    await db.insert(auditLogs).values({[m
+[32m+[m[32m      userId: (session.user as any).id,[m
+[32m+[m[32m      action: "CREATE_RESOURCE",[m
+[32m+[m[32m      targetType: "POST",[m
+[32m+[m[32m      targetId: newPost.id,[m
+[32m+[m[32m      metadata: JSON.stringify({ title: data.title }),[m
+[32m+[m[32m    });[m
+[32m+[m
+     revalidatePath("/resources");[m
+     revalidatePath("/admin/resources");[m
+     return { success: true, post: newPost };[m
+   } catch (error) {[m
+[31m-    console.error("Create post error:", error);[m
+[31m-    return { error: "Failed to create post" };[m
+[32m+[m[32m    console.error("Create resource error:", error);[m
+[32m+[m[32m    return { error: "Failed to create resource" };[m
+   }[m
+ }[m
+ [m
+[31m-export async function updatePost(id: string, data: any) {[m
+[31m-  const session = await auth();[m
+[31m-  if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'STAFF')) {[m
+[32m+[m[32mexport async function updateResource(id: string, data: any) {[m
+[32m+[m[32m  const session = await getServerSession(authOptions);[m
+[32m+[m[32m  if (!session?.user || ((session.user as any).role !== 'ADMIN' && (session.user as any).role !== 'STAFF')) {[m
+     throw new Error("Unauthorized");[m
+   }[m
+ [m
+[36m@@ -93,19 +125,27 @@[m [mexport async function updatePost(id: string, data: any) {[m
+       .where(eq(posts.id, id))[m
+       .returning();[m
+ [m
+[32m+[m[32m    await db.insert(auditLogs).values({[m
+[32m+[m[32m      userId: (session.user as any).id,[m
+[32m+[m[32m      action: "UPDATE_RESOURCE",[m
+[32m+[m[32m      targetType: "POST",[m
+[32m+[m[32m      targetId: id,[m
+[32m+[m[32m      metadata: JSON.stringify({ title: data.title }),[m
+[32m+[m[32m    });[m
+[32m+[m
+     revalidatePath("/resources");[m
+     revalidatePath(`/resources/${updatedPost.slug}`);[m
+     revalidatePath("/admin/resources");[m
+     return { success: true, post: updatedPost };[m
+   } catch (error) {[m
+[31m-    console.error("Update post error:", error);[m
+[31m-    return { error: "Failed to update post" };[m
+[32m+[m[32m    console.error("Update resource error:", error);[m
+[32m+[m[32m    return { error: "Failed to update resource" };[m
+   }[m
+ }[m
+ [m
+ export async function deletePost(id: string) {[m
+[31m-  const session = await auth();[m
+[31m-  if (!session || session.user.role !== 'ADMIN') {[m
+[32m+[m[32m  const session = await getServerSession(authOptions);[m
+[32m+[m[32m  if (!session?.user || (session.user as any).role !== 'ADMIN') {[m
+     throw new Error("Unauthorized");[m
+   }[m
+ [m
+[36m@@ -121,8 +161,8 @@[m [mexport async function deletePost(id: string) {[m
+ }[m
+ [m
+ export async function createCategory(data: any) {[m
+[31m-  const session = await auth();[m
+[31m-  if (!session || session.user.role !== 'ADMIN') {[m
+[32m+[m[32m  const session = await getServerSession(authOptions);[m
+[32m+[m[32m  if (!session?.user || (session.user as any).role !== 'ADMIN') {[m
+     throw new Error("Unauthorized");[m
+   }[m
+ [m
+[36m@@ -137,8 +177,8 @@[m [mexport async function createCategory(data: any) {[m
+ }[m
+ [m
+ export async function updateCategory(id: string, data: any) {[m
+[31m-  const session = await auth();[m
+[31m-  if (!session || session.user.role !== 'ADMIN') {[m
+[32m+[m[32m  const session = await getServerSession(authOptions);[m
+[32m+[m[32m  if (!session?.user || (session.user as any).role !== 'ADMIN') {[m
+     throw new Error("Unauthorized");[m
+   }[m
+ [m
+[36m@@ -156,8 +196,8 @@[m [mexport async function updateCategory(id: string, data: any) {[m
+ }[m
+ [m
+ export async function deleteCategory(id: string) {[m
+[31m-  const session = await auth();[m
+[31m-  if (!session || session.user.role !== 'ADMIN') {[m
+[32m+[m[32m  const session = await getServerSession(authOptions);[m
+[32m+[m[32m  if (!session?.user || (session.user as any).role !== 'ADMIN') {[m
+     throw new Error("Unauthorized");[m
+   }[m
+ [m
+[1mdiff --git a/src/app/(admin)/admin/resources/[id]/page.tsx b/src/app/(admin)/admin/resources/[id]/page.tsx[m
+[1mnew file mode 100644[m
+[1mindex 0000000..e4da79f[m
+[1m--- /dev/null[m
+[1m+++ b/src/app/(admin)/admin/resources/[id]/page.tsx[m
+[36m@@ -0,0 +1,38 @@[m
+[32m+[m[32mimport { db } from "@/lib/db";[m
+[32m+[m[32mimport { posts, categories } from "@/lib/db/schema";[m
+[32m+[m[32mimport { ResourceForm } from "@/components/admin/ResourceForm";[m
+[32m+[m[32mimport { ArrowLeft } from "lucide-react";[m
+[32m+[m[32mimport Link from "next/link";[m
+[32m+[m[32mimport { eq } from "drizzle-orm";[m
+[32m+[m[32mimport { notFound } from "next/navigation";[m
+[32m+[m
+[32m+[m[32mexport default async function EditResourcePage({ params }: { params: { id: string } }) {[m
+[32m+[m[32m  const resource = await db.query.posts.findFirst({[m
+[32m+[m[32m    where: eq(posts.id, params.id),[m
+[32m+[m[32m  });[m
+[32m+[m
+[32m+[m[32m  if (!resource) {[m
+[32m+[m[32m    notFound();[m
+[32m+[m[32m  }[m
+[32m+[m
+[32m+[m[32m  const allCategories = await db.select().from(categories);[m
+[32m+[m
+[32m+[m[32m  return ([m
+[32m+[m[32m    <div className="space-y-8">[m
+[32m+[m[32m      <div className="flex items-center gap-4">[m
+[32m+[m[32m        <Link[m[41m [m
+[32m+[m[32m          href="/admin/resources"[m
+[32m+[m[32m          className="p-2 bg-white border border-gray-100 rounded-xl text-gray-400 hover:text-brand-purple hover:border-brand-purple/20 transition-all"[m
+[32m+[m[32m        >[m
+[32m+[m[32m          <ArrowLeft size={20} />[m
+[32m+[m[32m        </Link>[m
+[32m+[m[32m        <div>[m
+[32m+[m[32m          <h1 className="text-3xl font-heading font-bold text-brand-black">Edit Resource</h1>[m
+[32m+[m[32m          <p className="text-brand-charcoal/60 text-sm">Update the details or file for this resource.</p>[m
+[32m+[m[32m        </div>[m
+[32m+[m[32m      </div>[m
+[32m+[m
+[32m+[m[32m      <ResourceForm initialData={resource} categories={allCategories} />[m
+[32m+[m[32m    </div>[m
+[32m+[m[32m  );[m
+[32m+[m[32m}[m
+[1mdiff --git a/src/app/(admin)/admin/resources/new/page.tsx b/src/app/(admin)/admin/resources/new/page.tsx[m
+[1mindex c3a6036..01653f6 100644[m
+[1m--- a/src/app/(admin)/admin/resources/new/page.tsx[m
+[1m+++ b/src/app/(admin)/admin/resources/new/page.tsx[m
+[36m@@ -1,214 +1,28 @@[m
+[31m-"use client";[m
+[31m-[m
+[31m-import { useState, useEffect } from "react";[m
+[31m-import { useRouter } from "next/navigation";[m
+[31m-import { createResource, getCategories } from "@/actions/admin/resources";[m
+[31m-import {[m
+[31m-  ArrowLeft,[m
+[31m-  Save,[m
+[31m-  Eye,[m
+[31m-  Image as ImageIcon,[m
+[31m-  Loader2,[m
+[31m-  CheckCircle2[m
+[31m-} from "lucide-react";[m
+[32m+[m[32mimport { db } from "@/lib/db";[m
+[32m+[m[32mimport { categories } from "@/lib/db/schema";[m
+[32m+[m[32mimport { ResourceForm } from "@/components/admin/ResourceForm";[m
+[32m+[m[32mimport { ArrowLeft } from "lucide-react";[m
+ import Link from "next/link";[m
+[31m-import { toast } from "sonner";[m
+[31m-[m
+[31m-export default function NewResourcePage() {[m
+[31m-  const router = useRouter();[m
+[31m-  const [loading, setLoading] = useState(false);[m
+[31m-  const [categories, setCategories] = useState<any[]>([]);[m
+[31m-  const [formData, setFormData] = useState({[m
+[31m-    title: "",[m
+[31m-    slug: "",[m
+[31m-    content: "",[m
+[31m-    categoryId: "",[m
+[31m-    status: "draft" as "draft" | "published",[m
+[31m-    featuredImageUrl: "",[m
+[31m-    seoDescription: "",[m
+[31m-  });[m
+[31m-[m
+[31m-  useEffect(() => {[m
+[31m-    async function loadCategories() {[m
+[31m-      const cats = await getCategories();[m
+[31m-      setCategories(cats);[m
+[31m-      if (cats.length > 0) {[m
+[31m-        setFormData(prev => ({ ...prev, categoryId: cats[0].id }));[m
+[31m-      }[m
+[31m-    }[m
+[31m-    loadCategories();[m
+[31m-  }, []);[m
+[31m-[m
+[31m-  const generateSlug = (title: string) => {[m
+[31m-    return title[m
+[31m-      .toLowerCase()[m
+[31m-      .replace(/[^a-z0-9]+/g, "-")[m
+[31m-      .replace(/^-+|-+$/g, "");[m
+[31m-  };[m
+[31m-[m
+[31m-  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {[m
+[31m-    const title = e.target.value;[m
+[31m-    setFormData(prev => ({[m
+[31m-      ...prev,[m
+[31m-      title,[m
+[31m-      slug: generateSlug(title)[m
+[31m-    }));[m
+[31m-  };[m
+ [m
+[31m-  const handleSubmit = async (e: React.FormEvent) => {[m
+[31m-    e.preventDefault();[m
+[31m-    if (!formData.categoryId) {[m
+[31m-      toast.error("Please select a category");[m
+[31m-      return;[m
+[31m-    }[m
+[31m-    setLoading(true);[m
+[31m-    try {[m
+[31m-      await createResource(formData);[m
+[31m-      toast.success("Resource created successfully");[m
+[31m-      router.push("/admin/resources");[m
+[31m-      router.refresh();[m
+[31m-    } catch (error) {[m
+[31m-      console.error(error);[m
+[31m-      toast.error("Failed to create resource");[m
+[31m-    } finally {[m
+[31m-      setLoading(false);[m
+[31m-    }[m
+[31m-  };[m
+[32m+[m[32mexport default async function NewResourcePage() {[m
+[32m+[m[32m  const allCategories = await db.select().from(categories);[m
+ [m
+   return ([m
+[31m-    <div className="max-w-5xl mx-auto space-y-8">[m
+[31m-      {/* Header */}[m
+[31m-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">[m
+[32m+[m[32m    <div className="space-y-8">[m
+[32m+[m[32m      <div className="flex items-center gap-4">[m
+[32m+[m[32m        <Link[m[41m [m
+[32m+[m[32m          href="/admin/resources"[m
+[32m+[m[32m          className="p-2 bg-white border border-gray-100 rounded-xl text-gray-400 hover:text-brand-purple hover:border-brand-purple/20 transition-all"[m
+[32m+[m[32m        >[m
+[32m+[m[32m          <ArrowLeft size={20} />[m
+[32m+[m[32m        </Link>[m
+         <div>[m
+[31m-          <Link href="/admin/resources" className="text-xs font-bold text-gray-400 hover:text-brand-purple flex items-center gap-1 mb-2 uppercase tracking-widest transition-colors">[m
+[31m-            <ArrowLeft size={14} /> Back to Resources CMS[m
+[31m-          </Link>[m
+[31m-          <h1 className="text-3xl font-heading font-bold text-brand-black">Create New Resource</h1>[m
+[31m-        </div>[m
+[31m-        <div className="flex gap-3">[m
+[31m-          <button[m
+[31m-            type="button"[m
+[31m-            onClick={() => window.open(`/resources/${formData.slug}?preview=true`, "_blank")}[m
+[31m-            className="px-6 py-3 rounded-xl font-bold border border-gray-200 hover:bg-gray-50 transition-all flex items-center gap-2"[m
+[31m-          >[m
+[31m-            <Eye size={18} /> Preview[m
+[31m-          </button>[m
+[31m-          <button[m
+[31m-            form="resource-form"[m
+[31m-            type="submit"[m
+[31m-            disabled={loading}[m
+[31m-            className="bg-brand-purple text-white px-8 py-3 rounded-xl font-bold hover:bg-opacity-90 transition-all flex items-center gap-2 shadow-lg shadow-brand-purple/20 disabled:opacity-50"[m
+[31m-          >[m
+[31m-            {loading ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}[m
+[31m-            Save Resource[m
+[31m-          </button>[m
+[32m+[m[32m          <h1 className="text-3xl font-heading font-bold text-brand-black">Add New Resource</h1>[m
+[32m+[m[32m          <p className="text-brand-charcoal/60 text-sm">Create a new checklist, template, or guide for your clients.</p>[m
+         </div>[m
+       </div>[m
+ [m
+[31m-      <form id="resource-form" onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-8">[m
+[31m-        {/* Main Content */}[m
+[31m-        <div className="lg:col-span-2 space-y-6">[m
+[31m-          <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">[m
+[31m-            <div>[m
+[31m-              <label className="block text-sm font-bold text-brand-black mb-2">Resource Title</label>[m
+[31m-              <input[m
+[31m-                type="text"[m
+[31m-                required[m
+[31m-                placeholder="e.g. 2024 Individual Tax Checklist"[m
+[31m-                value={formData.title}[m
+[31m-                onChange={handleTitleChange}[m
+[31m-                className="w-full p-4 rounded-xl border border-gray-100 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-brand-purple/20 outline-none transition-all text-lg font-heading"[m
+[31m-              />[m
+[31m-            </div>[m
+[31m-            <div>[m
+[31m-              <label className="block text-sm font-bold text-brand-black mb-2">Short Description</label>[m
+[31m-              <input[m
+[31m-                type="text"[m
+[31m-                value={formData.seoDescription}[m
+[31m-                onChange={(e) => setFormData(prev => ({ ...prev, seoDescription: e.target.value }))}[m
+[31m-                placeholder="Appears under the title on the resources page..."[m
+[31m-                className="w-full p-4 rounded-xl border border-gray-100 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-brand-purple/20 outline-none transition-all"[m
+[31m-              />[m
+[31m-            </div>[m
+[31m-            <div>[m
+[31m-              <label className="block text-sm font-bold text-brand-black mb-2">URL Slug</label>[m
+[31m-              <div className="flex items-center gap-2 p-4 rounded-xl border border-gray-100 bg-gray-50">[m
+[31m-                <span className="text-gray-400 text-sm">yourtaxsource.com/resources/</span>[m
+[31m-                <input[m
+[31m-                  type="text"[m
+[31m-                  required[m
+[31m-                  value={formData.slug}[m
+[31m-                  onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}[m
+[31m-                  className="bg-transparent border-none outline-none text-brand-purple font-bold flex-1"[m
+[31m-                />[m
+[31m-              </div>[m
+[31m-            </div>[m
+[31m-            <div>[m
+[31m-              <label className="block text-sm font-bold text-brand-black mb-2">Content (Markdown supported)</label>[m
+[31m-              <textarea[m
+[31m-                required[m
+[31m-                value={formData.content}[m
+[31m-                onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}[m
+[31m-                rows={15}[m
+[31m-                placeholder="Write your resource content here..."[m
+[31m-                className="w-full p-6 rounded-xl border border-gray-100 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-brand-purple/20 outline-none transition-all font-mono text-sm leading-relaxed"[m
+[31m-              ></textarea>[m
+[31m-            </div>[m
+[31m-          </div>[m
+[31m-        </div>[m
+[31m-[m
+[31m-        {/* Sidebar Settings */}[m
+[31m-        <div className="space-y-6">[m
+[31m-          <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-6">[m
+[31m-            <h3 className="font-bold text-brand-black border-b border-gray-50 pb-4">Resource Settings</h3>[m
+[31m-            <div>[m
+[31m-              <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Status</label>[m
+[31m-              <select[m
+[31m-                value={formData.status}[m
+[31m-                onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as any }))}[m
+[31m-                className="w-full p-3 rounded-xl border border-gray-100 bg-gray-50 outline-none"[m
+[31m-              >[m
+[31m-                <option value="draft">Draft</option>[m
+[31m-                <option value="published">Published</option>[m
+[31m-              </select>[m
+[31m-            </div>[m
+[31m-            <div>[m
+[31m-              <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Category</label>[m
+[31m-              <select[m
+[31m-                value={formData.categoryId}[m
+[31m-                onChange={(e) => setFormData(prev => ({ ...prev, categoryId: e.target.value }))}[m
+[31m-                className="w-full p-3 rounded-xl border border-gray-100 bg-gray-50 outline-none"[m
+[31m-              >[m
+[31m-                {categories.map(cat => ([m
+[31m-                  <option key={cat.id} value={cat.id}>{cat.name}</option>[m
+[31m-                ))}[m
+[31m-              </select>[m
+[31m-            </div>[m
+[31m-            <div>[m
+[31m-              <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Icon/Image URL (Optional)</label>[m
+[31m-              <div className="space-y-3">[m
+[31m-                <input[m
+[31m-                  type="text"[m
+[31m-                  value={formData.featuredImageUrl}[m
+[31m-                  onChange={(e) => setFormData(prev => ({ ...prev, featuredImageUrl: e.target.value }))}[m
+[31m-                  placeholder="https://..."[m
+[31m-                  className="w-full p-3 rounded-xl border border-gray-100 bg-gray-50 text-xs outline-none"[m
+[31m-                />[m
+[31m-              </div>[m
+[31m-            </div>[m
+[31m-          </div>[m
+[31m-          [m
+[31m-          <div className="bg-brand-navy p-6 rounded-3xl shadow-sm text-white space-y-4">[m
+[31m-            <h3 className="font-bold flex items-center gap-2 text-brand-purple">[m
+[31m-              <CheckCircle2 size={18} />[m
+[31m-              Resource Guide[m
+[31m-            </h3>[m
+[31m-            <p className="text-xs text-white/60 leading-relaxed">[m
+[31m-              Resources appear in the public library grouped by category. Ensure checklists are clear and links are valid.[m
+[31m-            </p>[m
+[31m-          </div>[m
+[31m-        </div>[m
+[31m-      </form>[m
+[32m+[m[32m      <ResourceForm categories={allCategories} />[m
+     </div>[m
+   );[m
+ }[m
+[1mdiff --git a/src/app/(admin)/admin/resources/page.tsx b/src/app/(admin)/admin/resources/page.tsx[m
+[1mindex 92fe890..79682f8 100644[m
+[1m--- a/src/app/(admin)/admin/resources/page.tsx[m
+[1m+++ b/src/app/(admin)/admin/resources/page.tsx[m
+[36m@@ -14,7 +14,9 @@[m [mimport {[m
+   LayoutGrid,[m
+   List,[m
+   ExternalLink,[m
+[31m-  ChevronRight[m
+[32m+[m[32m  ChevronRight,[m
+[32m+[m[32m  FileText,[m
+[32m+[m[32m  Download[m
+ } from "lucide-react";[m
+ import { getPosts, deletePost } from "@/actions/resources";[m
+ import Link from "next/link";[m
+[36m@@ -45,7 +47,7 @@[m [mexport default function ResourcesCMSPage() {[m
+ [m
+   const filteredPosts = posts.filter(post => [m
+     post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||[m
+[31m-    post.category.name.toLowerCase().includes(searchQuery.toLowerCase())[m
+[32m+[m[32m    post.category?.name.toLowerCase().includes(searchQuery.toLowerCase())[m
+   );[m
+ [m
+   async function handleDelete(id: string) {[m
+[36m@@ -70,21 +72,19 @@[m [mexport default function ResourcesCMSPage() {[m
+       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">[m
+         <div>[m
+           <h1 className="text-3xl font-heading font-bold text-brand-black">Resources CMS</h1>[m
+[31m-          <p className="text-brand-charcoal/60 text-sm">Manage your tax guides, checklists, and official links.</p>[m
+[31m-        </div>[m
+[31m-        <div className="flex gap-3">[m
+[31m-          <Link [m
+[31m-            href="/admin/resources/new" [m
+[31m-            className="bg-brand-purple text-white px-6 py-3 rounded-xl font-bold hover:bg-opacity-90 transition-all flex items-center gap-2 shadow-lg shadow-brand-purple/20"[m
+[31m-          >[m
+[31m-            <Plus size={20} /> Create New[m
+[31m-          </Link>[m
+[32m+[m[32m          <p className="text-brand-charcoal/60 text-sm">Manage your client checklists, templates, and guides.</p>[m
+         </div>[m
+[32m+[m[32m        <Link[m[41m [m
+[32m+[m[32m          href="/admin/resources/new"[m[41m [m
+[32m+[m[32m          className="bg-brand-purple text-white px-6 py-3 rounded-xl font-bold hover:bg-opacity-90 transition-all flex items-center gap-2 shadow-lg shadow-brand-purple/20"[m
+[32m+[m[32m        >[m
+[32m+[m[32m          <Plus size={20} /> Create New[m
+[32m+[m[32m        </Link>[m
+       </div>[m
+ [m
+       {/* Stats */}[m
+       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">[m
+[31m-        <StatCard title="Total Resources" value={posts.length.toString()} icon={<FileEdit className="text-brand-purple" />} />[m
+[32m+[m[32m        <StatCard title="Total Resources" value={posts.length.toString()} icon={<FileText className="text-brand-purple" />} />[m
+         <StatCard title="Published" value={posts.filter(p => p.status === 'published').length.toString()} icon={<CheckCircle2 className="text-green-500" />} />[m
+         <StatCard title="Drafts" value={posts.filter(p => p.status === 'draft').length.toString()} icon={<Clock className="text-blue-500" />} />[m
+       </div>[m
+[36m@@ -142,14 +142,19 @@[m [mexport default function ResourcesCMSPage() {[m
+                 {filteredPosts.map((post) => ([m
+                   <tr key={post.id} className="hover:bg-gray-50 transition-colors group">[m
+                     <td className="px-6 py-4">[m
+[31m-                      <div className="flex flex-col">[m
+[31m-                        <span className="font-bold text-brand-navy">{post.title}</span>[m
+[31m-                        <span className="text-xs text-gray-400 font-medium truncate max-w-xs">{post.slug}</span>[m
+[32m+[m[32m                      <div className="flex items-center gap-3">[m
+[32m+[m[32m                        <div className="p-2 bg-brand-purple/5 text-brand-purple rounded-lg">[m
+[32m+[m[32m                          <FileText size={18} />[m
+[32m+[m[32m                        </div>[m
+[32m+[m[32m                        <div className="flex flex-col">[m
+[32m+[m[32m                          <span className="font-bold text-brand-navy">{post.title}</span>[m
+[32m+[m[32m                          <span className="text-xs text-gray-400 font-medium truncate max-w-xs">{post.slug}</span>[m
+[32m+[m[32m                        </div>[m
+                       </div>[m
+                     </td>[m
+                     <td className="px-6 py-4">[m
+                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-brand-cloud text-brand-navy border border-brand-navy/10">[m
+[31m-                        {post.category.name}[m
+[32m+[m[32m                        {post.category?.name || 'Uncategorized'}[m
+                       </span>[m
+                     </td>[m
+                     <td className="px-6 py-4">[m
+[36m@@ -165,10 +170,12 @@[m [mexport default function ResourcesCMSPage() {[m
+                     </td>[m
+                     <td className="px-6 py-4 text-right">[m
+                       <div className="flex justify-end gap-2">[m
+[31m-                        <Link href={`/resources/${post.slug}`} target="_blank" className="p-2 hover:bg-white rounded-lg text-gray-400 hover:text-brand-purple transition-all border border-transparent hover:border-gray-100">[m
+[31m-                          <Eye size={18} />[m
+[31m-                        </Link>[m
+[31m-                        <Link href={`/admin/resources/edit/${post.id}`} className="p-2 hover:bg-white rounded-lg text-gray-400 hover:text-brand-purple transition-all border border-transparent hover:border-gray-100">[m
+[32m+[m[32m                        {post.fileUrl && ([m
+[32m+[m[32m                          <a href={post.fileUrl} target="_blank" rel="noopener noreferrer" className="p-2 hover:bg-white rounded-lg text-gray-400 hover:text-blue-500 transition-all border border-transparent hover:border-gray-100">[m
+[32m+[m[32m                            <ExternalLink size={18} />[m
+[32m+[m[32m                          </a>[m
+[32m+[m[32m                        )}[m
+[32m+[m[32m                        <Link href={`/admin/resources/${post.id}`} className="p-2 hover:bg-white rounded-lg text-gray-400 hover:text-brand-purple transition-all border border-transparent hover:border-gray-100">[m
+                           <FileEdit size={18} />[m
+                         </Link>[m
+                         <button [m
+[36m@@ -190,10 +197,10 @@[m [mexport default function ResourcesCMSPage() {[m
+               <div key={post.id} className="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-lg transition-all group flex flex-col h-full shadow-sm">[m
+                 <div className="flex justify-between items-start mb-4">[m
+                   <span className="text-[10px] font-bold px-2 py-1 bg-brand-cloud text-brand-navy rounded-full uppercase tracking-wider">[m
+[31m-                    {post.category.name}[m
+[32m+[m[32m                    {post.category?.name || 'Uncategorized'}[m
+                   </span>[m
+                   <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">[m
+[31m-                    <Link href={`/admin/resources/edit/${post.id}`} className="p-2 hover:bg-gray-50 rounded-lg text-gray-400 hover:text-brand-purple">[m
+[32m+[m[32m                    <Link href={`/admin/resources/${post.id}`} className="p-2 hover:bg-gray-50 rounded-lg text-gray-400 hover:text-brand-purple">[m
+                       <FileEdit size={16} />[m
+                     </Link>[m
+                     <button [m
+[36m@@ -237,15 +244,13 @@[m [mexport default function ResourcesCMSPage() {[m
+ [m
+ function StatCard({ title, value, icon }: { title: string, value: string, icon: React.ReactNode }) {[m
+   return ([m
+[31m-    <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">[m
+[31m-      <div className="flex items-center gap-4">[m
+[31m-        <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center">[m
+[31m-          {icon}[m
+[31m-        </div>[m
+[31m-        <div>[m
+[31m-          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">{title}</p>[m
+[31m-          <h3 className="text-2xl font-black text-brand-navy">{value}</h3>[m
+[31m-        </div>[m
+[32m+[m[32m    <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">[m
+[32m+[m[32m      <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center">[m
+[32m+[m[32m        {icon}[m
+[32m+[m[32m      </div>[m
+[32m+[m[32m      <div>[m
+[32m+[m[32m        <p className="text-xs font-bold text-brand-charcoal/40 uppercase tracking-widest">{title}</p>[m
+[32m+[m[32m        <p className="text-2xl font-heading font-bold text-brand-black">{value}</p>[m
+       </div>[m
+     </div>[m
+   );[m
+[1mdiff --git a/src/app/(admin)/layout.tsx b/src/app/(admin)/layout.tsx[m
+[1mindex 603f9c0..314cda0 100755[m
+[1m--- a/src/app/(admin)/layout.tsx[m
+[1m+++ b/src/app/(admin)/layout.tsx[m
+[36m@@ -37,8 +37,8 @@[m [mexport default async function AdminLayout({[m
+           <AdminNavLink href="/admin/users" icon={<Users size={20} />} label="Users" />[m
+           <AdminNavLink href="/admin/returns" icon={<FileText size={20} />} label="Tax Returns" />[m
+           <AdminNavLink href="/admin/messages" icon={<MessageSquare size={20} />} label="Messages" />[m
+[31m-          <AdminNavLink href="/admin/blog" icon={<FileText size={20} />} label="Blog CMS" />[m
+[31m-          <AdminNavLink href="/admin/resources" icon={<BookOpen size={20} />} label="Resources CMS" />[m
+[32m+[m[32m          <AdminNavLink href="/admin/blog" icon={<BookOpen size={20} />} label="Blog CMS" />[m
+[32m+[m[32m          <AdminNavLink href="/admin/resources" icon={<FileText size={20} />} label="Resources CMS" />[m
+           <AdminNavLink href="/admin/audit" icon={<ShieldCheck size={20} />} label="Audit Logs" />[m
+           <AdminNavLink href="/admin/settings" icon={<Settings size={20} />} label="Settings" />[m
+           [m
+[1mdiff --git a/src/app/(public)/about-jenn/page.tsx b/src/app/(public)/about-jenn/page.tsx[m
+[1mindex f650e0f..6fb700e 100755[m
+[1m--- a/src/app/(public)/about-jenn/page.tsx[m
+[1m+++ b/src/app/(public)/about-jenn/page.tsx[m
+[36m@@ -21,7 +21,7 @@[m [mexport default function AboutJennPage() {[m
+               <div className="lg:w-1/2 relative">[m
+                  <div className="relative aspect-square w-full max-w-md mx-auto rounded-[3rem] overflow-hidden shadow-2xl border-4 border-brand-purple bg-brand-soft-gray">[m
+                     <Image[m
+[31m-                      src="/images/jenn-portrait-authentic.png"[m
+[32m+[m[32m                      src="/images/jenn-office-work.png"[m
+                       alt="Jenn Simpson"[m
+                       fill[m
+                       className="object-cover object-top"[m
+[1mdiff --git a/src/app/(public)/about/page.tsx b/src/app/(public)/about/page.tsx[m
+[1mindex ef2243b..c6f57c4 100755[m
+[1m--- a/src/app/(public)/about/page.tsx[m
+[1m+++ b/src/app/(public)/about/page.tsx[m
+[36m@@ -30,7 +30,7 @@[m [mexport default function AboutPage() {[m
+                   <div className="absolute inset-0 bg-brand-purple rounded-[3rem] rotate-3 scale-95 opacity-10 blur-xl"></div>[m
+                   <div className="relative aspect-[4/5] w-full rounded-[3rem] overflow-hidden shadow-2xl border-4 border-white">[m
+                         <Image[m
+[31m-                          src="/images/jenn-portrait-authentic.png"[m
+[32m+[m[32m                          src="/images/jenn-office-work.png"[m
+                           alt="Jenn Simpson"[m
+                           fill[m
+                           className="object-cover object-top"[m
+[36m@@ -127,10 +127,10 @@[m [mexport default function AboutPage() {[m
+               </div>[m
+               <div className="lg:w-1/2 relative aspect-[4/3] w-full rounded-3xl overflow-hidden shadow-xl border-8 border-brand-soft-gray bg-brand-soft-gray">[m
+                  <Image[m
+[31m-                   src="/images/jenn-focused-office.png"[m
+[31m-                   alt="Jenn at her desk in our office"[m
+[32m+[m[32m                   src="/images/jenn-consultation-office.png"[m
+[32m+[m[32m                   alt="Our Boutique Office"[m
+                    fill[m
+[31m-                   className="object-contain"[m
+[32m+[m[32m                   className="object-cover object-top"[m
+                  />[m
+               </div>[m
+            </div>[m
+[1mdiff --git a/src/app/(public)/contact/page.tsx b/src/app/(public)/contact/page.tsx[m
+[1mindex 04222cf..ff7de54 100755[m
+[1m--- a/src/app/(public)/contact/page.tsx[m
+[1m+++ b/src/app/(public)/contact/page.tsx[m
+[36m@@ -52,7 +52,7 @@[m [mexport default function ContactPage() {[m
+ [m
+               <div className="relative h-[300px] rounded-3xl overflow-hidden shadow-xl border-4 border-brand-cloud">[m
+                 <Image[m
+[31m-                  src="/images/jenn-meeting-authentic.png"[m
+[32m+[m[32m                  src="/images/jenn-consultation-office.png"[m
+                   alt="Jenn Simpson"[m
+                   fill[m
+                   className="object-cover"[m
+[1mdiff --git a/src/app/(public)/page.tsx b/src/app/(public)/page.tsx[m
+[1mindex b7ed457..7c0bbb8 100755[m
+[1m--- a/src/app/(public)/page.tsx[m
+[1m+++ b/src/app/(public)/page.tsx[m
+[36m@@ -53,7 +53,7 @@[m [mexport default function Home() {[m
+               <div className="absolute inset-0 bg-brand-lavender rounded-[3rem] rotate-3 scale-95 opacity-20 blur-2xl"></div>[m
+               <div className="relative h-full w-full rounded-[2.5rem] overflow-hidden shadow-2xl border-4 border-white/10">[m
+                     <Image[m
+[31m-                      src="/images/jenn-hero-authentic.png"[m
+[32m+[m[32m                      src="/images/jenn-hero-desk.png"[m
+                       alt="Jenn Simpson, Your Tax Source"[m
+                       fill[m
+                       className="object-cover object-top"[m
+[36m@@ -76,25 +76,25 @@[m [mexport default function Home() {[m
+                <div>[m
+                   <h3 className="font-bold text-brand-black text-lg">IRS Authorized</h3>[m
+                   <p className="text-sm text-brand-charcoal/60 font-medium">Professional e-File provider for more than a decade.</p>[m
+[31m-                  </div>[m
+[31m-                  </div>[m
+[31m-                  <div className="flex items-center gap-4 bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">[m
+[31m-                  <div className="w-14 h-14 bg-brand-purple/5 rounded-xl flex items-center justify-center flex-shrink-0">[m
+[32m+[m[32m               </div>[m
+[32m+[m[32m            </div>[m
+[32m+[m[32m            <div className="flex items-center gap-4 bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">[m
+[32m+[m[32m               <div className="w-14 h-14 bg-brand-purple/5 rounded-xl flex items-center justify-center flex-shrink-0">[m
+                   <Lock className="text-brand-purple" size={28} />[m
+[31m-                  </div>[m
+[31m-                  <div>[m
+[32m+[m[32m               </div>[m
+[32m+[m[32m               <div>[m
+                   <h3 className="font-bold text-brand-black text-lg">Bank-Grade Security</h3>[m
+                   <p className="text-sm text-brand-charcoal/60 font-medium">Your data is encrypted and protected.</p>[m
+[31m-                  </div>[m
+[31m-                  </div>[m
+[31m-                  <div className="flex items-center gap-4 bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">[m
+[31m-                  <div className="w-14 h-14 bg-brand-purple/5 rounded-xl flex items-center justify-center flex-shrink-0">[m
+[32m+[m[32m               </div>[m
+[32m+[m[32m            </div>[m
+[32m+[m[32m            <div className="flex items-center gap-4 bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">[m
+[32m+[m[32m               <div className="w-14 h-14 bg-brand-purple/5 rounded-xl flex items-center justify-center flex-shrink-0">[m
+                   <TrendingUp className="text-brand-purple" size={28} />[m
+[31m-                  </div>[m
+[31m-                  <div>[m
+[32m+[m[32m               </div>[m
+[32m+[m[32m               <div>[m
+                   <h3 className="font-bold text-brand-black text-lg">Established Expertise</h3>[m
+                   <p className="text-sm text-brand-charcoal/60 font-medium">More than a decade of trusted tax advisory.</p>[m
+[31m-                  </div>[m
+[32m+[m[32m               </div>[m
+             </div>[m
+           </div>[m
+         </div>[m
+[1mdiff --git a/src/app/(public)/resources/page.tsx b/src/app/(public)/resources/page.tsx[m
+[1mindex 7459b73..ed28b23 100755[m
+[1m--- a/src/app/(public)/resources/page.tsx[m
+[1m+++ b/src/app/(public)/resources/page.tsx[m
+[36m@@ -1,15 +1,15 @@[m
+[31m-import {[m
+[31m-  FileText,[m
+[31m-  Globe,[m
+[32m+[m[32mimport {[m[41m [m
+[32m+[m[32m  FileText,[m[41m [m
+[32m+[m[32m  ExternalLink,[m[41m [m
+[32m+[m[32m  Download,[m[41m [m
+[32m+[m[32m  CheckCircle2,[m[41m [m
+[32m+[m[32m  Search,[m[41m [m
+[32m+[m[32m  BookOpen,[m[41m [m
+[32m+[m[32m  Globe,[m[41m [m
+   ShieldCheck,[m
+   Star,[m
+   ChevronRight,[m
+   ArrowRight,[m
+[31m-  Search,[m
+[31m-  BookOpen,[m
+[31m-  ExternalLink,[m
+[31m-  Download,[m
+[31m-  CheckCircle2,[m
+   Info[m
+ } from "lucide-react";[m
+ import Link from "next/link";[m
+[36m@@ -22,71 +22,37 @@[m [mexport default async function ResourcesPage() {[m
+   const categories = await getCategories();[m
+   const allPosts = await getPosts({ status: 'published' });[m
+ [m
+[31m-  // Map to desired display categories[m
+[31m-  const checklistCat = categories.find(c => c.slug === 'checklists');[m
+[31m-  const govCat = categories.find(c => c.slug === 'government-resources');[m
+[31m-  const formsCat = categories.find(c => c.slug === 'helpful-forms' || c.slug === 'useful-forms');[m
+[31m-[m
+[31m-  // Helper to get items for a category[m
+[31m-  const getItemsByCatId = (id: string | undefined) => {[m
+[31m-    if (!id) return [];[m
+[31m-    return allPosts[m
+[31m-      .filter(p => p.categoryId === id)[m
+[32m+[m[32m  // Group resources by category[m
+[32m+[m[32m  const groupedResources = categories.map(cat => {[m
+[32m+[m[32m    const items = allPosts[m
+[32m+[m[32m      .filter(p => p.categoryId === cat.id)[m
+       .map(p => {[m
+[31m-        const isDirectLink = p.featuredImageUrl?.startsWith('http');[m
+[31m-        const isExternalSlug = p.slug.startsWith('http');[m
+[31m-        [m
+[32m+[m[32m        const isExternal = p.fileUrl?.startsWith('http') || p.slug.startsWith('http');[m
+         return {[m
+           id: p.id,[m
+           name: p.title,[m
+[31m-          description: p.seoDescription || "",[m
+[31m-          type: (p.categoryId === govCat?.id) ? "External" : (isDirectLink ? "File" : "PDF"),[m
+[31m-          href: isDirectLink ? p.featuredImageUrl! : (isExternalSlug ? p.slug : `/resources/${p.slug}`),[m
+[31m-          isExternal: (p.categoryId === govCat?.id) || isDirectLink || isExternalSlug[m
+[32m+[m[32m          description: p.content, // Using content as description if seoDescription is missing[m
+[32m+[m[32m          type: p.fileUrl ? (p.fileUrl.endsWith('.pdf') ? 'PDF' : p.fileUrl.endsWith('.xlsx') ? 'XLSX' : 'Link') : 'Info',[m
+[32m+[m[32m          date: new Date(p.publishDate || p.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),[m
+[32m+[m[32m          href: p.fileUrl || (isExternal ? p.slug : `/resources/${p.slug}`),[m
+[32m+[m[32m          isExternal[m
+         };[m
+       });[m
+[31m-  };[m
+[31m-[m
+[31m-  const checklists = getItemsByCatId(checklistCat?.id);[m
+[31m-  const governmentResources = getItemsByCatId(govCat?.id);[m
+[31m-  const helpfulForms = getItemsByCatId(formsCat?.id);[m
+[31m-[m
+[31m-  // Manual ordering for checklists[m
+[31m-  const orderedChecklists = [...checklists].sort((a, b) => {[m
+[31m-    const aName = a.name.toLowerCase();[m
+[31m-    const bName = b.name.toLowerCase();[m
+[31m-    const target = "tax appointment";[m
+[31m-    if (aName.includes(target) && !bName.includes(target)) return -1;[m
+[31m-    if (!aName.includes(target) && bName.includes(target)) return 1;[m
+[31m-    return a.name.localeCompare(b.name);[m
+[31m-  });[m
+ [m
+[31m-  const displaySections = [[m
+[31m-    { [m
+[31m-      title: "Tax Checklists", [m
+[31m-      description: "Stay prepared and organized with our comprehensive checklists for every stage of your tax journey.", [m
+[31m-      icon: <FileText className="text-brand-purple" size={24} />,[m
+[31m-      items: orderedChecklists,[m
+[31m-      slug: 'checklists',[m
+[31m-      buttonText: "View All Checklists"[m
+[31m-    },[m
+[31m-    { [m
+[31m-      title: "Government Resources", [m
+[31m-      description: "Official links to federal and state tax resources and helpful government websites.", [m
+[31m-      icon: <Globe className="text-brand-purple" size={24} />,[m
+[31m-      items: governmentResources,[m
+[31m-      slug: 'government-resources',[m
+[31m-      buttonText: "View All Resources"[m
+[31m-    },[m
+[31m-    { [m
+[31m-      title: "Helpful Forms", [m
+[31m-      description: "Commonly used tax and business forms ready for download.", [m
+[31m-      icon: <BookOpen className="text-brand-purple" size={24} />,[m
+[31m-      items: helpfulForms,[m
+[31m-      slug: 'helpful-forms',[m
+[31m-      buttonText: "View All Forms"[m
+[31m-    }[m
+[31m-  ].filter(s => s.items.length > 0);[m
+[32m+[m[32m    return {[m
+[32m+[m[32m      title: cat.name,[m
+[32m+[m[32m      slug: cat.slug,[m
+[32m+[m[32m      description: cat.slug === 'checklists' ? "Prepare for your filing with these step-by-step guides." :[m
+[32m+[m[32m                   cat.slug === 'government-resources' ? "Official IRS and State Department of Revenue links." :[m
+[32m+[m[32m                   cat.slug === 'helpful-forms' ? "Commonly requested documents for individuals and businesses." :[m
+[32m+[m[32m                   "Helpful tools and information for your tax journey.",[m
+[32m+[m[32m      icon: cat.slug === 'checklists' ? <FileText className="text-brand-purple" size={24} /> :[m
+[32m+[m[32m            cat.slug === 'government-resources' ? <Globe className="text-brand-purple" size={24} /> :[m
+[32m+[m[32m            cat.slug === 'helpful-forms' ? <BookOpen className="text-brand-purple" size={24} /> :[m
+[32m+[m[32m            <FileText className="text-brand-purple" size={24} />,[m
+[32m+[m[32m      items[m
+[32m+[m[32m    };[m
+[32m+[m[32m  }).filter(section => section.items.length > 0);[m
+ [m
+   return ([m
+     <div className="flex flex-col bg-white">[m
+[36m@@ -103,39 +69,38 @@[m [mexport default async function ResourcesPage() {[m
+         </div>[m
+       </section>[m
+ [m
+[31m-      {/* Main Grid Content */}[m
+[31m-      <section className="pb-24 bg-white">[m
+[31m-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">[m
+[31m-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">[m
+[31m-            {displaySections.map((section, idx) => ([m
+[31m-              <div key={idx} className="flex flex-col h-full">[m
+[31m-                <div className="flex items-center gap-4 mb-6">[m
+[31m-                  <div className="w-14 h-14 bg-brand-lavender/20 rounded-2xl flex items-center justify-center border border-brand-purple/10">[m
+[32m+[m[32m      {/* Main Content */}[m
+[32m+[m[32m      <section className="py-24 max-w-7xl mx-auto px-4">[m
+[32m+[m[32m        <div className="space-y-32">[m
+[32m+[m[32m          {groupedResources.map((section, idx) => ([m
+[32m+[m[32m            <div key={idx} className="flex flex-col">[m
+[32m+[m[32m              <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12 border-b border-gray-100 pb-8">[m
+[32m+[m[32m                <div className="flex items-center gap-5">[m
+[32m+[m[32m                  <div className="w-16 h-16 bg-brand-purple/5 rounded-[1.25rem] flex items-center justify-center border border-brand-purple/10 shadow-sm">[m
+                     {section.icon}[m
+                   </div>[m
+[31m-                  <h2 className="text-2xl font-heading font-bold text-brand-black">{section.title}</h2>[m
+[32m+[m[32m                  <h2 className="text-4xl font-heading font-bold text-brand-black">{section.title}</h2>[m
+                 </div>[m
+[31m-                <p className="text-sm text-brand-charcoal/60 mb-8 font-medium leading-relaxed">[m
+[32m+[m[32m                <p className="text-brand-charcoal/60 max-w-md font-medium leading-relaxed">[m
+                   {section.description}[m
+                 </p>[m
+[31m-                <div className="space-y-4 flex-1">[m
+[31m-                  {section.items.map((item, itemIdx) => ([m
+[31m-                    <ResourceCard key={itemIdx} item={item} sectionSlug={section.slug || ""} />[m
+[31m-                  ))}[m
+[31m-                </div>[m
+[31m-                {section.slug && ([m
+[31m-                  <div className="mt-8">[m
+[31m-                    <Link[m
+[31m-                      href={`/resources/category/${section.slug}`}[m
+[31m-                      className="w-full inline-flex items-center justify-center gap-2 border border-brand-purple/20 text-brand-purple py-3 rounded-2xl font-bold hover:bg-brand-lavender/10 transition-all"[m
+[31m-                    >[m
+[31m-                      {section.buttonText} <ChevronRight size={16} />[m
+[31m-                    </Link>[m
+[31m-                  </div>[m
+[31m-                )}[m
+               </div>[m
+[31m-            ))}[m
+[31m-          </div>[m
+[32m+[m
+[32m+[m[32m              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">[m
+[32m+[m[32m                {section.items.map((item, itemIdx) => ([m
+[32m+[m[32m                  <ResourceCard key={itemIdx} item={item} />[m
+[32m+[m[32m                ))}[m
+[32m+[m[32m              </div>[m
+[32m+[m[32m            </div>[m
+[32m+[m[32m          ))}[m
+[32m+[m
+[32m+[m[32m          {groupedResources.length === 0 && ([m
+[32m+[m[32m             <div className="text-center py-20 bg-gray-50 rounded-[3rem] border border-gray-100">[m
+[32m+[m[32m                <FileText className="mx-auto text-gray-200 mb-6" size={64} />[m
+[32m+[m[32m                <h3 className="text-2xl font-heading font-bold text-brand-black">No resources found</h3>[m
+[32m+[m[32m                <p className="text-brand-charcoal/60 mt-2">Check back soon for new guides and checklists.</p>[m
+[32m+[m[32m             </div>[m
+[32m+[m[32m          )}[m
+         </div>[m
+       </section>[m
+ [m
+[36m@@ -240,10 +205,15 @@[m [mexport default async function ResourcesPage() {[m
+                 </div>[m
+               </div>[m
+             </div>[m
+[31m-          </div>[m
+[31m-          [m
+[31m-          <div className="mt-24">[m
+[31m-            <ResourcesFAQ />[m
+[32m+[m
+[32m+[m[32m            {/* FAQ Sub-section */}[m
+[32m+[m[32m            <div className="mt-24 max-w-4xl">[m
+[32m+[m[32m              <h3 className="text-2xl font-heading font-bold text-brand-black mb-10 flex items-center gap-3">[m
+[32m+[m[32m                <div className="w-1.5 h-8 bg-brand-purple rounded-full"></div>[m
+[32m+[m[32m                Common Questions[m
+[32m+[m[32m              </h3>[m
+[32m+[m[32m              <ResourcesFAQ />[m
+[32m+[m[32m            </div>[m
+           </div>[m
+         </div>[m
+       </section>[m
+[36m@@ -277,42 +247,30 @@[m [mexport default async function ResourcesPage() {[m
+   );[m
+ }[m
+ [m
+[31m-function ResourceCard({ item, sectionSlug }: { item: any; sectionSlug: string }) {[m
+[32m+[m[32mfunction ResourceCard({ item }: { item: any }) {[m
+   const isExternal = item.isExternal;[m
+[31m-  let Icon = FileText;[m
+[31m-  if (sectionSlug === 'government-resources') Icon = Globe;[m
+[31m-  if (sectionSlug === 'helpful-forms' || sectionSlug === 'useful-forms') Icon = BookOpen;[m
+[31m-[m
+[32m+[m[41m  [m
+   return ([m
+[31m-    <a[m
+[31m-      href={item.href}[m
+[31m-      target={isExternal ? "_blank" : undefined}[m
+[31m-      rel={isExternal ? "noopener noreferrer" : undefined}[m
+[31m-      className="group block bg-white border border-gray-100 p-5 rounded-2xl hover:border-brand-purple hover:shadow-xl hover:shadow-brand-purple/5 transition-all duration-300"[m
+[32m+[m[32m    <a[m[41m [m
+[32m+[m[32m      href={item.href}[m[41m [m
+[32m+[m[32m      target={isExternal || item.type === 'PDF' || item.type === 'XLSX' ? "_blank" : undefined}[m
+[32m+[m[32m      rel={isExternal || item.type === 'PDF' || item.type === 'XLSX' ? "noopener noreferrer" : undefined}[m
+[32m+[m[32m      className="group block bg-white border border-gray-100 p-8 rounded-[2rem] hover:border-brand-purple hover:shadow-2xl hover:shadow-brand-purple/10 transition-all duration-500 hover:-translate-y-1"[m
+     >[m
+[31m-      <div className="flex items-start gap-4">[m
+[31m-        <div className="w-10 h-10 bg-brand-soft-gray rounded-xl flex items-center justify-center text-brand-purple shrink-0 group-hover:bg-brand-lavender transition-colors">[m
+[31m-          <Icon size={20} />[m
+[31m-        </div>[m
+[31m-        <div className="flex-1">[m
+[31m-          <div className="flex items-center gap-2 mb-1">[m
+[31m-            <h4 className="font-bold text-brand-black group-hover:text-brand-purple transition-colors leading-tight">[m
+[31m-              {item.name}[m
+[31m-            </h4>[m
+[31m-            {item.type && item.type !== "File" && item.type !== "Info" && ([m
+[31m-              <span className="text-[9px] font-black uppercase tracking-widest text-brand-purple bg-brand-lavender/40 px-1.5 py-0.5 rounded-md">[m
+[31m-                {item.type}[m
+[31m-              </span>[m
+[31m-            )}[m
+[31m-          </div>[m
+[31m-          {item.description && ([m
+[31m-            <p className="text-xs text-brand-charcoal/60 leading-relaxed font-medium mt-1">[m
+[31m-              {item.description}[m
+[31m-            </p>[m
+[31m-          )}[m
+[32m+[m[32m      <div className="w-12 h-12 bg-brand-soft-gray rounded-2xl flex items-center justify-center text-brand-purple mb-6 group-hover:bg-brand-lavender transition-colors">[m
+[32m+[m[32m        <FileText size={24} />[m
+[32m+[m[32m      </div>[m
+[32m+[m[41m      [m
+[32m+[m[32m      <h4 className="text-xl font-heading font-bold text-brand-black group-hover:text-brand-purple transition-colors mb-3 leading-tight">{item.name}</h4>[m
+[32m+[m[32m      <p className="text-brand-charcoal/60 text-sm font-medium mb-8 flex-1 leading-relaxed line-clamp-3">{item.description}</p>[m
+[32m+[m[41m      [m
+[32m+[m[32m      <div className="pt-6 border-t border-gray-50 flex items-center justify-between">[m
+[32m+[m[32m        <div className="flex items-center gap-2">[m
+[32m+[m[32m          <span className="text-[10px] font-bold text-brand-charcoal/30 uppercase tracking-widest">Updated:</span>[m
+[32m+[m[32m          <span className="text-[10px] font-black text-brand-charcoal/50 uppercase tracking-widest">{item.date}</span>[m
+         </div>[m
+[31m-        <div className="text-brand-charcoal/20 group-hover:text-brand-purple transition-colors mt-1">[m
+[31m-          {isExternal ? <ExternalLink size={18} /> : <Download size={18} />}[m
+[32m+[m[32m        <div className="text-brand-purple font-black uppercase tracking-widest text-[10px] flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">[m
+[32m+[m[32m          {isExternal ? 'Visit' : 'Download'} <ArrowRight size={14} />[m
+         </div>[m
+       </div>[m
+     </a>[m
+[1mdiff --git a/src/app/(public)/services/page.tsx b/src/app/(public)/services/page.tsx[m
+[1mindex 36a5002..677406e 100755[m
+[1m--- a/src/app/(public)/services/page.tsx[m
+[1m+++ b/src/app/(public)/services/page.tsx[m
+[36m@@ -1,6 +1,6 @@[m
+ import Link from "next/link";[m
+ import Image from "next/image";[m
+[31m-import { User, Briefcase, TrendingUp, Calculator, CheckCircle2, Users, BarChart3 } from "lucide-react";[m
+[32m+[m[32mimport { User, Briefcase, TrendingUp, Calculator, CheckCircle2, Users, BarChart3, Clock } from "lucide-react";[m
+ import { BookingButton } from "@/components/BookingButton";[m
+ [m
+ export default function ServicesPage() {[m
+[36m@@ -35,7 +35,7 @@[m [mexport default function ServicesPage() {[m
+               "Prior Year Amendments"[m
+             ]}[m
+             icon={<Calculator className="w-12 h-12 text-brand-black" />}[m
+[31m-            imageSrc="/images/jenn-prof-woman.png"[m
+[32m+[m[32m            imageSrc="/images/jenn-hero-desk.png"[m
+             />[m
+ [m
+             <ServiceDetail[m
+[1mdiff --git a/src/components/Navbar.tsx b/src/components/Navbar.tsx[m
+[1mindex b9caf38..6d44ba9 100644[m
+[1m--- a/src/components/Navbar.tsx[m
+[1m+++ b/src/components/Navbar.tsx[m
+[36m@@ -32,6 +32,7 @@[m [mexport const Navbar = () => {[m
+     { name: "Pricing", href: "/pricing" },[m
+     { name: "About", href: "/about" },[m
+     { name: "Resources", href: "/resources" },[m
+[32m+[m[32m    { name: "Blog", href: "/blog" },[m
+     { name: "FAQ", href: "/faq" },[m
+     { name: "Contact", href: "/contact" },[m
+   ];[m
+[36m@@ -164,6 +165,14 @@[m [mexport const Navbar = () => {[m
+                 <LayoutDashboard size={20} />[m
+                 Client Portal[m
+               </Link>[m
+[32m+[m[32m              <Link[m[41m [m
+[32m+[m[32m                href="/auth/signup"[m[41m [m
+[32m+[m[32m                onClick={() => setIsOpen(false)}[m
+[32m+[m[32m                className="flex items-center gap-3 p-4 rounded-2xl bg-brand-purple text-white font-bold hover:bg-[#5a3a74] transition-all"[m
+[32m+[m[32m              >[m
+[32m+[m[32m                <UserPlus size={20} />[m
+[32m+[m[32m                Start Intake[m
+[32m+[m[32m              </Link>[m
+             </div>[m
+           </div>[m
+ [m
+[1mdiff --git a/src/components/ResourcesFAQ.tsx b/src/components/ResourcesFAQ.tsx[m
+[1mindex 3f62c86..110c3c9 100644[m
+[1m--- a/src/components/ResourcesFAQ.tsx[m
+[1m+++ b/src/components/ResourcesFAQ.tsx[m
+[36m@@ -3,50 +3,52 @@[m
+ import { useState } from "react";[m
+ import { ChevronRight } from "lucide-react";[m
+ [m
+[31m-interface FaqItemProps {[m
+[31m-  question: string;[m
+[31m-  answer: string;[m
+[32m+[m[32mconst FAQS = [[m
+[32m+[m[32m  {[m
+[32m+[m[32m    question: "What is the TaxSource Tracker™?",[m
+[32m+[m[32m    answer: "A proprietary digital system designed by Jenn Simpson to help you manage tax documents throughout the year. It provides real-time visibility into your tax readiness."[m
+[32m+[m[32m  },[m
+[32m+[m[32m  {[m
+[32m+[m[32m    question: "How do I get access?",[m
+[32m+[m[32m    answer: "Access is included for all Boutique Advisory clients. Standalone purchase is also available for $49."[m
+[32m+[m[32m  },[m
+[32m+[m[32m  {[m
+[32m+[m[32m    question: "Is my data secure?",[m
+[32m+[m[32m    answer: "Yes, we use enterprise-grade AES-256 encryption for all documents and data stored in the Tracker."[m
+[32m+[m[32m  },[m
+[32m+[m[32m  {[m
+[32m+[m[32m    question: "Do I need a separate login?",[m
+[32m+[m[32m    answer: "No, the Tracker is fully integrated into the Client Portal. One secure login gives you access to everything."[m
+[32m+[m[32m  }[m
+[32m+[m[32m];[m
+[32m+[m
+[32m+[m[32mexport function ResourcesFAQ() {[m
+[32m+[m[32m  return ([m
+[32m+[m[32m    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">[m
+[32m+[m[32m      {FAQS.map((faq, idx) => ([m
+[32m+[m[32m        <FaqItem key={idx} question={faq.question} answer={faq.answer} />[m
+[32m+[m[32m      ))}[m
+[32m+[m[32m    </div>[m
+[32m+[m[32m  );[m
+ }[m
+ [m
+[31m-function FaqItem({ question, answer }: FaqItemProps) {[m
+[32m+[m[32mfunction FaqItem({ question, answer }: { question: string, answer: string }) {[m
+   const [isOpen, setIsOpen] = useState(false);[m
+   [m
+   return ([m
+[31m-    <div className="border border-gray-100 rounded-2xl overflow-hidden bg-white">[m
+[32m+[m[32m    <div className="border border-gray-100 rounded-2xl overflow-hidden bg-gray-50/50 hover:bg-white transition-all">[m
+       <button [m
+         onClick={() => setIsOpen(!isOpen)}[m
+[31m-        className="w-full p-6 text-left flex justify-between items-center hover:bg-gray-50 transition-all"[m
+[32m+[m[32m        className="w-full p-6 text-left flex justify-between items-center transition-all"[m
+       >[m
+[31m-        <span className="font-bold text-brand-black">{question}</span>[m
+[31m-        <ChevronRight className={`text-brand-purple transition-transform duration-300 ${isOpen ? 'rotate-90' : ''}`} size={20} />[m
+[32m+[m[32m        <span className="font-bold text-brand-black text-sm">{question}</span>[m
+[32m+[m[32m        <ChevronRight className={`text-brand-purple transition-transform duration-300 ${isOpen ? 'rotate-90' : ''}`} size={18} />[m
+       </button>[m
+       <div className={`overflow-hidden transition-all duration-300 ${isOpen ? 'max-h-40' : 'max-h-0'}`}>[m
+[31m-        <div className="p-6 pt-0 text-sm text-brand-charcoal/60 leading-relaxed border-t border-gray-50">[m
+[32m+[m[32m        <div className="p-6 pt-0 text-xs text-brand-charcoal/60 leading-relaxed border-t border-gray-100">[m
+           {answer}[m
+         </div>[m
+       </div>[m
+     </div>[m
+   );[m
+ }[m
+[31m-[m
+[31m-export function ResourcesFAQ() {[m
+[31m-  return ([m
+[31m-    <div className="mt-20 max-w-4xl mx-auto">[m
+[31m-      <h3 className="text-2xl font-heading font-bold text-brand-black mb-10 text-center">TaxSource Tracker™ FAQ</h3>[m
+[31m-      <div className="space-y-4">[m
+[31m-        <FaqItem [m
+[31m-          question="What is the TaxSource Tracker™?" [m
+[31m-          answer="It is a proprietary digital dashboard and organizational system designed by Jenn Simpson to help clients categorize, track, and manage their tax documentation throughout the year."[m
+[31m-        />[m
+[31m-        <FaqItem [m
+[31m-          question="How do I get access?" [m
+[31m-          answer="The tracker is included for all 'Boutique Advisory' clients. It can also be purchased as a standalone resource for individuals and businesses who want to improve their organization."[m
+[31m-        />[m
+[31m-        <FaqItem [m
+[31m-          question="Is my data secure in the tracker?" [m
+[31m-          answer="Yes. The tracker uses the same bank-grade 256-bit encryption as our main Secure Client Portal, ensuring your financial data remains private and protected."[m
+[31m-        />[m
+[31m-      </div>[m
+[31m-    </div>[m
+[31m-  );[m
+[31m-}[m
+[1mdiff --git a/src/components/admin/ResourceForm.tsx b/src/components/admin/ResourceForm.tsx[m
+[1mnew file mode 100644[m
+[1mindex 0000000..f94784b[m
+[1m--- /dev/null[m
+[1m+++ b/src/components/admin/ResourceForm.tsx[m
+[36m@@ -0,0 +1,248 @@[m
+[32m+[m[32m"use client";[m
+[32m+[m
+[32m+[m[32mimport { useState } from "react";[m
+[32m+[m[32mimport { useRouter } from "next/navigation";[m
+[32m+[m[32mimport {[m[41m [m
+[32m+[m[32m  Save,[m[41m [m
+[32m+[m[32m  X,[m[41m [m
+[32m+[m[32m  Upload,[m[41m [m
+[32m+[m[32m  FileText,[m[41m [m
+[32m+[m[32m  Loader2,[m
+[32m+[m[32m  CheckCircle2,[m
+[32m+[m[32m  AlertCircle[m
+[32m+[m[32m} from "lucide-react";[m
+[32m+[m[32mimport Link from "next/link";[m
+[32m+[m[32mimport { getResourceUploadUrl, createResource, updateResource } from "@/actions/resources";[m
+[32m+[m
+[32m+[m[32minterface Category {[m
+[32m+[m[32m  id: string;[m
+[32m+[m[32m  name: string;[m
+[32m+[m[32m}[m
+[32m+[m
+[32m+[m[32minterface ResourceFormProps {[m
+[32m+[m[32m  initialData?: any;[m
+[32m+[m[32m  categories: Category[];[m
+[32m+[m[32m}[m
+[32m+[m
+[32m+[m[32mexport function ResourceForm({ initialData, categories }: ResourceFormProps) {[m
+[32m+[m[32m  const router = useRouter();[m
+[32m+[m[32m  const [isSubmitting, setIsSubmitting] = useState(false);[m
+[32m+[m[32m  const [uploadProgress, setUploadProgress] = useState(0);[m
+[32m+[m[32m  const [error, setError] = useState<string | null>(null);[m
+[32m+[m[32m  const [file, setFile] = useState<File | null>(null);[m
+[32m+[m
+[32m+[m[32m  const isEdit = !!initialData;[m
+[32m+[m
+[32m+[m[32m  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {[m
+[32m+[m[32m    event.preventDefault();[m
+[32m+[m[32m    setIsSubmitting(true);[m
+[32m+[m[32m    setError(null);[m
+[32m+[m
+[32m+[m[32m    const formData = new FormData(event.currentTarget);[m
+[32m+[m[32m    const title = formData.get("title") as string;[m
+[32m+[m[32m    const categoryId = formData.get("categoryId") as string;[m
+[32m+[m[32m    const status = formData.get("status") as string;[m
+[32m+[m[32m    const content = formData.get("content") as string;[m
+[32m+[m[32m    const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");[m
+[32m+[m
+[32m+[m[32m    try {[m
+[32m+[m[32m      let fileUrl = initialData?.fileUrl;[m
+[32m+[m
+[32m+[m[32m      // 1. Upload file if selected[m
+[32m+[m[32m      if (file) {[m
+[32m+[m[32m        setUploadProgress(10);[m
+[32m+[m[32m        const { uploadUrl, s3Key } = await getResourceUploadUrl(file.name, file.type);[m
+[32m+[m[32m        setUploadProgress(30);[m
+[32m+[m
+[32m+[m[32m        const uploadResponse = await fetch(uploadUrl, {[m
+[32m+[m[32m          method: "PUT",[m
+[32m+[m[32m          body: file,[m
+[32m+[m[32m          headers: {[m
+[32m+[m[32m            "Content-Type": file.type,[m
+[32m+[m[32m          },[m
+[32m+[m[32m        });[m
+[32m+[m
+[32m+[m[32m        if (!uploadResponse.ok) throw new Error("Failed to upload file to S3");[m
+[32m+[m[41m        [m
+[32m+[m[32m        setUploadProgress(70);[m
+[32m+[m[32m        // Construct the public URL (in a real app, this would use a CDN or public bucket URL)[m
+[32m+[m[32m        fileUrl = `https://${process.env.NEXT_PUBLIC_AWS_S3_BUCKET}.s3.amazonaws.com/${s3Key}`;[m
+[32m+[m[32m      }[m
+[32m+[m
+[32m+[m[32m      // 2. Save to database[m
+[32m+[m[32m      const data = {[m
+[32m+[m[32m        title,[m
+[32m+[m[32m        slug,[m
+[32m+[m[32m        content,[m
+[32m+[m[32m        categoryId,[m
+[32m+[m[32m        status,[m
+[32m+[m[32m        fileUrl,[m
+[32m+[m[32m      };[m
+[32m+[m
+[32m+[m[32m      if (isEdit) {[m
+[32m+[m[32m        await updateResource(initialData.id, data);[m
+[32m+[m[32m      } else {[m
+[32m+[m[32m        await createResource(data);[m
+[32m+[m[32m      }[m
+[32m+[m
+[32m+[m[32m      setUploadProgress(100);[m
+[32m+[m[32m      router.push("/admin/resources");[m
+[32m+[m[32m      router.refresh();[m
+[32m+[m[32m    } catch (err: any) {[m
+[32m+[m[32m      console.error(err);[m
+[32m+[m[32m      setError(err.message || "An error occurred while saving the resource.");[m
+[32m+[m[32m    } finally {[m
+[32m+[m[32m      setIsSubmitting(false);[m
+[32m+[m[32m    }[m
+[32m+[m[32m  }[m
+[32m+[m
+[32m+[m[32m  return ([m
+[32m+[m[32m    <form onSubmit={handleSubmit} className="space-y-8">[m
+[32m+[m[32m      {error && ([m
+[32m+[m[32m        <div className="p-4 bg-red-50 border border-red-100 rounded-xl flex items-center gap-3 text-red-600">[m
+[32m+[m[32m          <AlertCircle size={20} />[m
+[32m+[m[32m          <p className="text-sm font-medium">{error}</p>[m
+[32m+[m[32m        </div>[m
+[32m+[m[32m      )}[m
+[32m+[m
+[32m+[m[32m      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">[m
+[32m+[m[32m        {/* Main Content */}[m
+[32m+[m[32m        <div className="lg:col-span-2 space-y-6">[m
+[32m+[m[32m          <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">[m
+[32m+[m[32m            <div>[m
+[32m+[m[32m              <label htmlFor="title" className="block text-sm font-bold text-brand-black mb-2 uppercase tracking-widest">Resource Title</label>[m
+[32m+[m[32m              <input[m[41m [m
+[32m+[m[32m                id="title"[m
+[32m+[m[32m                name="title"[m
+[32m+[m[32m                type="text"[m[41m [m
+[32m+[m[32m                required[m
+[32m+[m[32m                defaultValue={initialData?.title}[m
+[32m+[m[32m                className="w-full bg-gray-50 border border-gray-100 rounded-xl py-3 px-4 outline-none focus:ring-2 focus:ring-brand-purple/20 transition-all font-medium"[m
+[32m+[m[32m                placeholder="e.g. 2024 Tax Checklist"[m
+[32m+[m[32m              />[m
+[32m+[m[32m            </div>[m
+[32m+[m
+[32m+[m[32m            <div>[m
+[32m+[m[32m              <label htmlFor="content" className="block text-sm font-bold text-brand-black mb-2 uppercase tracking-widest">Description / Content</label>[m
+[32m+[m[32m              <textarea[m[41m [m
+[32m+[m[32m                id="content"[m
+[32m+[m[32m                name="content"[m
+[32m+[m[32m                rows={6}[m
+[32m+[m[32m                required[m
+[32m+[m[32m                defaultValue={initialData?.content}[m
+[32m+[m[32m                className="w-full bg-gray-50 border border-gray-100 rounded-xl py-3 px-4 outline-none focus:ring-2 focus:ring-brand-purple/20 transition-all font-medium"[m
+[32m+[m[32m                placeholder="Describe this resource..."[m
+[32m+[m[32m              />[m
+[32m+[m[32m            </div>[m
+[32m+[m[32m          </div>[m
+[32m+[m
+[32m+[m[32m          <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">[m
+[32m+[m[32m            <label className="block text-sm font-bold text-brand-black mb-4 uppercase tracking-widest">Resource File</label>[m
+[32m+[m[41m            [m
+[32m+[m[32m            <div className={`relative border-2 border-dashed rounded-2xl p-8 transition-all flex flex-col items-center justify-center text-center ${file ? 'border-brand-purple bg-brand-purple/5' : 'border-gray-200 hover:border-brand-purple/50'}`}>[m
+[32m+[m[32m              <input[m[41m [m
+[32m+[m[32m                type="file"[m[41m [m
+[32m+[m[32m                onChange={(e) => setFile(e.target.files?.[0] || null)}[m
+[32m+[m[32m                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"[m
+[32m+[m[32m                accept=".pdf,.xlsx,.xls,.docx,.doc"[m
+[32m+[m[32m              />[m
+[32m+[m[41m              [m
+[32m+[m[32m              <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mb-4 text-gray-400">[m
+[32m+[m[32m                {file ? <FileText className="text-brand-purple" size={32} /> : <Upload size={32} />}[m
+[32m+[m[32m              </div>[m
+[32m+[m[41m              [m
+[32m+[m[32m              {file ? ([m
+[32m+[m[32m                <div>[m
+[32m+[m[32m                  <p className="font-bold text-brand-black">{file.name}</p>[m
+[32m+[m[32m                  <p className="text-xs text-gray-400">{(file.size / 1024).toFixed(1)} KB</p>[m
+[32m+[m[32m                  <button[m[41m [m
+[32m+[m[32m                    type="button"[m[41m [m
+[32m+[m[32m                    onClick={() => setFile(null)}[m
+[32m+[m[32m                    className="mt-4 text-xs font-bold text-red-500 hover:underline"[m
+[32m+[m[32m                  >[m
+[32m+[m[32m                    Remove File[m
+[32m+[m[32m                  </button>[m
+[32m+[m[32m                </div>[m
+[32m+[m[32m              ) : ([m
+[32m+[m[32m                <div>[m
+[32m+[m[32m                  <p className="font-bold text-brand-black">Click or drag to upload</p>[m
+[32m+[m[32m                  <p className="text-xs text-gray-400 mt-1">PDF, Excel, or Word (Max 10MB)</p>[m
+[32m+[m[32m                </div>[m
+[32m+[m[32m              )}[m
+[32m+[m[32m            </div>[m
+[32m+[m
+[32m+[m[32m            {initialData?.fileUrl && !file && ([m
+[32m+[m[32m              <div className="mt-4 flex items-center gap-2 p-3 bg-gray-50 rounded-xl border border-gray-100">[m
+[32m+[m[32m                <FileText size={16} className="text-gray-400" />[m
+[32m+[m[32m                <span className="text-xs font-medium text-brand-charcoal/60 truncate flex-1">{initialData.fileUrl}</span>[m
+[32m+[m[32m                <span className="text-[10px] font-black uppercase tracking-widest text-green-600 bg-green-50 px-2 py-0.5 rounded border border-green-100">Current</span>[m
+[32m+[m[32m              </div>[m
+[32m+[m[32m            )}[m
+[32m+[m[32m          </div>[m
+[32m+[m[32m        </div>[m
+[32m+[m
+[32m+[m[32m        {/* Sidebar */}[m
+[32m+[m[32m        <div className="space-y-6">[m
+[32m+[m[32m          <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">[m
+[32m+[m[32m            <div>[m
+[32m+[m[32m              <label htmlFor="categoryId" className="block text-sm font-bold text-brand-black mb-2 uppercase tracking-widest">Category</label>[m
+[32m+[m[32m              <select[m[41m [m
+[32m+[m[32m                id="categoryId"[m
+[32m+[m[32m                name="categoryId"[m
+[32m+[m[32m                required[m
+[32m+[m[32m                defaultValue={initialData?.categoryId}[m
+[32m+[m[32m                className="w-full bg-gray-50 border border-gray-100 rounded-xl py-3 px-4 outline-none focus:ring-2 focus:ring-brand-purple/20 transition-all font-medium appearance-none"[m
+[32m+[m[32m              >[m
+[32m+[m[32m                {categories.map(cat => ([m
+[32m+[m[32m                  <option key={cat.id} value={cat.id}>{cat.name}</option>[m
+[32m+[m[32m                ))}[m
+[32m+[m[32m              </select>[m
+[32m+[m[32m            </div>[m
+[32m+[m
+[32m+[m[32m            <div>[m
+[32m+[m[32m              <label htmlFor="status" className="block text-sm font-bold text-brand-black mb-2 uppercase tracking-widest">Status</label>[m
+[32m+[m[32m              <select[m[41m [m
+[32m+[m[32m                id="status"[m
+[32m+[m[32m                name="status"[m
+[32m+[m[32m                required[m
+[32m+[m[32m                defaultValue={initialData?.status || "draft"}[m
+[32m+[m[32m                className="w-full bg-gray-50 border border-gray-100 rounded-xl py-3 px-4 outline-none focus:ring-2 focus:ring-brand-purple/20 transition-all font-medium appearance-none"[m
+[32m+[m[32m              >[m
+[32m+[m[32m                <option value="draft">Draft</option>[m
+[32m+[m[32m                <option value="published">Published</option>[m
+[32m+[m[32m              </select>[m
+[32m+[m[32m            </div>[m
+[32m+[m[32m          </div>[m
+[32m+[m
+[32m+[m[32m          <div className="flex flex-col gap-3">[m
+[32m+[m[32m            <button[m[41m [m
+[32m+[m[32m              type="submit"[m
+[32m+[m[32m              disabled={isSubmitting}[m
+[32m+[m[32m              className="w-full bg-brand-purple text-white py-4 rounded-2xl font-bold hover:bg-opacity-90 transition-all flex items-center justify-center gap-2 shadow-lg shadow-brand-purple/20 disabled:opacity-70"[m
+[32m+[m[32m            >[m
+[32m+[m[32m              {isSubmitting ? ([m
+[32m+[m[32m                <>[m
+[32m+[m[32m                  <Loader2 className="animate-spin" size={20} />[m
+[32m+[m[32m                  {uploadProgress > 0 && uploadProgress < 100 ? `Uploading... ${uploadProgress}%` : "Saving..."}[m
+[32m+[m[32m                </>[m
+[32m+[m[32m              ) : ([m
+[32m+[m[32m                <>[m
+[32m+[m[32m                  <Save size={20} />[m
+[32m+[m[32m                  {isEdit ? "Update Resource" : "Create Resource"}[m
+[32m+[m[32m                </>[m
+[32m+[m[32m              )}[m
+[32m+[m[32m            </button>[m
+[32m+[m[41m            [m
+[32m+[m[32m            <Link[m[41m [m
+[32m+[m[32m              href="/admin/resources"[m
+[32m+[m[32m              className="w-full bg-white border border-gray-100 py-4 rounded-2xl font-bold text-brand-charcoal hover:bg-gray-50 transition-all flex items-center justify-center gap-2"[m
+[32m+[m[32m            >[m
+[32m+[m[32m              <X size={20} />[m
+[32m+[m[32m              Cancel[m
+[32m+[m[32m            </Link>[m
+[32m+[m[32m          </div>[m
+[32m+[m[32m        </div>[m
+[32m+[m[32m      </div>[m
+[32m+[m[32m    </form>[m
+[32m+[m[32m  );[m
+[32m+[m[32m}[m
+[1mdiff --git a/update_home.sh b/update_home.sh[m
+[1mnew file mode 100644[m
+[1mindex 0000000..66e0689[m
+[1m--- /dev/null[m
+[1m+++ b/update_home.sh[m
+[36m@@ -0,0 +1,4 @@[m
+[32m+[m[32msed -i 's/jenn-hero.png/jenn-portrait-modern.png/' src/app/\(public\)/page.tsx[m
+[32m+[m[32msed -i 's/jenn-meeting-clients.png/jenn-consultation.png/' src/app/\(public\)/page.tsx[m
+[32m+[m[32msed -i 's/jenn-working-laptop.png/jenn-desk-modern.png/' src/app/\(public\)/page.tsx[m
+[32m+[m[32msed -i 's/jenn-consultation.png/jenn-workspace-cozy.png/2' src/app/\(public\)/page.tsx[m
