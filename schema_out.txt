@@ -1,0 +1,21 @@
+CREATE TABLE `posts` (
+	`id` text PRIMARY KEY NOT NULL,
+	`title` text NOT NULL,
+	`slug` text NOT NULL,
+	`content` text NOT NULL,
+	`featured_image_url` text,
+	`publish_date` integer,
+	`status` text DEFAULT 'draft' NOT NULL,
+	`category_id` text NOT NULL,
+	`is_featured` integer DEFAULT false NOT NULL,
+	`author_id` text NOT NULL,
+	`seo_title` text,
+	`seo_description` text,
+	`social_title` text,
+	`social_description` text,
+	`social_image` text,
+	`created_at` integer DEFAULT (strftime('%s', 'now')) NOT NULL,
+	`updated_at` integer DEFAULT (strftime('%s', 'now')) NOT NULL, type TEXT NOT NULL DEFAULT 'blog',
+	FOREIGN KEY (`category_id`) REFERENCES `categories`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`author_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action
+)

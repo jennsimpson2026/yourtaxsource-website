@@ -14,9 +14,7 @@ import {
   LayoutGrid,
   List,
   ExternalLink,
-  ChevronRight,
-  FileText,
-  Download
+  ChevronRight
 } from "lucide-react";
 import { getPosts, deletePost } from "@/actions/resources";
 import Link from "next/link";
@@ -47,7 +45,7 @@ export default function ResourcesCMSPage() {
 
   const filteredPosts = posts.filter(post => 
     post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    post.category?.name.toLowerCase().includes(searchQuery.toLowerCase())
+    post.category.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   async function handleDelete(id: string) {
@@ -72,19 +70,21 @@ export default function ResourcesCMSPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-heading font-bold text-brand-black">Resources CMS</h1>
-          <p className="text-brand-charcoal/60 text-sm">Manage your client checklists, templates, and guides.</p>
+          <p className="text-brand-charcoal/60 text-sm">Manage your tax guides, checklists, and official links.</p>
         </div>
-        <Link 
-          href="/admin/resources/new" 
-          className="bg-brand-purple text-white px-6 py-3 rounded-xl font-bold hover:bg-opacity-90 transition-all flex items-center gap-2 shadow-lg shadow-brand-purple/20"
-        >
-          <Plus size={20} /> Create New
-        </Link>
+        <div className="flex gap-3">
+          <Link 
+            href="/admin/resources/new" 
+            className="bg-brand-purple text-white px-6 py-3 rounded-xl font-bold hover:bg-opacity-90 transition-all flex items-center gap-2 shadow-lg shadow-brand-purple/20"
+          >
+            <Plus size={20} /> Create New
+          </Link>
+        </div>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <StatCard title="Total Resources" value={posts.length.toString()} icon={<FileText className="text-brand-purple" />} />
+        <StatCard title="Total Resources" value={posts.length.toString()} icon={<FileEdit className="text-brand-purple" />} />
         <StatCard title="Published" value={posts.filter(p => p.status === 'published').length.toString()} icon={<CheckCircle2 className="text-green-500" />} />
         <StatCard title="Drafts" value={posts.filter(p => p.status === 'draft').length.toString()} icon={<Clock className="text-blue-500" />} />
       </div>
@@ -142,19 +142,14 @@ export default function ResourcesCMSPage() {
                 {filteredPosts.map((post) => (
                   <tr key={post.id} className="hover:bg-gray-50 transition-colors group">
                     <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-brand-purple/5 text-brand-purple rounded-lg">
-                          <FileText size={18} />
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="font-bold text-brand-navy">{post.title}</span>
-                          <span className="text-xs text-gray-400 font-medium truncate max-w-xs">{post.slug}</span>
-                        </div>
+                      <div className="flex flex-col">
+                        <span className="font-bold text-brand-navy">{post.title}</span>
+                        <span className="text-xs text-gray-400 font-medium truncate max-w-xs">{post.slug}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-brand-cloud text-brand-navy border border-brand-navy/10">
-                        {post.category?.name || 'Uncategorized'}
+                        {post.category.name}
                       </span>
                     </td>
                     <td className="px-6 py-4">
@@ -170,12 +165,10 @@ export default function ResourcesCMSPage() {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end gap-2">
-                        {post.fileUrl && (
-                          <a href={post.fileUrl} target="_blank" rel="noopener noreferrer" className="p-2 hover:bg-white rounded-lg text-gray-400 hover:text-blue-500 transition-all border border-transparent hover:border-gray-100">
-                            <ExternalLink size={18} />
-                          </a>
-                        )}
-                        <Link href={`/admin/resources/${post.id}`} className="p-2 hover:bg-white rounded-lg text-gray-400 hover:text-brand-purple transition-all border border-transparent hover:border-gray-100">
+                        <Link href={`/resources/${post.slug}`} target="_blank" className="p-2 hover:bg-white rounded-lg text-gray-400 hover:text-brand-purple transition-all border border-transparent hover:border-gray-100">
+                          <Eye size={18} />
+                        </Link>
+                        <Link href={`/admin/resources/edit/${post.id}`} className="p-2 hover:bg-white rounded-lg text-gray-400 hover:text-brand-purple transition-all border border-transparent hover:border-gray-100">
                           <FileEdit size={18} />
                         </Link>
                         <button 
@@ -197,10 +190,10 @@ export default function ResourcesCMSPage() {
               <div key={post.id} className="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-lg transition-all group flex flex-col h-full shadow-sm">
                 <div className="flex justify-between items-start mb-4">
                   <span className="text-[10px] font-bold px-2 py-1 bg-brand-cloud text-brand-navy rounded-full uppercase tracking-wider">
-                    {post.category?.name || 'Uncategorized'}
+                    {post.category.name}
                   </span>
                   <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Link href={`/admin/resources/${post.id}`} className="p-2 hover:bg-gray-50 rounded-lg text-gray-400 hover:text-brand-purple">
+                    <Link href={`/admin/resources/edit/${post.id}`} className="p-2 hover:bg-gray-50 rounded-lg text-gray-400 hover:text-brand-purple">
                       <FileEdit size={16} />
                     </Link>
                     <button 
@@ -244,13 +237,15 @@ export default function ResourcesCMSPage() {
 
 function StatCard({ title, value, icon }: { title: string, value: string, icon: React.ReactNode }) {
   return (
-    <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
-      <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center">
-        {icon}
-      </div>
-      <div>
-        <p className="text-xs font-bold text-brand-charcoal/40 uppercase tracking-widest">{title}</p>
-        <p className="text-2xl font-heading font-bold text-brand-black">{value}</p>
+    <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+      <div className="flex items-center gap-4">
+        <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center">
+          {icon}
+        </div>
+        <div>
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">{title}</p>
+          <h3 className="text-2xl font-black text-brand-navy">{value}</h3>
+        </div>
       </div>
     </div>
   );

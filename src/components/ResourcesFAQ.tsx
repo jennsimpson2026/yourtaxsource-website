@@ -3,51 +3,49 @@
 import { useState } from "react";
 import { ChevronRight } from "lucide-react";
 
-const FAQS = [
-  {
-    question: "What is the TaxSource Tracker™?",
-    answer: "A proprietary digital system designed by Jenn Simpson to help you manage tax documents throughout the year. It provides real-time visibility into your tax readiness."
-  },
-  {
-    question: "How do I get access?",
-    answer: "Access is included for all Boutique Advisory clients. Standalone purchase is also available for $49."
-  },
-  {
-    question: "Is my data secure?",
-    answer: "Yes, we use enterprise-grade AES-256 encryption for all documents and data stored in the Tracker."
-  },
-  {
-    question: "Do I need a separate login?",
-    answer: "No, the Tracker is fully integrated into the Client Portal. One secure login gives you access to everything."
-  }
-];
+interface FaqItemProps {
+  question: string;
+  answer: string;
+}
 
-export function ResourcesFAQ() {
+function FaqItem({ question, answer }: FaqItemProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {FAQS.map((faq, idx) => (
-        <FaqItem key={idx} question={faq.question} answer={faq.answer} />
-      ))}
+    <div className="border border-gray-100 rounded-2xl overflow-hidden bg-white">
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full p-6 text-left flex justify-between items-center hover:bg-gray-50 transition-all"
+      >
+        <span className="font-bold text-brand-black">{question}</span>
+        <ChevronRight className={`text-brand-purple transition-transform duration-300 ${isOpen ? 'rotate-90' : ''}`} size={20} />
+      </button>
+      <div className={`overflow-hidden transition-all duration-300 ${isOpen ? 'max-h-40' : 'max-h-0'}`}>
+        <div className="p-6 pt-0 text-sm text-brand-charcoal/60 leading-relaxed border-t border-gray-50">
+          {answer}
+        </div>
+      </div>
     </div>
   );
 }
 
-function FaqItem({ question, answer }: { question: string, answer: string }) {
-  const [isOpen, setIsOpen] = useState(false);
-  
+export function ResourcesFAQ() {
   return (
-    <div className="border border-gray-100 rounded-2xl overflow-hidden bg-gray-50/50 hover:bg-white transition-all">
-      <button 
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full p-6 text-left flex justify-between items-center transition-all"
-      >
-        <span className="font-bold text-brand-black text-sm">{question}</span>
-        <ChevronRight className={`text-brand-purple transition-transform duration-300 ${isOpen ? 'rotate-90' : ''}`} size={18} />
-      </button>
-      <div className={`overflow-hidden transition-all duration-300 ${isOpen ? 'max-h-40' : 'max-h-0'}`}>
-        <div className="p-6 pt-0 text-xs text-brand-charcoal/60 leading-relaxed border-t border-gray-100">
-          {answer}
-        </div>
+    <div className="mt-20 max-w-4xl mx-auto">
+      <h3 className="text-2xl font-heading font-bold text-brand-black mb-10 text-center">TaxSource Tracker™ FAQ</h3>
+      <div className="space-y-4">
+        <FaqItem 
+          question="What is the TaxSource Tracker™?" 
+          answer="It is a proprietary digital dashboard and organizational system designed by Jenn Simpson to help clients categorize, track, and manage their tax documentation throughout the year."
+        />
+        <FaqItem 
+          question="How do I get access?" 
+          answer="The tracker is included for all 'Boutique Advisory' clients. It can also be purchased as a standalone resource for individuals and businesses who want to improve their organization."
+        />
+        <FaqItem 
+          question="Is my data secure in the tracker?" 
+          answer="Yes. The tracker uses the same bank-grade 256-bit encryption as our main Secure Client Portal, ensuring your financial data remains private and protected."
+        />
       </div>
     </div>
   );

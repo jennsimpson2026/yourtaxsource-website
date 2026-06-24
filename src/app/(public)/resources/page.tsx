@@ -1,15 +1,15 @@
-import { 
-  FileText, 
-  ExternalLink, 
-  Download, 
-  CheckCircle2, 
-  Search, 
-  BookOpen, 
-  Globe, 
+import {
+  FileText,
+  Globe,
   ShieldCheck,
   Star,
   ChevronRight,
   ArrowRight,
+  Search,
+  BookOpen,
+  ExternalLink,
+  Download,
+  CheckCircle2,
   Info
 } from "lucide-react";
 import Link from "next/link";
@@ -22,37 +22,71 @@ export default async function ResourcesPage() {
   const categories = await getCategories();
   const allPosts = await getPosts({ status: 'published' });
 
-  // Group resources by category
-  const groupedResources = categories.map(cat => {
-    const items = allPosts
-      .filter(p => p.categoryId === cat.id)
+  // Map to desired display categories
+  const checklistCat = categories.find(c => c.slug === 'checklists');
+  const govCat = categories.find(c => c.slug === 'government-resources');
+  const formsCat = categories.find(c => c.slug === 'helpful-forms' || c.slug === 'useful-forms');
+
+  // Helper to get items for a category
+  const getItemsByCatId = (id: string | undefined) => {
+    if (!id) return [];
+    return allPosts
+      .filter(p => p.categoryId === id)
       .map(p => {
-        const isExternal = p.fileUrl?.startsWith('http') || p.slug.startsWith('http');
+        const isDirectLink = p.featuredImageUrl?.startsWith('http');
+        const isExternalSlug = p.slug.startsWith('http');
+        
         return {
           id: p.id,
           name: p.title,
-          description: p.content, // Using content as description if seoDescription is missing
-          type: p.fileUrl ? (p.fileUrl.endsWith('.pdf') ? 'PDF' : p.fileUrl.endsWith('.xlsx') ? 'XLSX' : 'Link') : 'Info',
-          date: new Date(p.publishDate || p.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
-          href: p.fileUrl || (isExternal ? p.slug : `/resources/${p.slug}`),
-          isExternal
+          description: p.seoDescription || "",
+          type: (p.categoryId === govCat?.id) ? "External" : (isDirectLink ? "File" : "PDF"),
+          href: isDirectLink ? p.featuredImageUrl! : (isExternalSlug ? p.slug : `/resources/${p.slug}`),
+          isExternal: (p.categoryId === govCat?.id) || isDirectLink || isExternalSlug
         };
       });
+  };
 
-    return {
-      title: cat.name,
-      slug: cat.slug,
-      description: cat.slug === 'checklists' ? "Prepare for your filing with these step-by-step guides." :
-                   cat.slug === 'government-resources' ? "Official IRS and State Department of Revenue links." :
-                   cat.slug === 'helpful-forms' ? "Commonly requested documents for individuals and businesses." :
-                   "Helpful tools and information for your tax journey.",
-      icon: cat.slug === 'checklists' ? <FileText className="text-brand-purple" size={24} /> :
-            cat.slug === 'government-resources' ? <Globe className="text-brand-purple" size={24} /> :
-            cat.slug === 'helpful-forms' ? <BookOpen className="text-brand-purple" size={24} /> :
-            <FileText className="text-brand-purple" size={24} />,
-      items
-    };
-  }).filter(section => section.items.length > 0);
+  const checklists = getItemsByCatId(checklistCat?.id);
+  const governmentResources = getItemsByCatId(govCat?.id);
+  const helpfulForms = getItemsByCatId(formsCat?.id);
+
+  // Manual ordering for checklists
+  const orderedChecklists = [...checklists].sort((a, b) => {
+    const aName = a.name.toLowerCase();
+    const bName = b.name.toLowerCase();
+    const target = "tax appointment";
+    if (aName.includes(target) && !bName.includes(target)) return -1;
+    if (!aName.includes(target) && bName.includes(target)) return 1;
+    return a.name.localeCompare(b.name);
+  });
+
+  const displaySections = [
+    { 
+      title: "Tax Checklists", 
+      description: "Stay prepared and organized with our comprehensive checklists for every stage of your tax journey.", 
+      icon: <FileText className="text-brand-purple" size={24} />,
+      items: orderedChecklists,
+      slug: 'checklists',
+      buttonText: "View All Checklists"
+    },
+    { 
+      title: "Government Resources", 
+      description: "Official links to federal and state tax resources and helpful government websites.", 
+      icon: <Globe className="text-brand-purple" size={24} />,
+      items: governmentResources,
+      slug: 'government-resources',
+      buttonText: "View All Resources"
+    },
+    { 
+      title: "Helpful Forms", 
+      description: "Commonly used tax and business forms ready for download.", 
+      icon: <BookOpen className="text-brand-purple" size={24} />,
+      items: helpfulForms,
+      slug: 'helpful-forms',
+      buttonText: "View All Forms"
+    }
+  ].filter(s => s.items.length > 0);
 
   return (
     <div className="flex flex-col bg-white">
@@ -69,38 +103,39 @@ export default async function ResourcesPage() {
         </div>
       </section>
 
-      {/* Main Content */}
-      <section className="py-24 max-w-7xl mx-auto px-4">
-        <div className="space-y-32">
-          {groupedResources.map((section, idx) => (
-            <div key={idx} className="flex flex-col">
-              <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12 border-b border-gray-100 pb-8">
-                <div className="flex items-center gap-5">
-                  <div className="w-16 h-16 bg-brand-purple/5 rounded-[1.25rem] flex items-center justify-center border border-brand-purple/10 shadow-sm">
+      {/* Main Grid Content */}
+      <section className="pb-24 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+            {displaySections.map((section, idx) => (
+              <div key={idx} className="flex flex-col h-full">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-14 h-14 bg-brand-lavender/20 rounded-2xl flex items-center justify-center border border-brand-purple/10">
                     {section.icon}
                   </div>
-                  <h2 className="text-4xl font-heading font-bold text-brand-black">{section.title}</h2>
+                  <h2 className="text-2xl font-heading font-bold text-brand-black">{section.title}</h2>
                 </div>
-                <p className="text-brand-charcoal/60 max-w-md font-medium leading-relaxed">
+                <p className="text-sm text-brand-charcoal/60 mb-8 font-medium leading-relaxed">
                   {section.description}
                 </p>
+                <div className="space-y-4 flex-1">
+                  {section.items.map((item, itemIdx) => (
+                    <ResourceCard key={itemIdx} item={item} sectionSlug={section.slug || ""} />
+                  ))}
+                </div>
+                {section.slug && (
+                  <div className="mt-8">
+                    <Link
+                      href={`/resources/category/${section.slug}`}
+                      className="w-full inline-flex items-center justify-center gap-2 border border-brand-purple/20 text-brand-purple py-3 rounded-2xl font-bold hover:bg-brand-lavender/10 transition-all"
+                    >
+                      {section.buttonText} <ChevronRight size={16} />
+                    </Link>
+                  </div>
+                )}
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {section.items.map((item, itemIdx) => (
-                  <ResourceCard key={itemIdx} item={item} />
-                ))}
-              </div>
-            </div>
-          ))}
-
-          {groupedResources.length === 0 && (
-             <div className="text-center py-20 bg-gray-50 rounded-[3rem] border border-gray-100">
-                <FileText className="mx-auto text-gray-200 mb-6" size={64} />
-                <h3 className="text-2xl font-heading font-bold text-brand-black">No resources found</h3>
-                <p className="text-brand-charcoal/60 mt-2">Check back soon for new guides and checklists.</p>
-             </div>
-          )}
+            ))}
+          </div>
         </div>
       </section>
 
@@ -205,15 +240,10 @@ export default async function ResourcesPage() {
                 </div>
               </div>
             </div>
-
-            {/* FAQ Sub-section */}
-            <div className="mt-24 max-w-4xl">
-              <h3 className="text-2xl font-heading font-bold text-brand-black mb-10 flex items-center gap-3">
-                <div className="w-1.5 h-8 bg-brand-purple rounded-full"></div>
-                Common Questions
-              </h3>
-              <ResourcesFAQ />
-            </div>
+          </div>
+          
+          <div className="mt-24">
+            <ResourcesFAQ />
           </div>
         </div>
       </section>
@@ -247,30 +277,42 @@ export default async function ResourcesPage() {
   );
 }
 
-function ResourceCard({ item }: { item: any }) {
+function ResourceCard({ item, sectionSlug }: { item: any; sectionSlug: string }) {
   const isExternal = item.isExternal;
-  
+  let Icon = FileText;
+  if (sectionSlug === 'government-resources') Icon = Globe;
+  if (sectionSlug === 'helpful-forms' || sectionSlug === 'useful-forms') Icon = BookOpen;
+
   return (
-    <a 
-      href={item.href} 
-      target={isExternal || item.type === 'PDF' || item.type === 'XLSX' ? "_blank" : undefined}
-      rel={isExternal || item.type === 'PDF' || item.type === 'XLSX' ? "noopener noreferrer" : undefined}
-      className="group block bg-white border border-gray-100 p-8 rounded-[2rem] hover:border-brand-purple hover:shadow-2xl hover:shadow-brand-purple/10 transition-all duration-500 hover:-translate-y-1"
+    <a
+      href={item.href}
+      target={isExternal ? "_blank" : undefined}
+      rel={isExternal ? "noopener noreferrer" : undefined}
+      className="group block bg-white border border-gray-100 p-5 rounded-2xl hover:border-brand-purple hover:shadow-xl hover:shadow-brand-purple/5 transition-all duration-300"
     >
-      <div className="w-12 h-12 bg-brand-soft-gray rounded-2xl flex items-center justify-center text-brand-purple mb-6 group-hover:bg-brand-lavender transition-colors">
-        <FileText size={24} />
-      </div>
-      
-      <h4 className="text-xl font-heading font-bold text-brand-black group-hover:text-brand-purple transition-colors mb-3 leading-tight">{item.name}</h4>
-      <p className="text-brand-charcoal/60 text-sm font-medium mb-8 flex-1 leading-relaxed line-clamp-3">{item.description}</p>
-      
-      <div className="pt-6 border-t border-gray-50 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-[10px] font-bold text-brand-charcoal/30 uppercase tracking-widest">Updated:</span>
-          <span className="text-[10px] font-black text-brand-charcoal/50 uppercase tracking-widest">{item.date}</span>
+      <div className="flex items-start gap-4">
+        <div className="w-10 h-10 bg-brand-soft-gray rounded-xl flex items-center justify-center text-brand-purple shrink-0 group-hover:bg-brand-lavender transition-colors">
+          <Icon size={20} />
         </div>
-        <div className="text-brand-purple font-black uppercase tracking-widest text-[10px] flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-          {isExternal ? 'Visit' : 'Download'} <ArrowRight size={14} />
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-1">
+            <h4 className="font-bold text-brand-black group-hover:text-brand-purple transition-colors leading-tight">
+              {item.name}
+            </h4>
+            {item.type && item.type !== "File" && item.type !== "Info" && (
+              <span className="text-[9px] font-black uppercase tracking-widest text-brand-purple bg-brand-lavender/40 px-1.5 py-0.5 rounded-md">
+                {item.type}
+              </span>
+            )}
+          </div>
+          {item.description && (
+            <p className="text-xs text-brand-charcoal/60 leading-relaxed font-medium mt-1">
+              {item.description}
+            </p>
+          )}
+        </div>
+        <div className="text-brand-charcoal/20 group-hover:text-brand-purple transition-colors mt-1">
+          {isExternal ? <ExternalLink size={18} /> : <Download size={18} />}
         </div>
       </div>
     </a>

@@ -1,0 +1,66 @@
+Starting data migration for Resources...
+Categories found: [
+  {
+    "id": "a5887cf8-ac4c-4da9-bf78-369d1eb7fda7",
+    "slug": "tax-tips"
+  },
+  {
+    "id": "c5140959-d0fc-492b-a444-dccb1d39f831",
+    "slug": "small-business"
+  },
+  {
+    "id": "b03f806c-0c8d-4e10-aa5e-5b01a9207b7c",
+    "slug": "real-estate"
+  },
+  {
+    "id": "21398763-14a8-4df7-a7f1-8acdff8e2ae4",
+    "slug": "financial-leadership"
+  },
+  {
+    "id": "df2b22f4-50f1-4882-bc63-bcf78ac96ae3",
+    "slug": "checklists"
+  },
+  {
+    "id": "e30f1d8a-e3c6-4d3b-b092-8ab5da631a7f",
+    "slug": "government-resources"
+  },
+  {
+    "id": "9ad29353-598f-4970-a604-bf642ea24eb1",
+    "slug": "helpful-forms"
+  },
+  {
+    "id": "41113331-cb23-4be1-a02f-e77d39ee738f",
+    "slug": "client-info"
+  },
+  {
+    "id": "de6f44dc-78b5-466e-b944-38e424d5119a",
+    "slug": "billing-info"
+  },
+  {
+    "id": "08d162ce-3710-4ba7-a56b-2b78c90c5040",
+    "slug": "faq"
+  }
+]
+IDs found: {
+  checklistId: 'df2b22f4-50f1-4882-bc63-bcf78ac96ae3',
+  govId: 'e30f1d8a-e3c6-4d3b-b092-8ab5da631a7f',
+  formsId: '9ad29353-598f-4970-a604-bf642ea24eb1'
+}
+Cleaning up old records in these categories...
+Adding Checklists...
+LibsqlError: SQLITE_CONSTRAINT: SQLite error: FOREIGN KEY constraint failed
+    at mapHranaError (/home/team/shared/repository/node_modules/@libsql/client/lib-cjs/hrana.js:340:16)
+    at /home/team/shared/repository/node_modules/@libsql/client/lib-cjs/http.js:120:52
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async migrate (/home/team/shared/repository/scripts/populate-resources.ts:48:5) {
+  code: 'SQLITE_CONSTRAINT',
+  extendedCode: undefined,
+  rawCode: undefined,
+  [cause]: [ResponseError: SQLite error: FOREIGN KEY constraint failed] {
+    code: 'SQLITE_CONSTRAINT',
+    proto: {
+      message: 'SQLite error: FOREIGN KEY constraint failed',
+      code: 'SQLITE_CONSTRAINT'
+    }
+  }
+}
