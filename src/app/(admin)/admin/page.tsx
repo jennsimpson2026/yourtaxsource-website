@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import DocumentReviewQueue from "@/components/admin/DocumentReviewQueue";
 import { getDocumentReviewQueue } from "@/actions/documents";
-import WorkflowStatus from "@/components/admin/WorkflowStatus";
+import { WorkflowStatus } from "@/components/admin/WorkflowStatus";
 import { SyncQboButton } from "@/components/admin/SyncQboButton";
 import { OutstandingFeesList } from "@/components/admin/OutstandingFeesList";
 

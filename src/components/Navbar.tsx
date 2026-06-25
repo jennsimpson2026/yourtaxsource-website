@@ -88,10 +88,10 @@ export const Navbar = () => {
                 className="bg-brand-purple text-white px-4 py-2 rounded-lg font-black hover:bg-[#5a3a74] transition-all shadow-md text-[10px] uppercase tracking-widest flex items-center gap-1.5"
               />
               <Link 
-                href="/portal" 
+                href="/auth/login" 
                 className="bg-brand-black text-white px-4 py-2 rounded-lg font-black hover:bg-brand-purple transition-all shadow-md flex items-center gap-2 text-[10px] uppercase tracking-widest whitespace-nowrap"
               >
-                Client Portal
+                Login
               </Link>
             </div>
           </div>
@@ -158,12 +158,12 @@ export const Navbar = () => {
             <div className="space-y-2">
               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-charcoal/40 mb-4">Account</p>
               <Link 
-                href="/portal" 
+                href="/auth/login" 
                 onClick={() => setIsOpen(false)}
                 className="flex items-center gap-3 p-4 rounded-2xl bg-brand-black text-white font-bold hover:bg-brand-purple transition-all"
               >
-                <LayoutDashboard size={20} />
-                Client Portal
+                <LogIn size={20} />
+                Login
               </Link>
               <Link 
                 href="/auth/signup" 
