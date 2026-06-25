@@ -57,7 +57,73 @@ export function DocumentList({ documents }: { documents: Document[] }) {
 
   return (
     <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden">
-      <div className="overflow-x-auto">
+      {/* Mobile View: Cards */}
+      <div className="grid grid-cols-1 divide-y divide-gray-50 md:hidden">
+        {documents.map((doc) => (
+          <div key={doc.id} className="p-6 space-y-4 hover:bg-brand-cloud/30 transition-colors">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-brand-soft-gray rounded-xl flex items-center justify-center text-brand-charcoal/40 shrink-0">
+                  <FileText size={20} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-brand-black truncate">{doc.fileName}</p>
+                  <div className="flex flex-wrap items-center gap-2 mt-1">
+                    {getStatusBadge(doc.status)}
+                    {doc.isLocked && (
+                      <div className="flex items-center gap-1 px-2 py-0.5 bg-amber-50 text-amber-600 rounded-full text-[10px] font-black uppercase">
+                        <Lock size={10} />
+                        Locked
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                {doc.isLocked ? (
+                  <button
+                    onClick={() => alert("This final return is locked until your tax preparation fee is paid.")}
+                    className="p-2 text-amber-500 bg-amber-50 rounded-lg"
+                  >
+                    <Lock size={18} />
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => handleDownload(doc.id)}
+                    disabled={downloading === doc.id}
+                    className="p-2 text-brand-purple bg-brand-lavender rounded-lg"
+                  >
+                    {downloading === doc.id ? <Loader2 size={18} className="animate-spin" /> : <Download size={18} />}
+                  </button>
+                )}
+                <button
+                  onClick={() => handleDelete(doc.id)}
+                  className="p-2 text-red-400 bg-red-50 rounded-lg"
+                >
+                  <Trash2 size={18} />
+                </button>
+              </div>
+            </div>
+            
+            <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-brand-charcoal/40 pt-2 border-t border-gray-50">
+              <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-lg">{doc.category}</span>
+              <div className="flex items-center gap-1">
+                <Clock size={12} />
+                {new Date(doc.uploadedAt).toLocaleDateString()}
+              </div>
+            </div>
+
+            {doc.reviewFeedback && (
+              <p className="text-[10px] text-red-500 font-medium italic bg-red-50 p-2 rounded-lg">
+                Note: {doc.reviewFeedback}
+              </p>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop View: Table */}
+      <div className="hidden md:block overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-100">
           <thead className="bg-gray-50/50">
             <tr>
@@ -138,21 +204,20 @@ export function DocumentList({ documents }: { documents: Document[] }) {
                 </td>
               </tr>
             ))}
-            {documents.length === 0 && (
-              <tr>
-                <td colSpan={4} className="px-6 py-12 text-center">
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center text-gray-300">
-                      <FileText size={32} />
-                    </div>
-                    <p className="text-brand-charcoal/40 text-sm font-medium">No documents found.</p>
-                  </div>
-                </td>
-              </tr>
-            )}
           </tbody>
         </table>
       </div>
+
+      {documents.length === 0 && (
+        <div className="px-6 py-12 text-center">
+          <div className="flex flex-col items-center gap-2">
+            <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center text-gray-300">
+              <FileText size={32} />
+            </div>
+            <p className="text-brand-charcoal/40 text-sm font-medium">No documents found.</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
