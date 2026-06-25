@@ -7,7 +7,7 @@ import { revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm";
 import { notifyDocumentRequest } from "@/lib/notifications";
 import { decrypt } from "@/lib/crypto";
-import { logPiiRead } from "@/lib/audit";
+import { logAction, logPiiRead } from "@/lib/audit";
 
 export async function getSensitiveClientData(clientId: string) {
   const session = await auth();
@@ -65,7 +65,7 @@ export async function getSensitiveClientData(clientId: string) {
   if (data.dependents) fields.push("Dependents SSN");
 
   if (fields.length > 0) {
-    await logPiiRead(clientId, fields);
+    await logPiiRead((session.user as any).id, clientId, fields);
   }
 
   return data;
@@ -92,12 +92,12 @@ export async function requestDocuments(clientId: string, returnId: string, docum
   await notifyDocumentRequest(client.email, client.profile?.phone || null, documentList);
 
   // Log the action
-  await db.insert(auditLogs).values({
+  await logAction({
     userId: (session.user as any).id,
-    action: "REQUEST_DOCUMENTS",
+    action: "REQUEST_DOCUMENT",
     targetType: "CLIENT",
     targetId: clientId,
-    metadata: JSON.stringify({ returnId, documentList }),
+    metadata: { returnId, documentList },
   });
 
   revalidatePath(`/admin/returns/${returnId}`);

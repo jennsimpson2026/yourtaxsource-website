@@ -57,3 +57,13 @@ export async function logAction(args: {
     logger.error("Failed to log audit action", { error, args });
   }
 }
+
+export async function logPiiRead(userId: string, clientId: string, fields: string[]) {
+  return logAction({
+    userId,
+    action: "PII_ACCESS",
+    targetType: "CLIENT",
+    targetId: clientId,
+    metadata: { fields }
+  });
+}
