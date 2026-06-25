@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { engagementLetters, auditLogs, users, workflows, taxReturns } from "@/lib/db/schema";
+import { engagementLetters, auditLogs, users, workflows, taxReturns, invoices } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
