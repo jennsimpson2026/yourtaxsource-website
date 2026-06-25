@@ -10,6 +10,7 @@ import { revalidatePath } from "next/cache";
 import { eq, and, isNotNull, lt, sql, desc, not } from "drizzle-orm";
 import { notifyDocumentRequest, notifyDocumentUpload, notifyDocumentStatusUpdate } from "@/lib/notifications";
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { logAction } from "@/lib/audit";
 
 export async function softDeleteDocument(documentId: string) {
   const session = await auth();
@@ -30,8 +31,8 @@ export async function softDeleteDocument(documentId: string) {
     .set({ deletedAt: new Date() })
     .where(eq(documents.id, documentId));
 
-  await db.insert(auditLogs).values({
-    userId: (session.user as any).id,
+  await logAction({
+    userId: session.user.id,
     action: "SOFT_DELETE_DOCUMENT",
     targetType: "DOCUMENT",
     targetId: documentId,
@@ -92,12 +93,12 @@ export async function requestDocument(userId: string, documentName: string) {
 
   await notifyDocumentRequest(user.email, user.profile?.phone || null, documentName);
 
-  await db.insert(auditLogs).values({
-    userId: (session.user as any).id,
+  await logAction({
+    userId: session.user.id,
     action: "REQUEST_DOCUMENT",
     targetType: "USER",
     targetId: userId,
-    metadata: JSON.stringify({ documentName }),
+    metadata: { documentName },
   });
 }
 
@@ -176,12 +177,12 @@ export async function registerDocument(data: {
 
     console.log(`registerDocument: Created record with ID ${doc.id}`);
 
-    await db.insert(auditLogs).values({
+    await logAction({
       userId,
       action: "UPLOAD_DOCUMENT",
       targetType: "DOCUMENT",
       targetId: doc.id,
-      metadata: JSON.stringify({ fileName: data.fileName }),
+      metadata: { fileName: data.fileName },
     });
 
     // Notify staff if a client uploaded a document
@@ -242,7 +243,7 @@ export async function getDownloadUrl(documentId: string) {
 
   const downloadUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
 
-  await db.insert(auditLogs).values({
+  await logAction({
     userId: (session.user as any).id,
     action: "DOWNLOAD_DOCUMENT",
     targetType: "DOCUMENT",
@@ -353,12 +354,12 @@ export async function reviewDocument(documentId: string, status: "ACCEPTED" | "R
     .where(eq(documents.id, documentId));
 
   // Audit Log
-  await db.insert(auditLogs).values({
+  await logAction({
     userId: (session.user as any).id,
     action: `REVIEW_DOCUMENT_${status}`,
     targetType: "DOCUMENT",
     targetId: documentId,
-    metadata: JSON.stringify({ status, feedback }),
+    metadata: { status, feedback },
   });
 
   // Notification

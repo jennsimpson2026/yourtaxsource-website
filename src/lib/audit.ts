@@ -1,48 +1,59 @@
 import { db } from "./db";
 import { auditLogs } from "./db/schema";
-import { auth } from "./auth";
+import { logger } from "./logger";
+import { headers } from "next/headers";
 
 export type AuditAction = 
-  | "PII_READ" 
-  | "PII_EXPORT"
-  | "LOGIN"
-  | "MFA_ENABLED"
-  | "DOCUMENT_UPLOAD"
-  | "DOCUMENT_DELETE"
-  | "RETURN_UPDATE"
-  | "REQUEST_DOCUMENTS"
-  | "MESSAGE_SENT";
+  | "SIGN_IN" | "SIGN_OUT" | "RESET_PASSWORD" | "SETUP_PASSWORD"
+  | "UPDATE_RETURN_STATUS" | "UPDATE_RETURN_DETAILS"
+  | "SUBMIT_QUESTIONNAIRE" | "SAVE_QUESTIONNAIRE_DRAFT"
+  | "CREATE_INVOICE" | "PAY_INVOICE"
+  | "UPLOAD_DOCUMENT" | "APPROVE_DOCUMENT" | "REJECT_DOCUMENT"
+  | "REQUEST_DOCUMENT" | "DELETE_DOCUMENT"
+  | "CREATE_APPOINTMENT" | "CANCEL_APPOINTMENT"
+  | "CREATE_RESOURCE" | "UPDATE_RESOURCE" | "DELETE_RESOURCE"
+  | "QBO_SYNC" | "PII_ACCESS"
+  | "MFA_ENABLED" | "MFA_RECOVERY_GEN";
 
-export async function logAudit(
-  action: AuditAction, 
-  targetType: string, 
-  targetId?: string, 
-  metadata?: any,
-  status: "SUCCESS" | "FAILED" | "PENDING" = "SUCCESS"
-) {
+export async function logAction(args: {
+  userId: string;
+  action: AuditAction | string;
+  targetType: string;
+  targetId?: string;
+  metadata?: any;
+  status?: string;
+}) {
+  let ipAddress = "127.0.0.1";
   try {
-    const session = await auth();
-    const userId = (session?.user as any)?.id;
-
+    const h = await headers();
+    ipAddress = h.get("x-forwarded-for")?.split(",")[0] || "127.0.0.1";
+  } catch (e) {
+    // headers() might fail in background contexts
+  }
+  
+  try {
+    // 1. Log to Database (Audit Trail)
     await db.insert(auditLogs).values({
-      userId: userId || null,
-      action,
-      targetType,
-      targetId: targetId || null,
-      metadata: metadata ? JSON.stringify(metadata) : null,
-      status,
-      // ipAddress is tricky in server actions without passing it in, 
-      // but we can omit it for now or try to get it if needed.
+      userId: args.userId,
+      action: args.action,
+      targetType: args.targetType,
+      targetId: args.targetId,
+      metadata: args.metadata ? JSON.stringify(args.metadata) : null,
+      status: args.status || "SUCCESS",
+      ipAddress,
+    });
+
+    // 2. Log to Axiom (Structured Logging)
+    logger.info(`Audit: ${args.action}`, {
+      userId: args.userId,
+      targetType: args.targetType,
+      targetId: args.targetId,
+      status: args.status,
+      ipAddress,
+      metadata: args.metadata
     });
   } catch (error) {
-    console.error("Failed to log audit event:", error);
+    console.error("Failed to log audit action:", error);
+    logger.error("Failed to log audit action", { error, args });
   }
-}
-
-export async function logPiiRead(clientId: string, fields: string[]) {
-  return logAudit("PII_READ", "CLIENT", clientId, { fields });
-}
-
-export async function logPiiExport(count: number, year?: string) {
-  return logAudit("PII_EXPORT", "SYSTEM", undefined, { count, year });
 }

@@ -23,6 +23,7 @@ export const metadata: Metadata = {
 };
 
 import { Providers } from "@/components/Providers";
+import { AxiomWebVitals } from 'next-axiom';
 
 export default function RootLayout({
   children,
@@ -36,7 +37,10 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         {/* Force Deploy: 2026-06-17 11:30 (Sync Trigger) */}
-        <Providers>{children}</Providers>
+        <Providers>
+          {children}
+          <AxiomWebVitals />
+        </Providers>
       </body>
     </html>
   );

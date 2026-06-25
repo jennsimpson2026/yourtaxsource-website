@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 import { eq, and } from "drizzle-orm";
 import { notifyStatusUpdate, notifyAdminPaymentReceived } from "@/lib/notifications";
 import { releaseReturnDocuments } from "@/lib/returns";
+import { logAction } from "@/lib/audit";
 
 export async function updateReturnDetails(returnId: string, data: {
   status?: string;
@@ -165,12 +166,12 @@ export async function updateReturnDetails(returnId: string, data: {
     }
   }
 
-  await db.insert(auditLogs).values({
-    userId: (session.user as any).id,
+  await logAction({
+    userId: session.user.id,
     action: "UPDATE_RETURN_DETAILS",
     targetType: "TAX_RETURN",
     targetId: returnId,
-    metadata: JSON.stringify(data),
+    metadata: data,
   });
 
   revalidatePath(`/admin/returns/${returnId}`);
@@ -227,12 +228,12 @@ export async function updateReturnStatus(returnId: string, status: string) {
     }
   }
 
-  await db.insert(auditLogs).values({
-    userId: (session.user as any).id,
+  await logAction({
+    userId: session.user.id,
     action: "UPDATE_RETURN_STATUS",
     targetType: "TAX_RETURN",
     targetId: returnId,
-    metadata: JSON.stringify({ newStatus: status }),
+    metadata: { newStatus: status },
   });
 
   revalidatePath(`/admin/returns/${returnId}`);
@@ -297,12 +298,12 @@ export async function setReturnFee(returnId: string, amount: number) {
     });
   }
 
-  await db.insert(auditLogs).values({
-    userId: (session.user as any).id,
+  await logAction({
+    userId: session.user.id,
     action: "SET_RETURN_FEE",
     targetType: "TAX_RETURN",
     targetId: returnId,
-    metadata: JSON.stringify({ amount }),
+    metadata: { amount },
   });
 
   revalidatePath(`/admin/returns/${returnId}`);

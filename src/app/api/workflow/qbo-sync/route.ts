@@ -25,19 +25,27 @@ export const { POST } = serve<{
     });
 
     const results: any[] = [];
+    const CHUNK_SIZE = 5;
 
-    // Step 2: Iterate and sync each user
-    // We use chunks or parallel execution if supported, 
-    // but for simplicity we'll iterate and use context.run for each
-    for (const user of targetUsers) {
-      try {
-        const qboId = await context.run(`sync-user-${user.id}`, async () => {
-          return await getOrCreateQboCustomer(user.id);
-        });
-        results.push({ userId: user.id, status: "success", qboId });
-      } catch (error: any) {
-        results.push({ userId: user.id, status: "error", error: error.message });
-      }
+    // Step 2: Iterate and sync each user in chunks to balance speed and rate limits
+    for (let i = 0; i < targetUsers.length; i += CHUNK_SIZE) {
+      const chunk = targetUsers.slice(i, i + CHUNK_SIZE);
+      
+      const chunkResults = await Promise.all(
+        chunk.map((user) => 
+          context.run(`sync-user-${user.id}`, async () => {
+            try {
+              const qboId = await getOrCreateQboCustomer(user.id);
+              return { userId: user.id, status: "success", qboId };
+            } catch (error: any) {
+              console.error(`[QBO Sync] Error for user ${user.id}:`, error);
+              return { userId: user.id, status: "error", error: error.message };
+            }
+          })
+        )
+      );
+
+      results.push(...chunkResults);
     }
 
     // Final Step: Update workflow status
@@ -45,7 +53,11 @@ export const { POST } = serve<{
       await db.update(workflows)
         .set({
           status: "successful",
-          result: JSON.stringify({ synced: results.length, details: results }),
+          result: JSON.stringify({ 
+            synced: results.filter(r => r.status === "success").length, 
+            failed: results.filter(r => r.status === "error").length,
+            details: results 
+          }),
           updatedAt: new Date(),
         })
         .where(eq(workflows.id, context.workflowRunId));

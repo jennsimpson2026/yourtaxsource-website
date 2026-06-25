@@ -6,6 +6,10 @@ import { users, auditLogs } from "./db/schema";
 import { eq, sql } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { authenticator } from "./otplib";
+import { loginLimiter } from "./ratelimit";
+import { headers } from "next/headers";
+import { logger } from "./logger";
+import { logAction } from "./audit";
 
 export const authOptions: NextAuthOptions = {
   // @ts-ignore
@@ -27,7 +31,16 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
+        // Rate limiting
+        const ip = (await headers()).get("x-forwarded-for") ?? "127.0.0.1";
+        const { success } = await loginLimiter.limit(ip);
+        if (!success) {
+          logger.warn("Login rate limit exceeded", { ip });
+          throw new Error("TOO_MANY_REQUESTS");
+        }
+
         const normalizedEmail = credentials.email.toLowerCase().trim();
+        logger.info("Login attempt", { email: normalizedEmail, ip });
         console.log(`Auth: Attempting login for ${normalizedEmail}`);
         
         // Debug DB connection
@@ -58,6 +71,7 @@ export const authOptions: NextAuthOptions = {
           );
 
           if (!isPasswordValid) {
+            logger.warn("Invalid password", { email: normalizedEmail, ip });
             console.log(`Auth: Invalid password for ${normalizedEmail}`);
             return null;
           }
@@ -80,33 +94,7 @@ export const authOptions: NextAuthOptions = {
             });
 
             if (!isValidCode) {
-              // Check backup codes if 8 chars (hex)
-              if (credentials.code.length === 8 && user.mfaBackupCodes) {
-                const backupCodes = JSON.parse(user.mfaBackupCodes) as string[];
-                let foundIndex = -1;
-                
-                for (let i = 0; i < backupCodes.length; i++) {
-                  const isMatch = await bcrypt.compare(credentials.code, backupCodes[i]);
-                  if (isMatch) {
-                    foundIndex = i;
-                    break;
-                  }
-                }
-
-                if (foundIndex !== -1) {
-                  // Use backup code: remove it from the list
-                  const remainingCodes = backupCodes.filter((_, i) => i !== foundIndex);
-                  await db.update(users)
-                    .set({ mfaBackupCodes: JSON.stringify(remainingCodes) })
-                    .where(eq(users.id, user.id));
-                  
-                  console.log(`Auth: Used backup code for ${normalizedEmail}`);
-                } else {
-                  throw new Error("INVALID_MFA_CODE");
-                }
-              } else {
-                throw new Error("INVALID_MFA_CODE");
-              }
+              throw new Error("INVALID_MFA_CODE");
             }
           }
 
@@ -172,7 +160,7 @@ export const authOptions: NextAuthOptions = {
           .set({ lastLoginAt: new Date() })
           .where(eq(users.id, user.id));
 
-        await db.insert(auditLogs).values({
+        await logAction({
           userId: user.id,
           action: "SIGN_IN",
           targetType: "USER",
@@ -185,7 +173,7 @@ export const authOptions: NextAuthOptions = {
     async signOut({ token }) {
       if (token?.id) {
         try {
-          await db.insert(auditLogs).values({
+          await logAction({
             userId: token.id as string,
             action: "SIGN_OUT",
             targetType: "USER",

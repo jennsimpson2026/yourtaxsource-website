@@ -51,7 +51,7 @@ export function ResourceForm({ initialData, categories }: ResourceFormProps) {
       // 1. Upload file if selected
       if (file) {
         setUploadProgress(10);
-        const { uploadUrl, s3Key } = await getResourceUploadUrl(file.name, file.type, file.size);
+        const { uploadUrl, s3Key } = await getResourceUploadUrl(file.name, file.type);
         setUploadProgress(30);
 
         const uploadResponse = await fetch(uploadUrl, {
@@ -168,7 +168,7 @@ export function ResourceForm({ initialData, categories }: ResourceFormProps) {
               ) : (
                 <div>
                   <p className="font-bold text-brand-black">Click or drag to upload</p>
-                  <p className="text-xs text-gray-400 mt-1">PDF, Excel, or Word (Max 20MB)</p>
+                  <p className="text-xs text-gray-400 mt-1">PDF, Excel, or Word (Max 10MB)</p>
                 </div>
               )}
             </div>

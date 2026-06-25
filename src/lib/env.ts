@@ -44,6 +44,14 @@ const envSchema = z.object({
   QSTASH_NEXT_SIGNING_KEY: z.string().optional(),
   UPSTASH_WORKFLOW_URL: z.string().optional(),
 
+  // Upstash Redis (for Rate Limiting)
+  UPSTASH_REDIS_REST_URL: z.string().optional(),
+  UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
+
+  // Axiom
+  AXIOM_DATASET: z.string().optional(),
+  AXIOM_TOKEN: z.string().optional(),
+
   // Admin/Misc
   ADMIN_EMAIL: z.string().email(),
   CONTACT_FORM_RECIPIENT: z.string().email(),

@@ -6,7 +6,7 @@ import { eq, desc, and, sql } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { s3Client, BUCKET_NAME } from "@/lib/s3";
-import { PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 export async function getCategories() {
@@ -57,29 +57,10 @@ export async function getPostBySlug(slug: string) {
 }
 
 // Resource Specific Actions
-export async function getResourceUploadUrl(fileName: string, fileType: string, fileSize: number) {
+export async function getResourceUploadUrl(fileName: string, fileType: string) {
   const session = await auth();
-  if (!session?.user || ((session.user as any).role !== 'ADMIN' && (session.user as any).role !== 'STAFF')) {
+  if (!session?.user || (session.user as any).role === "CLIENT") {
     throw new Error("Unauthorized");
-  }
-
-  // 1. Enforce file size (e.g., 20MB limit)
-  const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
-  if (fileSize > MAX_FILE_SIZE) {
-    throw new Error(`File is too large. Maximum size allowed is 20MB.`);
-  }
-
-  // 2. Enforce file types
-  const ALLOWED_TYPES = [
-    "application/pdf",
-    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // .xlsx
-    "application/vnd.ms-excel", // .xls
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .docx
-    "application/msword" // .doc
-  ];
-
-  if (!ALLOWED_TYPES.includes(fileType)) {
-    throw new Error("Invalid file type. Only PDF, Excel, and Word documents are allowed.");
   }
 
   const s3Key = `resources/${Date.now()}-${fileName}`;
@@ -134,26 +115,6 @@ export async function updateResource(id: string, data: any) {
   }
 
   try {
-    // 1. If a new fileUrl is provided, delete the old file from S3
-    const oldPost = await db.query.posts.findFirst({
-      where: eq(posts.id, id),
-    });
-
-    if (data.fileUrl && oldPost?.fileUrl && data.fileUrl !== oldPost.fileUrl) {
-      if (!oldPost.fileUrl.startsWith('http')) {
-        console.log(`[updateResource] Deleting old S3 object: ${oldPost.fileUrl}`);
-        try {
-          const command = new DeleteObjectCommand({
-            Bucket: BUCKET_NAME,
-            Key: oldPost.fileUrl,
-          });
-          await s3Client.send(command);
-        } catch (s3Error) {
-          console.error("S3 delete error (orphaned file may remain):", s3Error);
-        }
-      }
-    }
-
     const [updatedPost] = await db.update(posts)
       .set({
         ...data,
@@ -188,29 +149,7 @@ export async function deletePost(id: string) {
   }
 
   try {
-    // 1. Fetch post to get S3 key
-    const post = await db.query.posts.findFirst({
-      where: eq(posts.id, id),
-    });
-
-    if (post?.fileUrl && !post.fileUrl.startsWith('http')) {
-      // 2. Delete from S3
-      console.log(`[deletePost] Deleting S3 object: ${post.fileUrl}`);
-      try {
-        const command = new DeleteObjectCommand({
-          Bucket: BUCKET_NAME,
-          Key: post.fileUrl,
-        });
-        await s3Client.send(command);
-      } catch (s3Error) {
-        console.error("S3 delete error (orphaned file may remain):", s3Error);
-        // Continue with DB deletion even if S3 fails
-      }
-    }
-
-    // 3. Delete from DB
     await db.delete(posts).where(eq(posts.id, id));
-    
     revalidatePath("/resources");
     revalidatePath("/admin/resources");
     return { success: true };

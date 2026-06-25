@@ -1,5 +1,7 @@
 import { Resend } from "resend";
 import twilio from "twilio";
+import { workflowClient } from "./workflow";
+import { logger } from "./logger";
 
 // Helper to get Resend instance lazily
 let resendInstance: Resend | null = null;
@@ -7,9 +9,7 @@ function getResend() {
   if (!resendInstance) {
     const apiKey = process.env.RESEND_API_KEY;
     if (!apiKey || apiKey === "re_123") {
-      // Return a dummy instance or throw a better error for build time
       if (process.env.NODE_ENV === "production" && !process.env.VERCEL) {
-         // Allow build to proceed if we are just building and don't have keys yet
          console.warn("RESEND_API_KEY is not set, using mock during build");
          return { emails: { send: async () => ({ id: "mock" }) } } as any;
       }
@@ -34,7 +34,11 @@ function getTwilio() {
   return twilioInstance;
 }
 
-export async function sendEmail({
+/**
+ * LOW-LEVEL: Sends email directly using Resend.
+ * Use sendEmail() for background-aware sending.
+ */
+export async function sendEmailDirect({
   to,
   subject,
   html,
@@ -58,11 +62,14 @@ export async function sendEmail({
     return data;
   } catch (error) {
     console.error("Email sending error:", error);
-    // Don't throw, just log for now to prevent breaking flows
   }
 }
 
-export async function sendSMS({
+/**
+ * LOW-LEVEL: Sends SMS directly using Twilio.
+ * Use sendSMS() for background-aware sending.
+ */
+export async function sendSMSDirect({
   to,
   body,
 }: {
@@ -83,26 +90,83 @@ export async function sendSMS({
     return message;
   } catch (error) {
     console.error("SMS sending error:", error);
-    // Don't throw
   }
+}
+
+/**
+ * Triggers a background workflow for notifications.
+ * Falls back to synchronous execution if Upstash is not configured.
+ */
+async function triggerNotificationWorkflow(payload: {
+  email?: string;
+  phone?: string | null;
+  subject?: string;
+  html?: string;
+  smsBody?: string;
+  name: string;
+}) {
+  const isUpstashConfigured = !!process.env.QSTASH_TOKEN;
+  
+  if (isUpstashConfigured) {
+    try {
+      await workflowClient.trigger({
+        url: `${process.env.NEXTAUTH_URL}/api/workflow/notifications`,
+        body: payload,
+      });
+      console.log(`[Notifications] Offloaded ${payload.name} to background workflow`);
+      return;
+    } catch (error) {
+      console.error(`[Notifications] Failed to trigger workflow for ${payload.name}:`, error);
+      logger.error(`[Notifications] Failed to trigger workflow for ${payload.name}`, { error, payload });
+      // Fallback to sync
+    }
+  }
+
+  // Fallback: Synchronous execution using Direct methods to avoid loop
+  logger.info(`[Notifications] Falling back to synchronous execution for ${payload.name}`, { payload });
+  if (payload.email && payload.subject && payload.html) {
+    await sendEmailDirect({ to: payload.email, subject: payload.subject, html: payload.html });
+  }
+  if (payload.phone && payload.smsBody) {
+    await sendSMSDirect({ to: payload.phone, body: payload.smsBody });
+  }
+}
+
+/**
+ * Public API: Sends email, backgrounded if possible.
+ */
+export async function sendEmail(args: { to: string, subject: string, html: string }) {
+  return await triggerNotificationWorkflow({
+    email: args.to,
+    subject: args.subject,
+    html: args.html,
+    name: "Generic Email"
+  });
+}
+
+/**
+ * Public API: Sends SMS, backgrounded if possible.
+ */
+export async function sendSMS(args: { to: string, body: string }) {
+  return await triggerNotificationWorkflow({
+    phone: args.to,
+    smsBody: args.body,
+    name: "Generic SMS"
+  });
 }
 
 export async function notifyStatusUpdate(email: string, phone: string | null, status: string) {
   const subject = "Tax Return Status Updated";
   const body = `Your tax return status has been updated to: ${status}. Log in to the portal to see more details.`;
   
-  await sendEmail({
-    to: email,
+  await triggerNotificationWorkflow({
+    email,
+    phone,
     subject,
     html: `<p>${body}</p>`,
+    smsBody: body,
+    name: "Status Update"
   });
-
-  if (phone) {
-    await sendSMS({
-      to: phone,
-      body,
-    });
-  }
 }
 
 export async function notifyDocumentStatusUpdate(email: string, phone: string | null, fileName: string, status: string, feedback?: string) {
@@ -113,10 +177,7 @@ export async function notifyDocumentStatusUpdate(email: string, phone: string | 
   }
   body += `\n\nLog in to your portal to view more details.`;
 
-  await sendEmail({
-    to: email,
-    subject,
-    html: `<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+  const html = `<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
       <h2 style="color: #6d28d9;">Document Status Updated</h2>
       <p>Hi there,</p>
       <p>The status of your uploaded document has been updated:</p>
@@ -129,33 +190,30 @@ export async function notifyDocumentStatusUpdate(email: string, phone: string | 
         <a href="${process.env.NEXTAUTH_URL}/portal/documents" style="background-color: #6d28d9; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">View in Portal</a>
       </div>
       <p>Thank you!</p>
-    </div>`,
-  });
+    </div>`;
 
-  if (phone) {
-    await sendSMS({
-      to: phone,
-      body,
-    });
-  }
+  await triggerNotificationWorkflow({
+    email,
+    phone,
+    subject,
+    html,
+    smsBody: body,
+    name: "Document Status Update"
+  });
 }
 
 export async function notifyPaymentReceived(email: string, phone: string | null, amount: number) {
   const subject = "Payment Confirmed";
   const body = `We have received your payment of $${amount}. Thank you!`;
 
-  await sendEmail({
-    to: email,
+  await triggerNotificationWorkflow({
+    email,
+    phone,
     subject,
     html: `<p>${body}</p>`,
+    smsBody: body,
+    name: "Payment Received"
   });
-
-  if (phone) {
-    await sendSMS({
-      to: phone,
-      body,
-    });
-  }
 }
 
 export async function notifyAdminPaymentReceived({
@@ -183,10 +241,11 @@ export async function notifyAdminPaymentReceived({
     <p><a href="${process.env.NEXTAUTH_URL}/admin">View in Admin Dashboard</a></p>
   `;
 
-  await sendEmail({
-    to: recipient,
+  await triggerNotificationWorkflow({
+    email: recipient,
     subject,
     html,
+    name: "Admin Payment Received"
   });
 }
 
@@ -194,18 +253,14 @@ export async function notifyDocumentRequest(email: string, phone: string | null,
   const subject = "Action Needed: Documents Requested for Your Tax Return";
   const body = `We need additional documentation to proceed with your tax return: ${documentList}. Please upload these to your secure client portal.`;
 
-  await sendEmail({
-    to: email,
+  await triggerNotificationWorkflow({
+    email,
+    phone,
     subject,
     html: `<p>${body}</p><p><a href="${process.env.NEXTAUTH_URL}/portal/documents">Upload Documents</a></p>`,
+    smsBody: body,
+    name: "Document Request"
   });
-
-  if (phone) {
-    await sendSMS({
-      to: phone,
-      body,
-    });
-  }
 }
 
 export async function notifyDocumentUpload(staffEmail: string, clientName: string, documentName: string) {
@@ -217,10 +272,11 @@ export async function notifyDocumentUpload(staffEmail: string, clientName: strin
     <p><a href="${process.env.NEXTAUTH_URL}/admin">View in Admin Dashboard</a></p>
   `;
 
-  await sendEmail({
-    to: staffEmail,
+  await triggerNotificationWorkflow({
+    email: staffEmail,
     subject,
     html,
+    name: "Document Upload Notification"
   });
 }
 
@@ -254,13 +310,13 @@ export async function notifyPortalInvitation({
       <p style="word-break: break-all; color: #666;">${invitationLink}</p>
       <p>We look forward to working with you!</p>
       <p>Best regards,<br>The Your Tax Source Team</p>
-    </div>
-  `;
+    </div>`;
 
-  return await sendEmail({
-    to: email,
+  return await triggerNotificationWorkflow({
+    email,
     subject,
     html,
+    name: "Portal Invitation"
   });
 }
 
@@ -303,13 +359,13 @@ export async function notifyAppointmentScheduled({
 
       <p><a href="${process.env.NEXTAUTH_URL}/portal" style="color: #6d28d9; font-weight: bold;">Log in to your portal</a> to manage documents and view status.</p>
       <p>Best regards,<br>The Your Tax Source Team</p>
-    </div>
-  `;
+    </div>`;
 
-  return await sendEmail({
-    to: email,
+  return await triggerNotificationWorkflow({
+    email,
     subject,
     html,
+    name: "Appointment Confirmation"
   });
 }
 
@@ -333,10 +389,7 @@ export async function notifyUpcomingAppointmentReminder({
   const subject = "Reminder: Your Tax Appointment is Tomorrow";
   const body = "Hi " + (name || "there") + ", this is a reminder that you have an appointment with Your Tax Source scheduled for tomorrow at " + dateStr + ". Please ensure all requested documents are uploaded to your portal.";
 
-  await sendEmail({
-    to: email,
-    subject,
-    html: `<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+  const html = `<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
       <h2 style="color: #6d28d9;">Upcoming Appointment Reminder</h2>
       <p>Hi ${name || "there"},</p>
       <p>This is a friendly reminder of your upcoming tax appointment:</p>
@@ -348,12 +401,16 @@ export async function notifyUpcomingAppointmentReminder({
         <a href="${process.env.NEXTAUTH_URL}/portal" style="background-color: #6d28d9; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">Access Your Portal</a>
       </div>
       <p>We look forward to seeing you!</p>
-    </div>`,
-  });
+    </div>`;
 
-  if (phone) {
-    await sendSMS({ to: phone, body });
-  }
+  await triggerNotificationWorkflow({
+    email,
+    phone,
+    subject,
+    html,
+    smsBody: body,
+    name: "Appointment Reminder"
+  });
 }
 
 export async function notifyUnpaidInvoiceReminder({
@@ -372,10 +429,7 @@ export async function notifyUnpaidInvoiceReminder({
   const subject = "Reminder: Unpaid Invoice from Your Tax Source";
   const body = "Hi " + (name || "there") + ", this is a reminder regarding your unpaid invoice for $" + amount.toFixed(2) + ". You can pay securely through your client portal.";
 
-  await sendEmail({
-    to: email,
-    subject,
-    html: `<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+  const html = `<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
       <h2 style="color: #6d28d9;">Payment Reminder</h2>
       <p>Hi ${name || "there"},</p>
       <p>This is a friendly reminder that you have an outstanding invoice for your tax services:</p>
@@ -388,12 +442,16 @@ export async function notifyUnpaidInvoiceReminder({
         <a href="${process.env.NEXTAUTH_URL}/portal#invoices" style="background-color: #6d28d9; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">Pay Invoice</a>
       </div>
       <p>Thank you for your business!</p>
-    </div>`,
-  });
+    </div>`;
 
-  if (phone) {
-    await sendSMS({ to: phone, body });
-  }
+  await triggerNotificationWorkflow({
+    email,
+    phone,
+    subject,
+    html,
+    smsBody: body,
+    name: "Invoice Reminder"
+  });
 }
 
 export async function notifyActionNeededReminder({
@@ -408,10 +466,7 @@ export async function notifyActionNeededReminder({
   const subject = "Action Required: Your Tax Return Status";
   const body = "Hi " + (name || "there") + ", your tax return is currently on hold awaiting your action (missing documents or info). Please log in to your portal to see what's needed.";
 
-  await sendEmail({
-    to: email,
-    subject,
-    html: `<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+  const html = `<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
       <h2 style="color: #6d28d9;">Action Needed</h2>
       <p>Hi ${name || "there"},</p>
       <p>We are currently working on your tax return, but we need some additional information or documents from you to proceed.</p>
@@ -420,12 +475,16 @@ export async function notifyActionNeededReminder({
         <a href="${process.env.NEXTAUTH_URL}/portal" style="background-color: #6d28d9; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">Go to Portal</a>
       </div>
       <p>Thank you!</p>
-    </div>`,
-  });
+    </div>`;
 
-  if (phone) {
-    await sendSMS({ to: phone, body });
-  }
+  await triggerNotificationWorkflow({
+    email,
+    phone,
+    subject,
+    html,
+    smsBody: body,
+    name: "Action Needed Reminder"
+  });
 }
 
 export async function notifyContactFormSubmission({
@@ -453,15 +512,12 @@ export async function notifyContactFormSubmission({
     <p>${message.replace(/\n/g, '<br>')}</p>
   `;
 
-  const result = await sendEmail({
-    to: recipient,
+  await triggerNotificationWorkflow({
+    email: recipient,
     subject,
     html,
+    name: "Contact Form Submission"
   });
-
-  if (!result && process.env.RESEND_API_KEY) {
-    throw new Error("Failed to send email notification");
-  }
 }
 
 export async function notifyNewMessage({
@@ -481,10 +537,7 @@ export async function notifyNewMessage({
   const portalUrl = isToStaff ? `${process.env.NEXTAUTH_URL}/admin` : `${process.env.NEXTAUTH_URL}/portal/messages`;
   const body = `You have a new message from ${senderName}. Log in to the portal to view and respond.`;
 
-  await sendEmail({
-    to: toEmail,
-    subject,
-    html: `
+  const html = `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
         <h2 style="color: #6d28d9;">New Message</h2>
         <p>Hi,</p>
@@ -496,11 +549,14 @@ export async function notifyNewMessage({
         <div style="text-align: center; margin: 30px 0;">
           <a href="${portalUrl}" style="background-color: #6d28d9; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">View Message</a>
         </div>
-      </div>
-    `,
-  });
+      </div>`;
 
-  if (toPhone && !isToStaff) {
-    await sendSMS({ to: toPhone, body });
-  }
+  await triggerNotificationWorkflow({
+    email: toEmail,
+    phone: toPhone,
+    subject,
+    html,
+    smsBody: body,
+    name: "New Message Notification"
+  });
 }

@@ -1,6 +1,8 @@
 "use server";
 
 import { notifyContactFormSubmission } from "@/lib/notifications";
+import { contactFormLimiter } from "@/lib/ratelimit";
+import { headers } from "next/headers";
 import { z } from "zod";
 
 const contactSchema = z.object({
@@ -12,6 +14,13 @@ const contactSchema = z.object({
 });
 
 export async function submitContactForm(formData: FormData) {
+  // Rate limiting
+  const ip = (await headers()).get("x-forwarded-for") ?? "127.0.0.1";
+  const { success } = await contactFormLimiter.limit(ip);
+  if (!success) {
+    return { error: "Too many messages. Please try again in a minute." };
+  }
+
   const rawData = {
     firstName: formData.get("firstName"),
     lastName: formData.get("lastName"),

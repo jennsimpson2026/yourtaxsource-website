@@ -8,8 +8,18 @@ import crypto from "crypto";
 import { authenticator } from "@/lib/otplib";
 import { revalidatePath } from "next/cache";
 import { sendEmail } from "@/lib/notifications";
+import { intakeLimiter, forgotPasswordLimiter } from "@/lib/ratelimit";
+import { headers } from "next/headers";
+import { logger } from "@/lib/logger";
 
 export async function signUp(formData: FormData) {
+  // Rate limiting
+  const ip = (await headers()).get("x-forwarded-for") ?? "127.0.0.1";
+  const { success } = await intakeLimiter.limit(ip);
+  if (!success) {
+    return { error: "Too many signup attempts. Please try again later." };
+  }
+
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
   const name = formData.get("name") as string;
@@ -139,16 +149,7 @@ export async function verifyAndEnableMfa(userId: string, token: string) {
     return { error: "Invalid code" };
   }
 
-  // Generate backup codes
-  const backupCodes = Array.from({ length: 8 }, () => crypto.randomBytes(4).toString("hex"));
-  const hashedBackupCodes = await Promise.all(
-    backupCodes.map((code) => bcrypt.hash(code, 10))
-  );
-
-  await db.update(users).set({ 
-    mfaEnabled: true,
-    mfaBackupCodes: JSON.stringify(hashedBackupCodes)
-  }).where(eq(users.id, userId));
+  await db.update(users).set({ mfaEnabled: true }).where(eq(users.id, userId));
 
   await db.insert(auditLogs).values({
     userId,
@@ -158,11 +159,18 @@ export async function verifyAndEnableMfa(userId: string, token: string) {
   });
 
   revalidatePath("/");
-  return { success: true, backupCodes };
+  return { success: true };
 }
 
 export async function forgotPassword(formData: FormData) {
   try {
+    const ip = (await headers()).get("x-forwarded-for") ?? "127.0.0.1";
+    const { success: rateLimitSuccess } = await forgotPasswordLimiter.limit(ip);
+    if (!rateLimitSuccess) {
+      logger.warn("Forgot password rate limit exceeded", { ip });
+      return { error: "Too many requests. Please try again later." };
+    }
+
     const email = formData.get("email") as string;
     if (!email) return { error: "Email is required" };
 
@@ -207,6 +215,13 @@ export async function forgotPassword(formData: FormData) {
 
 export async function resetPassword(formData: FormData) {
   try {
+    const ip = (await headers()).get("x-forwarded-for") ?? "127.0.0.1";
+    const { success: rateLimitSuccess } = await forgotPasswordLimiter.limit(ip);
+    if (!rateLimitSuccess) {
+      logger.warn("Reset password rate limit exceeded", { ip });
+      return { error: "Too many requests. Please try again later." };
+    }
+
     const email = formData.get("email") as string;
     const token = formData.get("token") as string;
     const password = formData.get("password") as string;

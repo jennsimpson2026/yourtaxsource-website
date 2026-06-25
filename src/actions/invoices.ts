@@ -7,6 +7,7 @@ import { auth } from "@/lib/auth";
 
 import { revalidatePath } from "next/cache";
 import { eq, and } from "drizzle-orm";
+import { logAction } from "@/lib/audit";
 
 export async function initializePaymentSession(invoiceId: string) {
   const session = await auth();
@@ -71,12 +72,12 @@ export async function createInvoice(returnId: string, amount: number) {
     status: "UNPAID",
   }).returning();
 
-  await db.insert(auditLogs).values({
+  await logAction({
     userId: (session.user as any).id,
     action: "CREATE_INVOICE",
     targetType: "INVOICE",
     targetId: invoice.id,
-    metadata: JSON.stringify({ amount, qboInvoiceId: qboInvoice.Invoice.Id }),
+    metadata: { amount, qboInvoiceId: qboInvoice.Invoice.Id },
   });
 
   revalidatePath(`/admin/returns/${returnId}`);

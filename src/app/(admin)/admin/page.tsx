@@ -1,15 +1,14 @@
-import React from "react";
 import { db } from "@/lib/db";
 import { users, taxReturns, questionnaires, invoices, documents } from "@/lib/db/schema";
 import { count, eq, desc, and, not, sql, gt, inArray } from "drizzle-orm";
 import Link from "next/link";
-import { 
-  Users, 
-  FileText, 
-  Clock, 
-  AlertCircle, 
-  CheckCircle2, 
-  Activity, 
+import {
+  Users,
+  FileText,
+  Clock,
+  AlertCircle,
+  CheckCircle2,
+  Activity,
   ArrowRight,
   DollarSign,
   FileSearch,
@@ -22,55 +21,81 @@ import { SyncQboButton } from "@/components/admin/SyncQboButton";
 import { OutstandingFeesList } from "@/components/admin/OutstandingFeesList";
 
 export default async function AdminDashboard() {
-  const clientCount = await db.select({ value: count() }).from(users).where(eq(users.role, "CLIENT"));
-  const returnCount = await db.select({ value: count() }).from(taxReturns);
-  
-  const pendingReturns = await db.select({ value: count() })
-    .from(taxReturns)
-    .where(and(
-      not(eq(taxReturns.status, "COMPLETED")),
-      not(eq(taxReturns.status, "NOT_STARTED"))
-    ));
+  const [
+    clientCountResult,
+    returnCountResult,
+    pendingReturnsResult,
+    pendingQuestionnairesResult,
+    pendingPaymentsCountResult,
+    pendingDocsCountResult,
+    recentReturns,
+    outstandingFeesReturns,
+    dbReadyToFileReturns,
+    reviewQueue
+  ] = await Promise.all([
+    db.select({ value: count() }).from(users).where(eq(users.role, "CLIENT")),
+    db.select({ value: count() }).from(taxReturns),
+    db.select({ value: count() })
+      .from(taxReturns)
+      .where(and(
+        not(eq(taxReturns.status, "COMPLETED")),
+        not(eq(taxReturns.status, "NOT_STARTED"))
+      )),
+    db.select({ value: count() })
+      .from(questionnaires)
+      .where(eq(questionnaires.isSubmitted, true)),
+    db.select({ value: count() })
+      .from(taxReturns)
+      .where(and(
+        inArray(taxReturns.status, ["COMPLETED", "AWAITING_PAYMENT", "READY_FOR_SIGNATURE", "READY_TO_FILE"]),
+        not(eq(taxReturns.paymentStatus, "PAID")),
+        gt(taxReturns.taxPrepFee, 0)
+      )),
+    db.select({ value: count() })
+      .from(documents)
+      .where(and(
+        eq(documents.status, "PENDING"),
+        sql`${documents.deletedAt} IS NULL`
+      )),
+    db.query.taxReturns.findMany({
+      with: {
+        client: true,
+      },
+      limit: 5,
+      orderBy: [desc(taxReturns.updatedAt)],
+    }),
+    db.query.taxReturns.findMany({
+      where: and(
+        inArray(taxReturns.status, ["COMPLETED", "AWAITING_PAYMENT", "READY_FOR_SIGNATURE", "READY_TO_FILE"]),
+        not(eq(taxReturns.paymentStatus, "PAID")),
+        gt(taxReturns.taxPrepFee, 0)
+      ),
+      with: {
+        client: true,
+        invoices: true,
+      },
+      orderBy: [desc(taxReturns.updatedAt)],
+    }),
+    db.query.taxReturns.findMany({
+      where: and(
+        eq(taxReturns.status, "READY_TO_FILE"),
+        eq(taxReturns.paymentStatus, "PAID")
+      ),
+      with: {
+        client: true,
+        invoices: true,
+      },
+      orderBy: [desc(taxReturns.updatedAt)],
+    }),
+    getDocumentReviewQueue()
+  ]);
 
-  const pendingQuestionnaires = await db.select({ value: count() })
-    .from(questionnaires)
-    .where(eq(questionnaires.isSubmitted, true));
-
-  const pendingPaymentsCount = await db.select({ value: count() })
-    .from(taxReturns)
-    .where(and(
-      inArray(taxReturns.status, ["COMPLETED", "AWAITING_PAYMENT", "READY_FOR_SIGNATURE", "READY_TO_FILE"]),
-      not(eq(taxReturns.paymentStatus, "PAID")),
-      gt(taxReturns.taxPrepFee, 0)
-    ));
-
-  const pendingDocsCount = await db.select({ value: count() })
-    .from(documents)
-    .where(and(
-      eq(documents.status, "PENDING"),
-      sql`${documents.deletedAt} IS NULL`
-    ));
-
-  const recentReturns = await db.query.taxReturns.findMany({
-    with: {
-      client: true,
-    },
-    limit: 5,
-    orderBy: [desc(taxReturns.updatedAt)],
-  });
-
-  const outstandingFeesReturns = await db.query.taxReturns.findMany({
-    where: and(
-      inArray(taxReturns.status, ["COMPLETED", "AWAITING_PAYMENT", "READY_FOR_SIGNATURE", "READY_TO_FILE"]),
-      not(eq(taxReturns.paymentStatus, "PAID")),
-      gt(taxReturns.taxPrepFee, 0)
-    ),
-    with: {
-      client: true,
-      invoices: true,
-    },
-    orderBy: [desc(taxReturns.updatedAt)],
-  });
+  const clientCount = clientCountResult;
+  const returnCount = returnCountResult;
+  const pendingReturns = pendingReturnsResult;
+  const pendingQuestionnaires = pendingQuestionnairesResult;
+  const pendingPaymentsCount = pendingPaymentsCountResult;
+  const pendingDocsCount = pendingDocsCountResult;
 
   const outstandingFeesData = outstandingFeesReturns.map(ret => {
     const totalPaid = ret.invoices
@@ -88,175 +113,127 @@ export default async function AdminDashboard() {
     };
   });
 
-  const dbReadyToFileReturns = await db.query.taxReturns.findMany({
-    where: and(
-      eq(taxReturns.status, "READY_TO_FILE"),
-      eq(taxReturns.paymentStatus, "PAID")
-    ),
-    with: {
-      client: true,
-      invoices: true,
-    },
-    orderBy: [desc(taxReturns.updatedAt)],
-  });
-
-  // Filter to ensure balance is actually zero and no unpaid invoices exist (extra safety)
   const readyToFileReturns = dbReadyToFileReturns.filter(ret => {
     const totalPaid = ret.invoices
       .filter(inv => inv.status === 'PAID')
       .reduce((sum, inv) => sum + Number(inv.amount), 0);
-    const balanceDue = Math.max(0, Number(ret.taxPrepFee || 0) - totalPaid);
-    const hasUnpaid = ret.invoices.some(inv => inv.status === 'UNPAID');
-    return balanceDue <= 0 && !hasUnpaid;
+    const balance = Math.max(0, Number(ret.taxPrepFee || 0) - totalPaid);
+    return balance === 0;
   });
 
-  const reviewQueue = await getDocumentReviewQueue();
-
   return (
-    <div className="space-y-10">
-      <div>
-        <h1 className="text-4xl font-heading font-bold text-brand-navy">Welcome back, Staff</h1>
-        <p className="text-brand-charcoal/60 mt-2 font-medium">Here is what's happening with your clients today.</p>
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-4xl font-black text-brand-navy tracking-tight">Admin Dashboard</h1>
+          <p className="text-brand-charcoal/60 mt-1 font-medium">Welcome back. Here's what's happening today.</p>
+        </div>
+        <div className="flex items-center gap-3">
+           <div className="flex -space-x-2">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-gray-200 flex items-center justify-center text-[10px] font-bold text-gray-500">
+                   {String.fromCharCode(64 + i)}
+                </div>
+              ))}
+           </div>
+           <p className="text-xs font-bold text-brand-navy">3 Staff Online</p>
+        </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Primary Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatsCard 
-          icon={<Users className="text-blue-600" size={24} />}
+          icon={<Users className="text-brand-purple" />}
           label="Total Clients"
           value={clientCount[0].value}
-          subtext="Registered users"
+          subtext="Active in portal"
         />
         <StatsCard 
-          icon={<CheckCircle2 className="text-green-600" size={24} />}
-          label="Ready to File"
-          value={readyToFileReturns.length}
-          subtext="Paid & waiting"
+          icon={<FileText className="text-brand-purple" />}
+          label="Returns"
+          value={returnCount[0].value}
+          subtext="Total across all years"
         />
         <StatsCard 
-          icon={<FileSearch className="text-purple-600" size={24} />}
-          label="Docs to Review"
+          icon={<Clock className="text-brand-orange" />}
+          label="Active Returns"
+          value={pendingReturns[0].value}
+          subtext="In Process / Signed"
+        />
+        <StatsCard 
+          icon={<FileSearch className="text-brand-purple" />}
+          label="Pending Docs"
           value={pendingDocsCount[0].value}
-          subtext="Pending approval"
-        />
-        <StatsCard 
-          icon={<DollarSign className="text-brand-navy" size={24} />}
-          label="Pending Payments"
-          value={pendingPaymentsCount[0].value}
-          subtext="Awaiting client payment"
+          subtext="Awaiting review"
         />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Main Content Area */}
         <div className="lg:col-span-2 space-y-8">
-          {/* Ready to File Priority Section */}
-          {readyToFileReturns.length > 0 && (
-            <div className="bg-green-50 rounded-2xl shadow-sm border border-green-100 overflow-hidden">
-              <div className="p-6 border-b border-green-100 flex justify-between items-center bg-green-100/30">
-                <h2 className="text-lg font-bold text-green-900 flex items-center gap-2">
-                  <CheckCircle2 size={20} className="text-green-600" />
-                  Ready to File (Priority)
-                </h2>
-                <span className="bg-green-600 text-white text-[10px] font-black px-2 py-1 rounded-full uppercase tracking-tighter">
-                  Action Required
-                </span>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-green-100">
-                  <tbody className="divide-y divide-green-50">
-                    {readyToFileReturns.map((ret) => (
-                      <tr key={ret.id} className="hover:bg-green-100/30 transition-colors group">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="font-bold text-green-900">
-                            {(ret as any).client?.name || "N/A"}
-                          </div>
-                          <div className="text-xs text-green-700/60 font-medium">{(ret as any).client?.email}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-green-800 font-medium">
-                          {ret.year} Return
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right">
-                          <Link 
-                            href={`/admin/returns/${ret.id}`} 
-                            className="inline-flex items-center gap-1 text-xs font-bold bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-all shadow-sm hover:shadow-green-200"
-                          >
-                            Open Return
-                          </Link>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-          {/* Recent Activity Table */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="p-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
-              <h2 className="text-lg font-bold text-brand-navy flex items-center gap-2">
-                <Clock size={20} className="text-brand-orange" />
-                Recent Activity
-              </h2>
-              <Link href="/admin/returns" className="text-sm font-semibold text-blue-600 hover:text-blue-800 flex items-center gap-1 transition-colors">
-                View All <ArrowRight size={16} />
+          {/* Main Activity Area */}
+          <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="p-6 border-b border-gray-50 flex items-center justify-between">
+              <h3 className="font-bold text-brand-navy flex items-center gap-2 text-lg">
+                <Activity size={20} className="text-brand-purple" />
+                Recent Returns
+              </h3>
+              <Link href="/admin/returns" className="text-xs font-bold text-brand-purple hover:underline flex items-center gap-1">
+                View all <ArrowRight size={12} />
               </Link>
             </div>
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-100">
+              <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="bg-white text-left text-[10px] uppercase tracking-wider text-gray-400 font-bold">
-                    <th className="px-6 py-4">Client</th>
-                    <th className="px-6 py-4">Year</th>
-                    <th className="px-6 py-4">Status</th>
-                    <th className="px-6 py-4 text-right">Action</th>
+                  <tr className="bg-gray-50/50">
+                    <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Client</th>
+                    <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Year</th>
+                    <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Status</th>
+                    <th className="px-6 py-4 text-right"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
                   {recentReturns.map((ret) => (
-                    <tr key={ret.id} className="hover:bg-brand-cloud/50 transition-colors group">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="font-bold text-brand-navy group-hover:text-brand-orange transition-colors">
-                          {(ret as any).client?.name || "N/A"}
-                        </div>
-                        <div className="text-xs text-gray-400 font-medium">{(ret as any).client?.email}</div>
+                    <tr key={ret.id} className="hover:bg-gray-50/50 transition-colors group">
+                      <td className="px-6 py-4">
+                        <p className="text-sm font-bold text-brand-navy">{(ret as any).client?.name || 'Unknown'}</p>
+                        <p className="text-[10px] text-gray-400 font-medium tracking-tight">{(ret as any).client?.email}</p>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-brand-charcoal/80 font-medium">
-                        {ret.year}
+                      <td className="px-6 py-4">
+                        <span className="text-sm font-black text-brand-purple">{ret.year}</span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <StatusBadge status={ret.status} />
+                      <td className="px-6 py-4">
+                        <StatusBadge status={ret.status || 'NOT_STARTED'} />
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <td className="px-6 py-4 text-right">
                         <Link 
-                          href={`/admin/returns/${ret.id}`} 
-                          className="inline-flex items-center gap-1 text-xs font-bold bg-brand-cloud text-brand-navy px-3 py-1.5 rounded-lg hover:bg-brand-navy hover:text-white transition-all"
+                          href={`/admin/returns/${ret.id}`}
+                          className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-gray-50 text-brand-navy hover:bg-brand-purple hover:text-white transition-all opacity-0 group-hover:opacity-100"
                         >
-                          Details
+                          <ArrowRight size={14} />
                         </Link>
                       </td>
                     </tr>
                   ))}
+                  {recentReturns.length === 0 && (
+                    <tr>
+                      <td colSpan={4} className="px-6 py-12 text-center text-gray-400 font-medium">
+                        No returns found.
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
-            {recentReturns.length === 0 && (
-              <div className="p-12 text-center">
-                <FileText className="mx-auto text-gray-200 mb-4" size={48} />
-                <p className="text-gray-400 font-medium">No active returns found.</p>
-              </div>
-            )}
           </div>
-
-          {/* Outstanding Fees Section */}
-          <OutstandingFeesList fees={outstandingFeesData} />
 
           {/* Document Review Queue */}
           <DocumentReviewQueue initialDocuments={reviewQueue} />
+          
+          {/* Outstanding Fees */}
+          <OutstandingFeesList fees={outstandingFeesData} />
         </div>
 
-        {/* Priority Sidebar */}
+        {/* Sidebar */}
         <div className="space-y-6">
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
             <h3 className="text-sm font-bold text-brand-navy uppercase tracking-widest mb-4 flex items-center justify-between">
@@ -267,7 +244,6 @@ export default async function AdminDashboard() {
             </h3>
             <SyncQboButton />
           </div>
-
           <WorkflowStatus />
 
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
@@ -311,7 +287,7 @@ export default async function AdminDashboard() {
               )}
             </div>
           </div>
-          
+
           <div className="bg-brand-navy p-6 rounded-2xl shadow-lg text-white relative overflow-hidden">
              <div className="absolute -right-4 -bottom-4 opacity-10">
                 <FileText size={120} />
@@ -353,7 +329,7 @@ function StatusBadge({ status }: { status: string }) {
     'READY_TO_FILE': 'bg-purple-100 text-brand-purple border-brand-purple/10',
     'COMPLETED': 'bg-green-600 text-white border-green-700',
   };
-  
+
   return (
     <span className={`px-2.5 py-1 text-[10px] font-bold rounded-full border ${styles[normalizedStatus] || styles['NOT_STARTED']}`}>
       {status?.replace(/_/g, ' ')}
