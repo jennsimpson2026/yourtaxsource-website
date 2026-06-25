@@ -33,16 +33,32 @@ export default async function ResourcesPage() {
     return allPosts
       .filter(p => p.categoryId === id)
       .map(p => {
-        const isDirectLink = p.featuredImageUrl?.startsWith('http');
+        const fileUrl = p.fileUrl;
+        const isDirectLink = !!fileUrl || p.featuredImageUrl?.startsWith('http');
         const isExternalSlug = p.slug.startsWith('http');
         
+        // Detect type from file extension
+        let displayType = "PDF";
+        if (p.categoryId === govCat?.id) {
+          displayType = "External";
+        } else if (fileUrl) {
+          const ext = fileUrl.split('.').pop()?.toLowerCase();
+          if (ext === 'xlsx' || ext === 'xls') displayType = "Excel";
+          else if (ext === 'docx' || ext === 'doc') displayType = "Word";
+          else if (ext === 'pdf') displayType = "PDF";
+          else displayType = "File";
+        } else if (isDirectLink) {
+          displayType = "File";
+        }
+
         return {
           id: p.id,
           name: p.title,
           description: p.seoDescription || "",
-          type: (p.categoryId === govCat?.id) ? "External" : (isDirectLink ? "File" : "PDF"),
-          href: isDirectLink ? p.featuredImageUrl! : (isExternalSlug ? p.slug : `/resources/${p.slug}`),
-          isExternal: (p.categoryId === govCat?.id) || isDirectLink || isExternalSlug
+          type: displayType,
+          href: fileUrl || (isDirectLink ? p.featuredImageUrl! : (isExternalSlug ? p.slug : `/resources/${p.slug}`)),
+          isExternal: (p.categoryId === govCat?.id) || isDirectLink || isExternalSlug,
+          isDownload: !!fileUrl
         };
       });
   };
@@ -312,7 +328,13 @@ function ResourceCard({ item, sectionSlug }: { item: any; sectionSlug: string })
           )}
         </div>
         <div className="text-brand-charcoal/20 group-hover:text-brand-purple transition-colors mt-1">
-          {isExternal ? <ExternalLink size={18} /> : <Download size={18} />}
+          {item.isDownload ? (
+            <Download size={18} />
+          ) : isExternal ? (
+            <ExternalLink size={18} />
+          ) : (
+            <ChevronRight size={18} />
+          )}
         </div>
       </div>
     </a>

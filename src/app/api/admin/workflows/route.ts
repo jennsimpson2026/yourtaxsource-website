@@ -29,8 +29,8 @@ export async function DELETE() {
     // Clear all workflow logs
     await db.delete(workflows);
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Failed to clear workflows:", error);
-    return NextResponse.json({ error: "Failed to clear workflows" }, { status: 500 });
+    return NextResponse.json({ error: error.message || "Failed to clear workflows" }, { status: 500 });
   }
 }

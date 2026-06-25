@@ -65,8 +65,10 @@ export function ResourceForm({ initialData, categories }: ResourceFormProps) {
         if (!uploadResponse.ok) throw new Error("Failed to upload file to S3");
         
         setUploadProgress(70);
-        // Construct the public URL (in a real app, this would use a CDN or public bucket URL)
-        fileUrl = `https://${process.env.NEXT_PUBLIC_AWS_S3_BUCKET}.s3.amazonaws.com/${s3Key}`;
+        // Construct the public URL
+        const bucketName = process.env.NEXT_PUBLIC_AWS_S3_BUCKET || "your-tax-source-docs";
+        const region = "us-east-2"; // Standard for this project
+        fileUrl = `https://${bucketName}.s3.${region}.amazonaws.com/${s3Key}`;
       }
 
       // 2. Save to database

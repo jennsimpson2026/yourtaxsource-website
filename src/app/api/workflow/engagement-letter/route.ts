@@ -1,6 +1,6 @@
 import { serve } from "@upstash/workflow/nextjs";
 import { db } from "@/lib/db";
-import { engagementLetters, auditLogs, workflows } from "@/lib/db/schema";
+import { engagementLetters, auditLogs, workflows, taxReturns } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { generateEngagementLetterPDF } from "@/lib/pdf-server";
 import { s3Client, BUCKET_NAME } from "@/lib/s3";
@@ -40,7 +40,6 @@ export const { POST } = serve<{
         year,
       });
       // Upstash Workflow requires serializable data if returned from run
-      // But we can use it within the same run or convert to base64
       return buffer.toString("base64");
     });
 
@@ -76,7 +75,7 @@ export const { POST } = serve<{
         })
         .where(eq(engagementLetters.id, letterId));
 
-      // Update tax return status to AWAITING_PAYMENT if it was READY_FOR_SIGNATURE
+      // Update tax return status based on payment status
       const el = await db.query.engagementLetters.findFirst({
         where: eq(engagementLetters.id, letterId),
         with: {
@@ -129,7 +128,7 @@ export const { POST } = serve<{
     await db.update(workflows)
       .set({
         status: "failed",
-        error: error.message,
+        error: error.message || "Unknown error",
         updatedAt: new Date(),
       })
       .where(eq(workflows.id, context.workflowRunId));

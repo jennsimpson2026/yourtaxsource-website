@@ -1,4 +1,4 @@
-import { ArrowLeft, Calendar, User, Tag, Share2 } from "lucide-react";
+import { ArrowLeft, Calendar, User, Tag, Share2, Download } from "lucide-react";
 import Link from "next/link";
 import { getPostBySlug } from "@/actions/resources";
 import { notFound } from "next/navigation";
@@ -18,23 +18,40 @@ export default async function ResourceDetailPage({ params }: { params: { slug: s
           <Link href="/resources" className="inline-flex items-center gap-2 text-brand-purple hover:text-white transition-colors mb-8 font-bold">
             <ArrowLeft size={20} /> Back to Resource Center
           </Link>
-          <div className="flex items-center gap-3 mb-6">
-            <span className="bg-brand-purple/20 text-brand-purple px-4 py-1.5 rounded-full text-sm font-bold border border-brand-purple/30">
-              {post.category.name}
-            </span>
-          </div>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-heading font-bold mb-8 leading-tight">
-            {post.title}
-          </h1>
-          <div className="flex flex-wrap items-center gap-6 text-sm text-blue-100/60 font-medium">
-            <div className="flex items-center gap-2">
-              <Calendar size={18} className="text-brand-purple" />
-              {post.publishDate ? new Date(post.publishDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'Draft'}
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-6">
+                <span className="bg-brand-purple/20 text-brand-purple px-4 py-1.5 rounded-full text-sm font-bold border border-brand-purple/30">
+                  {post.category.name}
+                </span>
+              </div>
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-heading font-bold mb-8 leading-tight">
+                {post.title}
+              </h1>
+              <div className="flex flex-wrap items-center gap-6 text-sm text-blue-100/60 font-medium">
+                <div className="flex items-center gap-2">
+                  <Calendar size={18} className="text-brand-purple" />
+                  {post.publishDate ? new Date(post.publishDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'Draft'}
+                </div>
+                <div className="flex items-center gap-2">
+                  <User size={18} className="text-brand-purple" />
+                  By {post.author.name}
+                </div>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <User size={18} className="text-brand-purple" />
-              By {post.author.name}
-            </div>
+
+            {post.fileUrl && (
+              <div className="shrink-0">
+                <a
+                  href={post.fileUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-3 bg-brand-purple text-white px-8 py-4 rounded-2xl font-bold hover:bg-opacity-90 transition-all shadow-xl shadow-brand-purple/20"
+                >
+                  <Download size={20} /> Download Resource
+                </a>
+              </div>
+            )}
           </div>
         </div>
       </section>
