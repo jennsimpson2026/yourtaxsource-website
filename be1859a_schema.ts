@@ -9,7 +9,6 @@ export const users = sqliteTable("users", {
   password: text("password"),
   mfaEnabled: integer("mfa_enabled", { mode: "boolean" }).default(false).notNull(),
   mfaSecret: text("mfa_secret"),
-  mfaBackupCodes: text("mfa_backup_codes"), // JSON array of hashed codes
   emailVerified: integer("email_verified", { mode: "timestamp" }),
   image: text("image"),
   lastLoginAt: integer("last_login_at", { mode: "timestamp" }),

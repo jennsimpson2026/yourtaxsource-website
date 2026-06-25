@@ -4,6 +4,7 @@ import { users, taxReturns, annualUpdates } from "@/lib/db/schema";
 import { eq, desc, and } from "drizzle-orm";
 import { isStaff, staffOnlyResponse } from "@/lib/auth-utils";
 import { decrypt } from "@/lib/crypto";
+import { logPiiExport } from "@/lib/audit";
 
 export async function GET(req: Request) {
   if (!(await isStaff())) {
@@ -86,6 +87,9 @@ export async function GET(req: Request) {
     });
 
     const csv = [headers.join(","), ...rows].join("\n");
+
+    // Log the export action
+    await logPiiExport(filteredUpdates.length, year || "all");
 
     return new NextResponse(csv, {
       headers: {

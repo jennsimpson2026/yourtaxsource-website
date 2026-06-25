@@ -13,6 +13,7 @@ export function MfaSetup({ userId, initialEnabled }: { userId: string, initialEn
   const [verifying, setVerifying] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showSetup, setShowSetup] = useState(false);
+  const [backupCodes, setBackupCodes] = useState<string[] | null>(null);
 
   const handleStartSetup = async () => {
     setLoading(true);
@@ -41,6 +42,7 @@ export function MfaSetup({ userId, initialEnabled }: { userId: string, initialEn
       if ("error" in result) throw new Error(result.error);
       
       setEnabled(true);
+      setBackupCodes(result.backupCodes || null);
       setShowSetup(false);
     } catch (err: any) {
       setError(err.message || "Invalid code. Please try again.");
@@ -48,6 +50,47 @@ export function MfaSetup({ userId, initialEnabled }: { userId: string, initialEn
       setVerifying(false);
     }
   };
+
+  if (backupCodes) {
+    return (
+      <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-brand-purple/20 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-brand-purple/10 rounded-2xl flex items-center justify-center text-brand-purple">
+            <ShieldCheck size={24} />
+          </div>
+          <div>
+            <h3 className="text-xl font-heading font-bold text-brand-black">MFA Activated!</h3>
+            <p className="text-brand-charcoal/60 text-sm">Your account is now more secure.</p>
+          </div>
+        </div>
+
+        <div className="p-6 bg-brand-soft-gray rounded-3xl space-y-4">
+          <div className="flex items-start gap-3 text-brand-orange">
+            <AlertCircle size={20} className="shrink-0 mt-0.5" />
+            <p className="text-sm font-bold uppercase tracking-wide">Save Your Recovery Codes</p>
+          </div>
+          <p className="text-xs text-brand-charcoal/70 leading-relaxed">
+            If you lose your device, these codes are the <strong>only way</strong> to regain access to your account. Store them in a safe place (like a password manager). Each code can only be used once.
+          </p>
+          
+          <div className="grid grid-cols-2 gap-3 pt-2">
+            {backupCodes.map((code, idx) => (
+              <div key={idx} className="bg-white p-3 rounded-xl border border-gray-100 text-center font-mono font-bold text-brand-navy select-all">
+                {code}
+              </div>
+            ))}
+          </div>
+
+          <button
+            onClick={() => window.location.reload()}
+            className="w-full bg-brand-black text-white py-3 rounded-xl font-bold text-sm hover:bg-brand-purple transition-colors mt-4"
+          >
+            I've Saved These Codes
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (enabled) {
     return (

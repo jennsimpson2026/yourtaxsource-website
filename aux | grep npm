@@ -1,0 +1,352 @@
+[1mdiff --git a/src/lib/db/schema.ts b/src/lib/db/schema.ts[m
+[1mindex 3bc427f..c11de9c 100755[m
+[1m--- a/src/lib/db/schema.ts[m
+[1m+++ b/src/lib/db/schema.ts[m
+[36m@@ -51,10 +51,20 @@[m [mexport const profiles = sqliteTable("profiles", {[m
+   addressLine2: text("address_line2"),[m
+   city: text("city"),[m
+   state: text("state"),[m
+[31m-  zip: text("zip"),[m
+[31m-  createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),[m
+[31m-  updatedAt: integer("updated_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),[m
+[31m-});[m
+[32m+[m[32m  zipCode: text("zip_code"),[m
+[32m+[m[32m  encryptedSsn: text("encrypted_ssn"),[m
+[32m+[m[32m  dateOfBirth: text("date_of_birth"),[m
+[32m+[m[32m  qboCustomerId: text("qbo_customer_id"),[m
+[32m+[m[32m}, (table) => ({[m
+[32m+[m[32m  userIdIdx: index("profiles_user_id_idx").on(table.userId),[m
+[32m+[m[32m}));[m
+[32m+[m
+[32m+[m[32mexport const profilesRelations = relations(profiles, ({ one }) => ({[m
+[32m+[m[32m  user: one(users, {[m
+[32m+[m[32m    fields: [profiles.userId],[m
+[32m+[m[32m    references: [users.id],[m
+[32m+[m[32m  }),[m
+[32m+[m[32m}));[m
+ [m
+ export const taxReturns = sqliteTable("tax_returns", {[m
+   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),[m
+[36m@@ -66,16 +76,16 @@[m [mexport const taxReturns = sqliteTable("tax_returns", {[m
+   paymentStatus: text("payment_status").default("UNPAID").notNull(),[m
+   assignedStaffId: text("assigned_staff_id").references(() => users.id),[m
+   federalResult: real("federal_result"),[m
+[31m-  stateResult: real("state_result"),[m
+[31m-  taxPrepFee: real("tax_prep_fee").default(0).notNull(),[m
+[31m-  hasBusinessIncome: integer("has_business_income", { mode: "boolean" }).default(false).notNull(),[m
+[31m-  hasRentalIncome: integer("has_rental_income", { mode: "boolean" }).default(false).notNull(),[m
+[31m-  hasStockSales: integer("has_stock_sales", { mode: "boolean" }).default(false).notNull(),[m
+[32m+[m[32m  stateResults: text("state_results"), // JSON string[m
+[32m+[m[32m  taxPrepFee: real("tax_prep_fee").default(0),[m
+[32m+[m[32m  manualRelease: integer("manual_release", { mode: "boolean" }).default(false).notNull(),[m
+[32m+[m[32m  isComplimentary: integer("is_complimentary", { mode: "boolean" }).default(false).notNull(),[m
+   notes: text("notes"),[m
+   createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),[m
+   updatedAt: integer("updated_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),[m
+ }, (table) => ({[m
+   clientIdIdx: index("tax_returns_client_id_idx").on(table.clientId),[m
+[32m+[m[32m  yearIdx: index("tax_returns_year_idx").on(table.year),[m
+   statusIdx: index("tax_returns_status_idx").on(table.status),[m
+ }));[m
+ [m
+[36m@@ -84,12 +94,17 @@[m [mexport const taxReturnsRelations = relations(taxReturns, ({ one, many }) => ({[m
+     fields: [taxReturns.clientId],[m
+     references: [users.id],[m
+   }),[m
+[31m-  assignedStaff: one(users, {[m
+[31m-    fields: [taxReturns.assignedStaffId],[m
+[31m-    references: [users.id],[m
+[31m-  }),[m
+   documents: many(documents),[m
+   invoices: many(invoices),[m
+[32m+[m[32m  engagementLetters: many(engagementLetters),[m
+[32m+[m[32m  annualUpdate: one(annualUpdates, {[m
+[32m+[m[32m    fields: [taxReturns.id],[m
+[32m+[m[32m    references: [annualUpdates.returnId],[m
+[32m+[m[32m  }),[m
+[32m+[m[32m  questionnaire: one(questionnaires, {[m
+[32m+[m[32m    fields: [taxReturns.id],[m
+[32m+[m[32m    references: [questionnaires.returnId],[m
+[32m+[m[32m  }),[m
+ }));[m
+ [m
+ export const documents = sqliteTable("documents", {[m
+[36m@@ -97,18 +112,27 @@[m [mexport const documents = sqliteTable("documents", {[m
+   userId: text("user_id")[m
+     .references(() => users.id)[m
+     .notNull(),[m
+[31m-  taxReturnId: text("tax_return_id").references(() => taxReturns.id),[m
+[31m-  name: text("name").notNull(),[m
+[31m-  type: text("type").notNull(), // 'W2', '1099', 'FINAL_RETURN', etc.[m
+[31m-  url: text("url").notNull(),[m
+[31m-  status: text("status").default("PENDING").notNull(), // 'PENDING', 'APPROVED', 'REJECTED'[m
+[31m-  isLocked: integer("is_locked", { mode: "boolean" }).default(false).notNull(), // For Pay-to-Unlock[m
+[31m-  notes: text("notes"),[m
+[31m-  createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),[m
+[31m-  updatedAt: integer("updated_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),[m
+[32m+[m[32m  returnId: text("return_id").references(() => taxReturns.id),[m
+[32m+[m[32m  s3Key: text("s3_key").notNull().unique(),[m
+[32m+[m[32m  fileName: text("file_name").notNull(),[m
+[32m+[m[32m  fileType: text("file_type").notNull(),[m
+[32m+[m[32m  fileSize: integer("file_size").notNull(),[m
+[32m+[m[32m  category: text("category").notNull(),[m
+[32m+[m[32m  taxYear: integer("tax_year"),[m
+[32m+[m[32m  isLocked: integer("is_locked", { mode: "boolean" }).default(true).notNull(),[m
+[32m+[m[32m  status: text("status").default("PENDING").notNull(), // 'PENDING', 'ACCEPTED', 'REJECTED', 'CLARIFICATION_REQUESTED'[m
+[32m+[m[32m  reviewFeedback: text("review_feedback"),[m
+[32m+[m[32m  reviewedAt: integer("reviewed_at", { mode: "timestamp" }),[m
+[32m+[m[32m  reviewedBy: text("reviewed_by").references(() => users.id),[m
+[32m+[m[32m  uploadedAt: integer("uploaded_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),[m
+[32m+[m[32m  deletedAt: integer("deleted_at", { mode: "timestamp" }),[m
+ }, (table) => ({[m
+   userIdIdx: index("documents_user_id_idx").on(table.userId),[m
+[31m-  taxReturnIdIdx: index("documents_tax_return_id_idx").on(table.taxReturnId),[m
+[32m+[m[32m  returnIdIdx: index("documents_return_id_idx").on(table.returnId),[m
+[32m+[m[32m  categoryIdx: index("documents_category_idx").on(table.category),[m
+[32m+[m[32m  statusIdx: index("documents_status_idx").on(table.status),[m
+[32m+[m[32m  uploadedAtIdx: index("documents_uploaded_at_idx").on(table.uploadedAt),[m
+[32m+[m[32m  taxYearIdx: index("documents_tax_year_idx").on(table.taxYear),[m
+ }));[m
+ [m
+ export const documentsRelations = relations(documents, ({ one }) => ({[m
+[36m@@ -117,30 +141,83 @@[m [mexport const documentsRelations = relations(documents, ({ one }) => ({[m
+     references: [users.id],[m
+   }),[m
+   taxReturn: one(taxReturns, {[m
+[31m-    fields: [documents.taxReturnId],[m
+[32m+[m[32m    fields: [documents.returnId],[m
+     references: [taxReturns.id],[m
+   }),[m
+ }));[m
+ [m
+[32m+[m[32mexport const questionnaires = sqliteTable("questionnaires", {[m
+[32m+[m[32m  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),[m
+[32m+[m[32m  clientId: text("client_id")[m
+[32m+[m[32m    .references(() => users.id)[m
+[32m+[m[32m    .notNull(),[m
+[32m+[m[32m  returnId: text("return_id")[m
+[32m+[m[32m    .references(() => taxReturns.id)[m
+[32m+[m[32m    .notNull(),[m
+[32m+[m[32m  data: text("data").notNull(), // JSON string[m
+[32m+[m[32m  isSubmitted: integer("is_submitted", { mode: "boolean" }).default(false).notNull(),[m
+[32m+[m[32m  submittedAt: integer("submitted_at", { mode: "timestamp" }),[m
+[32m+[m[32m}, (table) => ({[m
+[32m+[m[32m  clientIdIdx: index("questionnaires_client_id_idx").on(table.clientId),[m
+[32m+[m[32m  returnIdIdx: index("questionnaires_return_id_idx").on(table.returnId),[m
+[32m+[m[32m}));[m
+[32m+[m
+[32m+[m[32mexport const questionnairesRelations = relations(questionnaires, ({ one }) => ({[m
+[32m+[m[32m  client: one(users, {[m
+[32m+[m[32m    fields: [questionnaires.clientId],[m
+[32m+[m[32m    references: [users.id],[m
+[32m+[m[32m  }),[m
+[32m+[m[32m  taxReturn: one(taxReturns, {[m
+[32m+[m[32m    fields: [questionnaires.returnId],[m
+[32m+[m[32m    references: [taxReturns.id],[m
+[32m+[m[32m  }),[m
+[32m+[m[32m}));[m
+[32m+[m
+[32m+[m[32mexport const auditLogs = sqliteTable("audit_logs", {[m
+[32m+[m[32m  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),[m
+[32m+[m[32m  userId: text("user_id").references(() => users.id),[m
+[32m+[m[32m  action: text("action").notNull(),[m
+[32m+[m[32m  targetType: text("target_type").notNull(),[m
+[32m+[m[32m  targetId: text("target_id"),[m
+[32m+[m[32m  status: text("status").default("PENDING"),[m
+[32m+[m[32m  metadata: text("metadata"), // JSON string[m
+[32m+[m[32m  ipAddress: text("ip_address"),[m
+[32m+[m[32m  createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),[m
+[32m+[m[32m}, (table) => ({[m
+[32m+[m[32m  userIdIdx: index("audit_logs_user_id_idx").on(table.userId),[m
+[32m+[m[32m  actionIdx: index("audit_logs_action_idx").on(table.action),[m
+[32m+[m[32m  targetIdIdx: index("audit_logs_target_id_idx").on(table.targetId),[m
+[32m+[m[32m  createdAtIdx: index("audit_logs_created_at_idx").on(table.createdAt),[m
+[32m+[m[32m}));[m
+[32m+[m
+[32m+[m[32mexport const auditLogsRelations = relations(auditLogs, ({ one }) => ({[m
+[32m+[m[32m  user: one(users, {[m
+[32m+[m[32m    fields: [auditLogs.userId],[m
+[32m+[m[32m    references: [users.id],[m
+[32m+[m[32m  }),[m
+[32m+[m[32m}));[m
+[32m+[m
+ export const invoices = sqliteTable("invoices", {[m
+   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),[m
+   userId: text("user_id")[m
+     .references(() => users.id)[m
+     .notNull(),[m
+[31m-  taxReturnId: text("tax_return_id")[m
+[32m+[m[32m  returnId: text("return_id")[m
+     .references(() => taxReturns.id)[m
+     .notNull(),[m
+[32m+[m[32m  helcimInvoiceId: text("helcim_invoice_id"),[m
+[32m+[m[32m  qboInvoiceId: text("qbo_invoice_id"),[m
+[32m+[m[32m  qboSalesReceiptId: text("qbo_sales_receipt_id"),[m
+   amount: real("amount").notNull(),[m
+[31m-  status: text("status").default("UNPAID").notNull(), // 'UNPAID', 'PAID', 'CANCELLED'[m
+[31m-  description: text("description"),[m
+[31m-  externalInvoiceId: text("external_invoice_id"), // For Helcim/Stripe/QBO sync[m
+[31m-  paymentUrl: text("payment_url"),[m
+[32m+[m[32m  currency: text("currency").default("USD").notNull(),[m
+[32m+[m[32m  status: text("status").default("UNPAID").notNull(),[m
+   paidAt: integer("paid_at", { mode: "timestamp" }),[m
+   createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),[m
+   updatedAt: integer("updated_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),[m
+ }, (table) => ({[m
+   userIdIdx: index("invoices_user_id_idx").on(table.userId),[m
+[31m-  taxReturnIdIdx: index("invoices_tax_return_id_idx").on(table.taxReturnId),[m
+[32m+[m[32m  returnIdIdx: index("invoices_return_id_idx").on(table.returnId),[m
+[32m+[m[32m  statusIdx: index("invoices_status_idx").on(table.status),[m
+ }));[m
+ [m
+ export const invoicesRelations = relations(invoices, ({ one }) => ({[m
+[36m@@ -149,39 +226,95 @@[m [mexport const invoicesRelations = relations(invoices, ({ one }) => ({[m
+     references: [users.id],[m
+   }),[m
+   taxReturn: one(taxReturns, {[m
+[31m-    fields: [invoices.taxReturnId],[m
+[32m+[m[32m    fields: [invoices.returnId],[m
+     references: [taxReturns.id],[m
+   }),[m
+ }));[m
+ [m
+[31m-export const annualUpdates = sqliteTable("annual_updates", {[m
+[32m+[m[32mexport const engagementLetters = sqliteTable("engagement_letters", {[m
+[32m+[m[32m  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),[m
+[32m+[m[32m  returnId: text("return_id")[m
+[32m+[m[32m    .references(() => taxReturns.id)[m
+[32m+[m[32m    .notNull(),[m
+[32m+[m[32m  status: text("status").default("PENDING").notNull(), // 'PENDING', 'SIGNED', 'PROCESSING'[m
+[32m+[m[32m  content: text("content").notNull(),[m
+[32m+[m[32m  signedAt: integer("signed_at", { mode: "timestamp" }),[m
+[32m+[m[32m  signatureData: text("signature_data"),[m
+[32m+[m[32m  s3Key: text("s3_key"),[m
+[32m+[m[32m  consentAgreed: integer("consent_agreed", { mode: "boolean" }).default(false).notNull(),[m
+[32m+[m[32m  consentElectronic: integer("consent_electronic", { mode: "boolean" }).default(false).notNull(),[m
+[32m+[m[32m  consentResponsibility: integer("consent_responsibility", { mode: "boolean" }).default(false).notNull(),[m
+[32m+[m[32m  createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),[m
+[32m+[m[32m  updatedAt: integer("updated_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),[m
+[32m+[m[32m}, (table) => ({[m
+[32m+[m[32m  returnIdIdx: index("engagement_letters_return_id_idx").on(table.returnId),[m
+[32m+[m[32m}));[m
+[32m+[m
+[32m+[m[32mexport const engagementLettersRelations = relations(engagementLetters, ({ one }) => ({[m
+[32m+[m[32m  taxReturn: one(taxReturns, {[m
+[32m+[m[32m    fields: [engagementLetters.returnId],[m
+[32m+[m[32m    references: [taxReturns.id],[m
+[32m+[m[32m  }),[m
+[32m+[m[32m}));[m
+[32m+[m
+[32m+[m[32mexport const appointments = sqliteTable("appointments", {[m
+   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),[m
+   userId: text("user_id")[m
+     .references(() => users.id)[m
+     .notNull(),[m
+[31m-  year: integer("year").notNull(),[m
+[31m-  status: text("status").default("DRAFT").notNull(), // 'DRAFT', 'SUBMITTED', 'REVIEWED'[m
+[31m-  data: text("data").notNull(), // JSON blob for flexible questionnaire[m
+[32m+[m[32m  bookingId: text("booking_id"), // Remote booking ID[m
+[32m+[m[32m  startTime: integer("start_time", { mode: "timestamp" }).notNull(),[m
+[32m+[m[32m  endTime: integer("end_time", { mode: "timestamp" }).notNull(),[m
+[32m+[m[32m  location: text("location"),[m
+[32m+[m[32m  notes: text("notes"),[m
+[32m+[m[32m  status: text("status").default("SCHEDULED").notNull(), // 'SCHEDULED', 'COMPLETED', 'CANCELLED'[m
+[32m+[m[32m  createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),[m
+[32m+[m[32m}, (table) => ({[m
+[32m+[m[32m  userIdIdx: index("appointments_user_id_idx").on(table.userId),[m
+[32m+[m[32m}));[m
+[32m+[m
+[32m+[m[32mexport const appointmentsRelations = relations(appointments, ({ one }) => ({[m
+[32m+[m[32m  user: one(users, {[m
+[32m+[m[32m    fields: [appointments.userId],[m
+[32m+[m[32m    references: [users.id],[m
+[32m+[m[32m  }),[m
+[32m+[m[32m}));[m
+[32m+[m
+[32m+[m[32mexport const annualUpdates = sqliteTable("annual_updates", {[m
+[32m+[m[32m  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),[m
+[32m+[m[32m  clientId: text("client_id")[m
+[32m+[m[32m    .references(() => users.id)[m
+[32m+[m[32m    .notNull(),[m
+[32m+[m[32m  returnId: text("return_id")[m
+[32m+[m[32m    .references(() => taxReturns.id)[m
+[32m+[m[32m    .notNull(),[m
+[32m+[m[32m  status: text("status").default("DRAFT").notNull(), // 'DRAFT', 'SUBMITTED'[m
+[32m+[m[32m  taxInfo: text("tax_info"), // JSON string[m
+[32m+[m[32m  dependents: text("dependents"), // JSON string[m
+[32m+[m[32m  bankingInfo: text("banking_info"), // JSON string (contains encrypted fields)[m
+[32m+[m[32m  priorYearChanges: text("prior_year_changes"),[m
+   createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),[m
+   updatedAt: integer("updated_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),[m
+ }, (table) => ({[m
+[31m-  userIdIdx: index("annual_updates_user_id_idx").on(table.userId),[m
+[32m+[m[32m  clientIdIdx: index("annual_updates_client_id_idx").on(table.clientId),[m
+[32m+[m[32m  returnIdIdx: index("annual_updates_return_id_idx").on(table.returnId),[m
+ }));[m
+ [m
+ export const annualUpdatesRelations = relations(annualUpdates, ({ one }) => ({[m
+[31m-  user: one(users, {[m
+[31m-    fields: [annualUpdates.userId],[m
+[32m+[m[32m  client: one(users, {[m
+[32m+[m[32m    fields: [annualUpdates.clientId],[m
+     references: [users.id],[m
+   }),[m
+[32m+[m[32m  taxReturn: one(taxReturns, {[m
+[32m+[m[32m    fields: [annualUpdates.returnId],[m
+[32m+[m[32m    references: [taxReturns.id],[m
+[32m+[m[32m  }),[m
+ }));[m
+ [m
+ export const categories = sqliteTable("categories", {[m
+   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),[m
+   name: text("name").notNull(),[m
+   slug: text("slug").notNull().unique(),[m
+[31m-  description: text("description"),[m
+[31m-  createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),[m
+[31m-  updatedAt: integer("updated_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),[m
+ });[m
+ [m
+ export const categoriesRelations = relations(categories, ({ many }) => ({[m
+[36m@@ -282,42 +415,3 @@[m [mexport const workflows = sqliteTable("workflows", {[m
+   createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),[m
+   updatedAt: integer("updated_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),[m
+ });[m
+[31m-[m
+[31m-export const auditLogs = sqliteTable("audit_logs", {[m
+[31m-  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),[m
+[31m-  userId: text("user_id").references(() => users.id),[m
+[31m-  action: text("action").notNull(),[m
+[31m-  entityType: text("entity_type"),[m
+[31m-  entityId: text("entity_id"),[m
+[31m-  details: text("details"),[m
+[31m-  ipAddress: text("ip_address"),[m
+[31m-  createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),[m
+[31m-});[m
+[31m-[m
+[31m-export const auditLogsRelations = relations(auditLogs, ({ one }) => ({[m
+[31m-  user: one(users, {[m
+[31m-    fields: [auditLogs.userId],[m
+[31m-    references: [users.id],[m
+[31m-  }),[m
+[31m-}));[m
+[31m-[m
+[31m-export const appointments = sqliteTable("appointments", {[m
+[31m-  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),[m
+[31m-  userId: text("user_id").references(() => users.id),[m
+[31m-  startTime: integer("start_time", { mode: "timestamp" }).notNull(),[m
+[31m-  endTime: integer("end_time", { mode: "timestamp" }).notNull(),[m
+[31m-  status: text("status").default("scheduled").notNull(), // 'scheduled', 'cancelled', 'completed'[m
+[31m-  externalEventId: text("external_event_id"), // Microsoft Graph Event ID[m
+[31m-  type: text("type").default("tax_consultation").notNull(),[m
+[31m-  meetingUrl: text("meeting_url"),[m
+[31m-  notes: text("notes"),[m
+[31m-  createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),[m
+[31m-  updatedAt: integer("updated_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),[m
+[31m-});[m
+[31m-[m
+[31m-export const appointmentsRelations = relations(appointments, ({ one }) => ({[m
+[31m-  user: one(users, {[m
+[31m-    fields: [appointments.userId],[m
+[31m-    references: [users.id],[m
+[31m-  }),[m
+[31m-}));[m

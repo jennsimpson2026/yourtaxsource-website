@@ -139,7 +139,16 @@ export async function verifyAndEnableMfa(userId: string, token: string) {
     return { error: "Invalid code" };
   }
 
-  await db.update(users).set({ mfaEnabled: true }).where(eq(users.id, userId));
+  // Generate backup codes
+  const backupCodes = Array.from({ length: 8 }, () => crypto.randomBytes(4).toString("hex"));
+  const hashedBackupCodes = await Promise.all(
+    backupCodes.map((code) => bcrypt.hash(code, 10))
+  );
+
+  await db.update(users).set({ 
+    mfaEnabled: true,
+    mfaBackupCodes: JSON.stringify(hashedBackupCodes)
+  }).where(eq(users.id, userId));
 
   await db.insert(auditLogs).values({
     userId,
@@ -149,7 +158,7 @@ export async function verifyAndEnableMfa(userId: string, token: string) {
   });
 
   revalidatePath("/");
-  return { success: true };
+  return { success: true, backupCodes };
 }
 
 export async function forgotPassword(formData: FormData) {

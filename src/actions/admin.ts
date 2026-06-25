@@ -1,11 +1,75 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { auditLogs, users } from "@/lib/db/schema";
+import { auditLogs, users, profiles, annualUpdates } from "@/lib/db/schema";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm";
 import { notifyDocumentRequest } from "@/lib/notifications";
+import { decrypt } from "@/lib/crypto";
+import { logPiiRead } from "@/lib/audit";
+
+export async function getSensitiveClientData(clientId: string) {
+  const session = await auth();
+  if (!session?.user || (session.user as any).role === "CLIENT") {
+    throw new Error("Unauthorized");
+  }
+
+  const profile = await db.query.profiles.findFirst({
+    where: eq(profiles.userId, clientId),
+  });
+
+  const annualUpdate = await db.query.annualUpdates.findFirst({
+    where: eq(annualUpdates.clientId, clientId),
+    orderBy: (au, { desc }) => [desc(au.createdAt)],
+  });
+
+  const data: any = {};
+
+  if (profile?.encryptedSsn) {
+    try {
+      data.ssn = decrypt(profile.encryptedSsn);
+    } catch (e) {
+      console.error("Failed to decrypt SSN", e);
+    }
+  }
+
+  if (annualUpdate?.bankingInfo) {
+    try {
+      const banking = JSON.parse(annualUpdate.bankingInfo);
+      if (banking.accountNumber) {
+        banking.accountNumber = decrypt(banking.accountNumber);
+      }
+      data.banking = banking;
+    } catch (e) {
+      console.error("Failed to decrypt banking info", e);
+    }
+  }
+
+  if (annualUpdate?.dependents) {
+    try {
+      const dependents = JSON.parse(annualUpdate.dependents);
+      dependents.forEach((d: any) => {
+        if (d.ssn) d.ssn = decrypt(d.ssn);
+      });
+      data.dependents = dependents;
+    } catch (e) {
+      console.error("Failed to decrypt dependents", e);
+    }
+  }
+
+  // Log the access
+  const fields = [];
+  if (data.ssn) fields.push("SSN");
+  if (data.banking) fields.push("Banking Info");
+  if (data.dependents) fields.push("Dependents SSN");
+
+  if (fields.length > 0) {
+    await logPiiRead(clientId, fields);
+  }
+
+  return data;
+}
 
 export async function requestDocuments(clientId: string, returnId: string, documentList: string) {
   const session = await auth();

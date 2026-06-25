@@ -80,7 +80,33 @@ export const authOptions: NextAuthOptions = {
             });
 
             if (!isValidCode) {
-              throw new Error("INVALID_MFA_CODE");
+              // Check backup codes if 8 chars (hex)
+              if (credentials.code.length === 8 && user.mfaBackupCodes) {
+                const backupCodes = JSON.parse(user.mfaBackupCodes) as string[];
+                let foundIndex = -1;
+                
+                for (let i = 0; i < backupCodes.length; i++) {
+                  const isMatch = await bcrypt.compare(credentials.code, backupCodes[i]);
+                  if (isMatch) {
+                    foundIndex = i;
+                    break;
+                  }
+                }
+
+                if (foundIndex !== -1) {
+                  // Use backup code: remove it from the list
+                  const remainingCodes = backupCodes.filter((_, i) => i !== foundIndex);
+                  await db.update(users)
+                    .set({ mfaBackupCodes: JSON.stringify(remainingCodes) })
+                    .where(eq(users.id, user.id));
+                  
+                  console.log(`Auth: Used backup code for ${normalizedEmail}`);
+                } else {
+                  throw new Error("INVALID_MFA_CODE");
+                }
+              } else {
+                throw new Error("INVALID_MFA_CODE");
+              }
             }
           }
 

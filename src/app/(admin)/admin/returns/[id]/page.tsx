@@ -24,6 +24,7 @@ import { DocumentDownloadButton } from "@/components/admin/DocumentDownloadButto
 import { DocumentDeleteButton } from "@/components/admin/DocumentDeleteButton";
 import { EngagementLetterManager } from "@/components/admin/EngagementLetterManager";
 import { InvoiceManager } from "@/components/admin/InvoiceManager";
+import { SensitiveDataViewer } from "@/components/admin/SensitiveDataViewer";
 
 export default async function ReviewReturnPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -147,6 +148,9 @@ export default async function ReviewReturnPage({ params }: { params: Promise<{ i
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
+          {/* Sensitive Data Viewer */}
+          <SensitiveDataViewer clientId={ret.clientId} />
+
           {/* Intake Questionnaire */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <div className="p-6 border-b border-gray-50 bg-gray-50/50 flex justify-between items-center">

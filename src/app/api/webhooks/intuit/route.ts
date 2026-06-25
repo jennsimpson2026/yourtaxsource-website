@@ -1,41 +1,52 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { invoices, taxReturns, auditLogs } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { notifyPaymentReceived, notifyAdminPaymentReceived } from "@/lib/notifications";
 import { releaseReturnDocuments } from "@/lib/returns";
 import { getQboInvoice } from "@/lib/qbo";
+import crypto from "crypto";
 
 export async function POST(req: Request) {
   try {
-    const payload = await req.json();
+    const body = await req.text();
+    const payload = JSON.parse(body);
+    const signature = req.headers.get("intuit-signature");
     
-    // Intuit Webhook Payload
-    // https://developer.intuit.com/app/developer/qbo/docs/develop/webhooks
-    // {
-    //   "eventNotifications": [
-    //     {
-    //       "realmId": "123456789",
-    //       "dataChangeEvent": {
-    //         "entities": [
-    //           {
-    //             "name": "Invoice",
-    //             "id": "123",
-    //             "operation": "Update",
-    //             "lastUpdated": "2023-01-01T00:00:00Z"
-    //           }
-    //         ]
-    //       }
-    //     }
-    //   ]
-    // }
+    // Validate signature in production
+    const secret = process.env.INTUIT_WEBHOOK_SECRET;
+    if (secret && signature) {
+      const computedSignature = crypto
+        .createHmac("sha256", secret)
+        .update(body)
+        .digest("base64");
+      
+      if (computedSignature !== signature) {
+        console.warn("[IntuitWebhook] Invalid signature");
+        return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
+      }
+    }
 
     for (const notification of payload.eventNotifications) {
       for (const entity of notification.dataChangeEvent.entities) {
         if (entity.name === "Invoice" || entity.name === "Payment") {
-          // If it's an invoice, check if it's paid
           const qboId = entity.id;
           
+          // Idempotency check: Use a unique key for this specific entity update
+          const idempotencyKey = `intuit-${notification.realmId}-${entity.name}-${qboId}-${entity.lastUpdated}`;
+          
+          const existingLog = await db.query.auditLogs.findFirst({
+            where: and(
+              eq(auditLogs.action, "PAYMENT_RECEIVED_INTUIT"),
+              eq(auditLogs.targetId, idempotencyKey)
+            )
+          });
+
+          if (existingLog) {
+            console.log(`[IntuitWebhook] Event ${idempotencyKey} already processed. Skipping.`);
+            continue;
+          }
+
           // Find our local invoice
           const localInvoice = await db.query.invoices.findFirst({
             where: eq(invoices.qboInvoiceId, qboId),
@@ -69,7 +80,7 @@ export async function POST(req: Request) {
                   userId: localInvoice.userId,
                   action: "PAYMENT_RECEIVED_INTUIT",
                   targetType: "INVOICE",
-                  targetId: localInvoice.id,
+                  targetId: idempotencyKey,
                   metadata: JSON.stringify({ amount: localInvoice.amount, qboId }),
                 });
 
