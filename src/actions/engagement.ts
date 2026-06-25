@@ -89,6 +89,28 @@ export async function signEngagementLetter(
             updatedAt: new Date(),
           })
           .where(eq(engagementLetters.id, letterId));
+
+        // Update tax return status if needed
+        if (letter.taxReturn.status === "READY_FOR_SIGNATURE") {
+          const allInvoices = await db.query.invoices.findMany({
+            where: eq(invoices.returnId, (letter.taxReturn as any).id),
+          });
+          const totalPaid = allInvoices
+            .filter(inv => inv.status === "PAID")
+            .reduce((sum, inv) => sum + Number(inv.amount), 0);
+          const isFullyPaid = totalPaid >= Number(letter.taxReturn.taxPrepFee || 0);
+
+          const nextStatus = isFullyPaid ? "READY_TO_FILE" : "AWAITING_PAYMENT";
+          
+          await db.update(taxReturns)
+            .set({ 
+              status: nextStatus as any,
+              paymentStatus: isFullyPaid ? "PAID" : letter.taxReturn.paymentStatus,
+              updatedAt: new Date() 
+            })
+            .where(eq(taxReturns.id, (letter.taxReturn as any).id));
+        }
+
         console.log("[SIGN_ENGAGEMENT] Database update successful");
 
         await db.insert(auditLogs).values({

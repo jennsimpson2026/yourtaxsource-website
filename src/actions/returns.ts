@@ -49,8 +49,12 @@ export async function updateReturnDetails(returnId: string, data: {
     .filter(inv => inv.status === "PAID")
     .reduce((sum, inv) => sum + Number(inv.amount), 0);
   
+  const hasUnpaidInvoices = allInvoices.some(inv => inv.status === "UNPAID");
   const taxPrepFee = data.taxPrepFee !== undefined ? data.taxPrepFee : Number(currentReturn.taxPrepFee || 0);
-  const isFullyPaid = totalPaid >= taxPrepFee || data.paymentStatus === "PAID";
+  
+  // STRICT: Ready to File is ONLY allowed if balance is $0 and no unpaid invoices exist
+  const balanceDue = Math.max(0, taxPrepFee - totalPaid);
+  const isFullyPaid = balanceDue <= 0 && !hasUnpaidInvoices;
 
   if (isFullyPaid && ["AWAITING_PAYMENT", "READY_FOR_SIGNATURE"].includes(finalStatus)) {
     console.log(`[updateReturnDetails] Auto-transitioning return ${returnId} to READY_TO_FILE`);
@@ -58,9 +62,10 @@ export async function updateReturnDetails(returnId: string, data: {
     updateData.status = "READY_TO_FILE";
   }
 
-  // FORCE: If status is READY_TO_FILE but balance is due, force status back to AWAITING_PAYMENT
-  if (finalStatus === "READY_TO_FILE" && totalPaid < taxPrepFee && data.paymentStatus !== "PAID") {
-    console.log(`[updateReturnDetails] FORCING status back to AWAITING_PAYMENT because balance is due (${totalPaid}/${taxPrepFee})`);
+  // FORCE: If status is READY_TO_FILE but balance is due or unpaid invoices exist, force status back to AWAITING_PAYMENT
+  // This handles manual status changes that don't respect the payment rule
+  if (finalStatus === "READY_TO_FILE" && !isFullyPaid && data.paymentStatus !== "PAID") {
+    console.log(`[updateReturnDetails] FORCING status back to AWAITING_PAYMENT because balance is due or unpaid invoices exist`);
     finalStatus = "AWAITING_PAYMENT";
     updateData.status = "AWAITING_PAYMENT";
   }
@@ -177,8 +182,35 @@ export async function updateReturnStatus(returnId: string, status: string) {
   const session = await auth();
   if (!session?.user || (session.user as any).role === "CLIENT") throw new Error("Unauthorized");
 
+  // Fetch current state to check balance if moving to READY_TO_FILE
+  const currentReturn = await db.query.taxReturns.findFirst({
+    where: eq(taxReturns.id, returnId),
+    with: {
+      invoices: true,
+    }
+  });
+
+  if (!currentReturn) throw new Error("Return not found");
+
+  let finalStatus = status;
+
+  // STRICT: Ready to File is ONLY allowed if balance is $0 and no unpaid invoices exist
+  if (status === "READY_TO_FILE") {
+    const totalPaid = currentReturn.invoices
+      .filter(inv => inv.status === "PAID")
+      .reduce((sum, inv) => sum + Number(inv.amount), 0);
+    const balanceDue = Math.max(0, Number(currentReturn.taxPrepFee || 0) - totalPaid);
+    const hasUnpaidInvoices = currentReturn.invoices.some(inv => inv.status === "UNPAID");
+
+    if ((balanceDue > 0 || hasUnpaidInvoices) && currentReturn.paymentStatus !== "PAID") {
+      console.log(`[updateReturnStatus] Blocking transition to READY_TO_FILE because balance is due or unpaid invoices exist`);
+      // Fallback to AWAITING_PAYMENT if they try to move to READY_TO_FILE with balance
+      finalStatus = "AWAITING_PAYMENT";
+    }
+  }
+
   const [updatedReturn] = await db.update(taxReturns)
-    .set({ status: status as any, updatedAt: new Date() })
+    .set({ status: finalStatus as any, updatedAt: new Date() })
     .where(eq(taxReturns.id, returnId))
     .returning();
 

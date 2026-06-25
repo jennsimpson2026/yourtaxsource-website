@@ -41,11 +41,13 @@ export async function POST(req: Request) {
           .filter(inv => inv.status === "PAID")
           .reduce((sum, inv) => sum + Number(inv.amount), 0);
 
+        const hasUnpaid = allInvoices.some(inv => inv.status === "UNPAID");
+
         const taxReturn = await db.query.taxReturns.findFirst({
           where: eq(taxReturns.id, invoice.returnId),
         });
 
-        const isFullyPaid = taxReturn && totalPaid >= Number(taxReturn.taxPrepFee);
+        const isFullyPaid = taxReturn && totalPaid >= Number(taxReturn.taxPrepFee) && !hasUnpaid;
 
         if (isFullyPaid) {
           await db.update(taxReturns)

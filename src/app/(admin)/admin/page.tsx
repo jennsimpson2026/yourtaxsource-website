@@ -100,13 +100,14 @@ export default async function AdminDashboard() {
     orderBy: [desc(taxReturns.updatedAt)],
   });
 
-  // Filter to ensure balance is actually zero (extra safety)
+  // Filter to ensure balance is actually zero and no unpaid invoices exist (extra safety)
   const readyToFileReturns = dbReadyToFileReturns.filter(ret => {
     const totalPaid = ret.invoices
       .filter(inv => inv.status === 'PAID')
       .reduce((sum, inv) => sum + Number(inv.amount), 0);
     const balanceDue = Math.max(0, Number(ret.taxPrepFee || 0) - totalPaid);
-    return balanceDue <= 0;
+    const hasUnpaid = ret.invoices.some(inv => inv.status === 'UNPAID');
+    return balanceDue <= 0 && !hasUnpaid;
   });
 
   const reviewQueue = await getDocumentReviewQueue();
