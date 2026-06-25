@@ -53,7 +53,7 @@ export default function Home() {
               <div className="absolute inset-0 bg-brand-lavender rounded-[3rem] rotate-3 scale-95 opacity-20 blur-2xl"></div>
               <div className="relative h-full w-full rounded-[2.5rem] overflow-hidden shadow-2xl border-4 border-white/10">
                     <Image
-                      src="/images/jenn-hero-desk.png"
+                      src="/images/jenn-hero-authentic.png"
                       alt="Jenn Simpson, Your Tax Source"
                       fill
                       className="object-cover object-top"
@@ -76,25 +76,25 @@ export default function Home() {
                <div>
                   <h3 className="font-bold text-brand-black text-lg">IRS Authorized</h3>
                   <p className="text-sm text-brand-charcoal/60 font-medium">Professional e-File provider for more than a decade.</p>
-               </div>
-            </div>
-            <div className="flex items-center gap-4 bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-               <div className="w-14 h-14 bg-brand-purple/5 rounded-xl flex items-center justify-center flex-shrink-0">
+                  </div>
+                  </div>
+                  <div className="flex items-center gap-4 bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                  <div className="w-14 h-14 bg-brand-purple/5 rounded-xl flex items-center justify-center flex-shrink-0">
                   <Lock className="text-brand-purple" size={28} />
-               </div>
-               <div>
+                  </div>
+                  <div>
                   <h3 className="font-bold text-brand-black text-lg">Bank-Grade Security</h3>
                   <p className="text-sm text-brand-charcoal/60 font-medium">Your data is encrypted and protected.</p>
-               </div>
-            </div>
-            <div className="flex items-center gap-4 bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-               <div className="w-14 h-14 bg-brand-purple/5 rounded-xl flex items-center justify-center flex-shrink-0">
+                  </div>
+                  </div>
+                  <div className="flex items-center gap-4 bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                  <div className="w-14 h-14 bg-brand-purple/5 rounded-xl flex items-center justify-center flex-shrink-0">
                   <TrendingUp className="text-brand-purple" size={28} />
-               </div>
-               <div>
+                  </div>
+                  <div>
                   <h3 className="font-bold text-brand-black text-lg">Established Expertise</h3>
                   <p className="text-sm text-brand-charcoal/60 font-medium">More than a decade of trusted tax advisory.</p>
-               </div>
+                  </div>
             </div>
           </div>
         </div>

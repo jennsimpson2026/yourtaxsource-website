@@ -1,0 +1,25 @@
+Starting data migration for Resources...
+Cleaning up old records in these categories...
+Adding Checklists...
+/home/team/shared/repository/node_modules/@libsql/client/lib-cjs/hrana.js:340
+        return new api_1.LibsqlError(e.message, code, undefined, undefined, e);
+               ^
+
+LibsqlError: SQLITE_CONSTRAINT: SQLite error: FOREIGN KEY constraint failed
+    at mapHranaError (/home/team/shared/repository/node_modules/@libsql/client/lib-cjs/hrana.js:340:16)
+    at /home/team/shared/repository/node_modules/@libsql/client/lib-cjs/http.js:120:52
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async migrate (/home/team/shared/repository/scripts/populate-resources.ts:44:5) {
+  code: 'SQLITE_CONSTRAINT',
+  extendedCode: undefined,
+  rawCode: undefined,
+  [cause]: [ResponseError: SQLite error: FOREIGN KEY constraint failed] {
+    code: 'SQLITE_CONSTRAINT',
+    proto: {
+      message: 'SQLite error: FOREIGN KEY constraint failed',
+      code: 'SQLITE_CONSTRAINT'
+    }
+  }
+}
+
+Node.js v24.16.0

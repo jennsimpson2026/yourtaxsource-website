@@ -1,0 +1,1118 @@
+[33mcommit e58bb68b120ff8b83fd233883436d1aa53c28520[m
+Author: Jenn Simpson <jsimpson@yourtaxsource.com>
+Date:   Wed Jun 24 00:46:58 2026 +0000
+
+    Fix 'Ready to File' logic, secure portal button, add 'Blog' link, and update background job UI
+
+[1mdiff --git a/build_local.log b/build_local.log[m
+[1mnew file mode 100644[m
+[1mindex 0000000..b49c389[m
+[1m--- /dev/null[m
+[1m+++ b/build_local.log[m
+[36m@@ -0,0 +1,19 @@[m
+[32m+[m
+[32m+[m[32m> your-tax-source@0.1.0 build[m
+[32m+[m[32m> next build[m
+[32m+[m
+[32m+[m[32m⚠ Warning: Next.js inferred your workspace root, but it may not be correct.[m
+[32m+[m[32m We detected multiple lockfiles and selected the directory of /home/agent-lead-engineer-2/package-lock.json as the root directory.[m
+[32m+[m[32m To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.[m
+[32m+[m[32m   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.[m
+[32m+[m[32m Detected additional lockfiles:[m[41m [m
+[32m+[m[32m   * /home/agent-lead-engineer-2/your-tax-source/package-lock.json[m
+[32m+[m
+[32m+[m[32m▲ Next.js 16.2.6 (Turbopack)[m
+[32m+[m[32m- Environments: .env.local, .env.production[m
+[32m+[m
+[32m+[m[32m⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy[m
+[32m+[m[32m  Creating an optimized production build ...[m
+[32m+[m[32m✓ Compiled successfully in 3.5min[m
+[32m+[m[32m  Running TypeScript ...[m
+[32m+[m[32mKilled[m
+[1mdiff --git a/db_output.json b/db_output.json[m
+[1mnew file mode 100644[m
+[1mindex 0000000..fab2d41[m
+[1m--- /dev/null[m
+[1m+++ b/db_output.json[m
+[36m@@ -0,0 +1,58 @@[m
+[32m+[m[32m[[m
+[32m+[m[32m  {[m
+[32m+[m[32m    "id": "a746c805-126a-492e-a907-c62dfcecd915",[m
+[32m+[m[32m    "email": "admin@yourtaxsource.com",[m
+[32m+[m[32m    "name": "Admin User",[m
+[32m+[m[32m    "role": "ADMIN",[m
+[32m+[m[32m    "password": "$2b$10$XS5snvTHPg1AT7EubL1wdOTjKk/LHA5qX2P/UD0Z2TNaROXJBDcR6",[m
+[32m+[m[32m    "mfa_enabled": 0,[m
+[32m+[m[32m    "mfa_secret": "V3E4HF5NXRWILWEE336HHICSPQ6NV5OH",[m
+[32m+[m[32m    "email_verified": null,[m
+[32m+[m[32m    "image": null,[m
+[32m+[m[32m    "created_at": 1779917894,[m
+[32m+[m[32m    "updated_at": 1779917894,[m
+[32m+[m[32m    "last_login_at": null[m
+[32m+[m[32m  },[m
+[32m+[m[32m  {[m
+[32m+[m[32m    "id": "398c0063-85c0-4aec-b48a-82a6ef85de54",[m
+[32m+[m[32m    "email": "client@example.com",[m
+[32m+[m[32m    "name": "Test Client",[m
+[32m+[m[32m    "role": "CLIENT",[m
+[32m+[m[32m    "password": "$2b$10$DaVETsqziHY0Bzb7/qgfE.sDEz97p3.DhivCiMCk1As03W4vIPY6i",[m
+[32m+[m[32m    "mfa_enabled": 0,[m
+[32m+[m[32m    "mfa_secret": null,[m
+[32m+[m[32m    "email_verified": null,[m
+[32m+[m[32m    "image": null,[m
+[32m+[m[32m    "created_at": 1779917894,[m
+[32m+[m[32m    "updated_at": 1779917894,[m
+[32m+[m[32m    "last_login_at": null[m
+[32m+[m[32m  },[m
+[32m+[m[32m  {[m
+[32m+[m[32m    "id": "e1939cc7-3f7d-4136-8693-8660b79c8604",[m
+[32m+[m[32m    "email": "test@example.com",[m
+[32m+[m[32m    "name": "Test User",[m
+[32m+[m[32m    "role": "CLIENT",[m
+[32m+[m[32m    "password": "$2b$10$fQhWxLcEdEUZ3VFjGYmxEu.ZDahGfm3jFdoVHCs3OWJ.8bwZGvnb6",[m
+[32m+[m[32m    "mfa_enabled": 0,[m
+[32m+[m[32m    "mfa_secret": null,[m
+[32m+[m[32m    "email_verified": null,[m
+[32m+[m[32m    "image": null,[m
+[32m+[m[32m    "created_at": 1779918319,[m
+[32m+[m[32m    "updated_at": 1779918319,[m
+[32m+[m[32m    "last_login_at": null[m
+[32m+[m[32m  },[m
+[32m+[m[32m  {[m
+[32m+[m[32m    "id": "94d9f84e-ab6c-49bd-a7af-b13dcfee07a8",[m
+[32m+[m[32m    "email": "jsimpson@yourtaxsource.com",[m
+[32m+[m[32m    "name": "Jennifer Simpson",[m
+[32m+[m[32m    "role": "ADMIN",[m
+[32m+[m[32m    "password": "$2b$10$WkONSBChBJ0k9Q3jh04.xekQnxgZSrSFUPY3ud7mgbZrBXAm8ecNG",[m
+[32m+[m[32m    "mfa_enabled": 0,[m
+[32m+[m[32m    "mfa_secret": "XWCJOHUYYT5HK6VEIBXA4FHQCCGVGMLV",[m
+[32m+[m[32m    "email_verified": null,[m
+[32m+[m[32m    "image": null,[m
+[32m+[m[32m    "created_at": 1780357534,[m
+[32m+[m[32m    "updated_at": 1780357534,[m
+[32m+[m[32m    "last_login_at": 1781574823[m
+[32m+[m[32m  }[m
+[32m+[m[32m][m
+[1mdiff --git a/documentation/architecture/SCHEMA.md b/documentation/architecture/SCHEMA.md[m
+[1mindex 0144eda..06c720c 100755[m
+[1m--- a/documentation/architecture/SCHEMA.md[m
+[1m+++ b/documentation/architecture/SCHEMA.md[m
+[36m@@ -5,7 +5,7 @@[m [mThis document outlines the database schema using SQLite syntax via Drizzle ORM.[m
+ ## Enums (Handled as TEXT in SQLite)[m
+ [m
+ *   `user_role`: 'CLIENT', 'STAFF', 'ADMIN'[m
+[31m-*   `return_status`: 'NOT_STARTED', 'IN_PROGRESS', 'REVIEW', 'READY_FOR_SIGNATURE', 'READY_FOR_PAYMENT', 'FILED'[m
+[32m+[m[32m*   `return_status`: 'NOT_STARTED', 'IN_PROCESS', 'READY_FOR_SIGNATURE', 'AWAITING_PAYMENT', 'READY_TO_FILE', 'COMPLETED'[m
+ *   `document_category`: 'INTAKE', 'SUPPORTING', 'FINAL_RETURN', 'ID_VERIFICATION'[m
+ *   `payment_status`: 'UNPAID', 'PARTIAL', 'PAID', 'VOID'[m
+ [m
+[1mdiff --git a/local.db b/local.db[m
+[1mindex 6ca2b59..e78c16b 100755[m
+Binary files a/local.db and b/local.db differ
+[1mdiff --git a/src/actions/returns.ts b/src/actions/returns.ts[m
+[1mindex 99f2e13..1078007 100755[m
+[1m--- a/src/actions/returns.ts[m
+[1m+++ b/src/actions/returns.ts[m
+[36m@@ -43,6 +43,18 @@[m [mexport async function updateReturnDetails(returnId: string, data: {[m
+   if (updatedReturn) {[m
+     console.log(`[updateReturnDetails] Successfully updated return ${returnId}. New status: ${updatedReturn.status}, Payment: ${updatedReturn.paymentStatus}`);[m
+     [m
+[32m+[m[32m    // Automation: (AWAITING_PAYMENT or READY_FOR_SIGNATURE) + PAID = READY_TO_FILE[m
+[32m+[m[32m    if (updatedReturn.paymentStatus === "PAID" && ["AWAITING_PAYMENT", "READY_FOR_SIGNATURE"].includes(updatedReturn.status)) {[m
+[32m+[m[32m      console.log(`[updateReturnDetails] Auto-transitioning return ${returnId} to READY_TO_FILE`);[m
+[32m+[m[32m      const [autoUpdated] = await db.update(taxReturns)[m
+[32m+[m[32m        .set({ status: "READY_TO_FILE" as any, updatedAt: new Date() })[m
+[32m+[m[32m        .where(eq(taxReturns.id, returnId))[m
+[32m+[m[32m        .returning();[m
+[32m+[m[32m      if (autoUpdated) {[m
+[32m+[m[32m        updatedReturn.status = autoUpdated.status;[m
+[32m+[m[32m      }[m
+[32m+[m[32m    }[m
+[32m+[m
+     const client = await db.query.users.findFirst({[m
+       where: eq(users.id, updatedReturn.clientId),[m
+       with: {[m
+[1mdiff --git a/src/app/(admin)/admin/page.tsx b/src/app/(admin)/admin/page.tsx[m
+[1mindex f191671..ebbffc1 100755[m
+[1m--- a/src/app/(admin)/admin/page.tsx[m
+[1m+++ b/src/app/(admin)/admin/page.tsx[m
+[36m@@ -28,7 +28,7 @@[m [mexport default async function AdminDashboard() {[m
+   const pendingReturns = await db.select({ value: count() })[m
+     .from(taxReturns)[m
+     .where(and([m
+[31m-      not(eq(taxReturns.status, "FILED")),[m
+[32m+[m[32m      not(eq(taxReturns.status, "COMPLETED")),[m
+       not(eq(taxReturns.status, "NOT_STARTED"))[m
+     ));[m
+ [m
+[36m@@ -39,7 +39,7 @@[m [mexport default async function AdminDashboard() {[m
+   const pendingPaymentsCount = await db.select({ value: count() })[m
+     .from(taxReturns)[m
+     .where(and([m
+[31m-      inArray(taxReturns.status, ["FILED", "AWAITING_PAYMENT", "READY_FOR_SIGNATURE"]),[m
+[32m+[m[32m      inArray(taxReturns.status, ["COMPLETED", "AWAITING_PAYMENT", "READY_FOR_SIGNATURE", "READY_TO_FILE"]),[m
+       not(eq(taxReturns.paymentStatus, "PAID")),[m
+       gt(taxReturns.taxPrepFee, 0)[m
+     ));[m
+[36m@@ -61,7 +61,7 @@[m [mexport default async function AdminDashboard() {[m
+ [m
+   const outstandingFeesReturns = await db.query.taxReturns.findMany({[m
+     where: and([m
+[31m-      inArray(taxReturns.status, ["FILED", "AWAITING_PAYMENT", "READY_FOR_SIGNATURE"]),[m
+[32m+[m[32m      inArray(taxReturns.status, ["COMPLETED", "AWAITING_PAYMENT", "READY_FOR_SIGNATURE", "READY_TO_FILE"]),[m
+       not(eq(taxReturns.paymentStatus, "PAID")),[m
+       gt(taxReturns.taxPrepFee, 0)[m
+     ),[m
+[36m@@ -88,17 +88,23 @@[m [mexport default async function AdminDashboard() {[m
+     };[m
+   });[m
+ [m
+[31m-  const readyToFileReturns = await db.query.taxReturns.findMany({[m
+[31m-    where: and([m
+[31m-      eq(taxReturns.paymentStatus, "PAID"),[m
+[31m-      not(eq(taxReturns.status, "FILED"))[m
+[31m-    ),[m
+[32m+[m[32m  const readyToFileReturnsRaw = await db.query.taxReturns.findMany({[m
+[32m+[m[32m    where: eq(taxReturns.status, "READY_TO_FILE"),[m
+     with: {[m
+       client: true,[m
+[32m+[m[32m      invoices: true,[m
+     },[m
+     orderBy: [desc(taxReturns.updatedAt)],[m
+   });[m
+ [m
+[32m+[m[32m  const readyToFileReturns = readyToFileReturnsRaw.filter(ret => {[m
+[32m+[m[32m    const totalPaid = ret.invoices[m
+[32m+[m[32m      .filter(inv => inv.status === 'PAID')[m
+[32m+[m[32m      .reduce((sum, inv) => sum + Number(inv.amount), 0);[m
+[32m+[m[32m    const balanceDue = Math.max(0, Number(ret.taxPrepFee || 0) - totalPaid);[m
+[32m+[m[32m    return balanceDue <= 0;[m
+[32m+[m[32m  });[m
+[32m+[m
+   const reviewQueue = await getDocumentReviewQueue();[m
+ [m
+   return ([m
+[36m@@ -339,7 +345,8 @@[m [mfunction StatusBadge({ status }: { status: string }) {[m
+     'IN_PROCESS': 'bg-blue-100 text-brand-navy border-brand-navy/10',[m
+     'READY_FOR_SIGNATURE': 'bg-green-100 text-brand-green border-brand-green/10',[m
+     'AWAITING_PAYMENT': 'bg-orange-100 text-brand-orange border-brand-orange/10',[m
+[31m-    'FILED': 'bg-gray-100 text-gray-400 border-gray-200',[m
+[32m+[m[32m    'READY_TO_FILE': 'bg-purple-100 text-brand-purple border-brand-purple/10',[m
+[32m+[m[32m    'COMPLETED': 'bg-gray-100 text-gray-400 border-gray-200',[m
+   };[m
+   [m
+   return ([m
+[1mdiff --git a/src/app/(admin)/admin/returns/[id]/page.tsx b/src/app/(admin)/admin/returns/[id]/page.tsx[m
+[1mindex e12c4be..a4e4c59 100755[m
+[1m--- a/src/app/(admin)/admin/returns/[id]/page.tsx[m
+[1m+++ b/src/app/(admin)/admin/returns/[id]/page.tsx[m
+[36m@@ -126,15 +126,15 @@[m [mexport default async function ReviewReturnPage({ params }: { params: Promise<{ i[m
+       </div>[m
+ [m
+       {/* Ready to File Notice */}[m
+[31m-      {ret.paymentStatus?.toUpperCase() === "PAID" && ret.status?.toUpperCase() !== "FILED" && ([m
+[31m-        <div className="bg-green-600 text-white p-6 rounded-2xl shadow-lg border-2 border-green-400 flex items-center justify-between animate-in fade-in slide-in-from-top-4 duration-500">[m
+[32m+[m[32m      {ret.status?.trim().toUpperCase() === "READY_TO_FILE" && ([m
+[32m+[m[32m        <div className="bg-purple-600 text-white p-6 rounded-2xl shadow-lg border-2 border-purple-400 flex items-center justify-between animate-in fade-in slide-in-from-top-4 duration-500">[m
+           <div className="flex items-center gap-4">[m
+             <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">[m
+               <CheckCircle2 size={28} />[m
+             </div>[m
+             <div>[m
+               <h3 className="text-lg font-black uppercase tracking-tight">Ready to File</h3>[m
+[31m-              <p className="text-sm font-medium text-green-50 opacity-90">Payment has been received and all documents are signed. You can now file this return.</p>[m
+[32m+[m[32m              <p className="text-sm font-medium text-purple-50 opacity-90">Payment has been received and all documents are signed. You can now file this return.</p>[m
+             </div>[m
+           </div>[m
+           <div className="hidden md:block">[m
+[36m@@ -277,7 +277,8 @@[m [mexport default async function ReviewReturnPage({ params }: { params: Promise<{ i[m
+                     <option value="IN_PROCESS">In Process</option>[m
+                     <option value="READY_FOR_SIGNATURE">Ready for Signature</option>[m
+                     <option value="AWAITING_PAYMENT">Awaiting Payment</option>[m
+[31m-                    <option value="FILED">Filed</option>[m
+[32m+[m[32m                    <option value="READY_TO_FILE">Ready to File</option>[m
+[32m+[m[32m                    <option value="COMPLETED">Completed</option>[m
+                   </select>[m
+                 </div>[m
+                 [m
+[36m@@ -423,7 +424,8 @@[m [mfunction StatusBadge({ status }: { status: string }) {[m
+     'IN_PROCESS': 'bg-blue-100 text-brand-navy border-brand-navy/10',[m
+     'READY_FOR_SIGNATURE': 'bg-green-100 text-brand-green border-brand-green/10',[m
+     'AWAITING_PAYMENT': 'bg-orange-100 text-brand-orange border-brand-orange/10',[m
+[31m-    'FILED': 'bg-gray-100 text-gray-400 border-gray-200',[m
+[32m+[m[32m    'READY_TO_FILE': 'bg-purple-100 text-brand-purple border-brand-purple/10',[m
+[32m+[m[32m    'COMPLETED': 'bg-gray-100 text-gray-400 border-gray-200',[m
+   };[m
+   [m
+   return ([m
+[1mdiff --git a/src/app/(admin)/admin/returns/page.tsx b/src/app/(admin)/admin/returns/page.tsx[m
+[1mindex 6f12464..cf57c6a 100644[m
+[1m--- a/src/app/(admin)/admin/returns/page.tsx[m
+[1m+++ b/src/app/(admin)/admin/returns/page.tsx[m
+[36m@@ -16,7 +16,7 @@[m [mexport default async function ReturnsAdminPage() {[m
+     <div className="space-y-8">[m
+       <div>[m
+         <h1 className="text-4xl font-heading font-bold text-brand-navy">Tax Workflow</h1>[m
+[31m-        <p className="text-brand-charcoal/60 mt-1 font-medium">Manage and review all client tax filings through the 5-step process.</p>[m
+[32m+[m[32m        <p className="text-brand-charcoal/60 mt-1 font-medium">Manage and review all client tax filings through the 6-step process.</p>[m
+       </div>[m
+ [m
+       <WorkflowManagementTable returns={returns} />[m
+[1mdiff --git a/src/app/(portal)/portal/page.tsx b/src/app/(portal)/portal/page.tsx[m
+[1mindex 74ac150..c4d0618 100755[m
+[1m--- a/src/app/(portal)/portal/page.tsx[m
+[1m+++ b/src/app/(portal)/portal/page.tsx[m
+[36m@@ -212,32 +212,32 @@[m [mexport default async function PortalDashboard() {[m
+               />[m
+               <TimelineStep [m
+                 number={2} [m
+[31m-                label="Upload Docs" [m
+[31m-                status={currentReturn?.status === 'IN_PROCESS' ? 'current' : (currentReturn && ['READY_FOR_SIGNATURE', 'AWAITING_PAYMENT', 'FILED'].includes(currentReturn.status) ? 'completed' : 'pending')} [m
+[31m-                icon={<Upload size={20} />}[m
+[31m-              />[m
+[31m-              <TimelineStep [m
+[31m-                number={3} [m
+[31m-                label="Tax Preparation" [m
+[31m-                status={currentReturn?.status === 'IN_PROCESS' ? 'current' : (currentReturn && ['READY_FOR_SIGNATURE', 'AWAITING_PAYMENT', 'FILED'].includes(currentReturn.status) ? 'completed' : 'pending')} [m
+[32m+[m[32m                label="Preparation"[m[41m [m
+[32m+[m[32m                status={currentReturn?.status === 'IN_PROCESS' ? 'current' : (currentReturn && ['READY_FOR_SIGNATURE', 'AWAITING_PAYMENT', 'READY_TO_FILE', 'COMPLETED'].includes(currentReturn.status) ? 'completed' : 'pending')}[m[41m [m
+                 icon={<Lock size={20} />}[m
+               />[m
+               <TimelineStep [m
+[31m-                number={4} [m
+[32m+[m[32m                number={3}[m[41m [m
+                 label="Signature" [m
+[31m-                status={currentReturn?.status === 'READY_FOR_SIGNATURE' ? 'current' : (currentReturn && ['AWAITING_PAYMENT', 'FILED'].includes(currentReturn.status) ? 'completed' : 'pending')} [m
+[32m+[m[32m                status={currentReturn?.status === 'READY_FOR_SIGNATURE' ? 'current' : (currentReturn && ['AWAITING_PAYMENT', 'READY_TO_FILE', 'COMPLETED'].includes(currentReturn.status) ? 'completed' : 'pending')}[m[41m [m
+                 icon={<PenTool size={20} />}[m
+               />[m
+               <TimelineStep [m
+[31m-                number={5} [m
+[32m+[m[32m                number={4}[m[41m [m
+                 label="Payment" [m
+[31m-                status={currentReturn?.paymentStatus === 'PAID' ? 'completed' : (currentReturn?.status === 'AWAITING_PAYMENT' ? 'current' : 'pending')} [m
+[32m+[m[32m                status={currentReturn?.status === 'AWAITING_PAYMENT' ? 'current' : (currentReturn && ['READY_TO_FILE', 'COMPLETED'].includes(currentReturn.status) ? 'completed' : 'pending')}[m[41m [m
+                 icon={<CreditCard size={20} />}[m
+               />[m
+[32m+[m[32m              <TimelineStep[m[41m [m
+[32m+[m[32m                number={5}[m[41m [m
+[32m+[m[32m                label="Ready to File"[m[41m [m
+[32m+[m[32m                status={currentReturn?.status === 'READY_TO_FILE' ? 'current' : (currentReturn?.status === 'COMPLETED' ? 'completed' : 'pending')}[m[41m [m
+[32m+[m[32m                icon={<Zap size={20} />}[m
+[32m+[m[32m              />[m
+               <TimelineStep [m
+                 number={6} [m
+[31m-                label="Complete" [m
+[31m-                status={currentReturn?.status === 'FILED' ? 'completed' : 'pending'} [m
+[32m+[m[32m                label="Completed"[m[41m [m
+[32m+[m[32m                status={currentReturn?.status === 'COMPLETED' ? 'completed' : 'pending'}[m[41m [m
+                 icon={<CheckCircle2 size={20} />}[m
+               />[m
+             </div>[m
+[1mdiff --git a/src/app/api/admin/workflows/route.ts b/src/app/api/admin/workflows/route.ts[m
+[1mindex cfb34bd..99f5f48 100644[m
+[1m--- a/src/app/api/admin/workflows/route.ts[m
+[1m+++ b/src/app/api/admin/workflows/route.ts[m
+[36m@@ -18,3 +18,13 @@[m [mexport async function GET() {[m
+ [m
+   return NextResponse.json(result);[m
+ }[m
+[32m+[m
+[32m+[m[32mexport async function DELETE() {[m
+[32m+[m[32m  const session = await auth();[m
+[32m+[m[32m  if (!session || (session.user as any).role === "CLIENT") {[m
+[32m+[m[32m    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });[m
+[32m+[m[32m  }[m
+[32m+[m
+[32m+[m[32m  await db.delete(workflows);[m
+[32m+[m[32m  return NextResponse.json({ success: true });[m
+[32m+[m[32m}[m
+[1mdiff --git a/src/app/api/webhooks/helcim/route.ts b/src/app/api/webhooks/helcim/route.ts[m
+[1mindex 55d59bc..9f11c35 100755[m
+[1m--- a/src/app/api/webhooks/helcim/route.ts[m
+[1m+++ b/src/app/api/webhooks/helcim/route.ts[m
+[36m@@ -33,9 +33,17 @@[m [mexport async function POST(req: Request) {[m
+           .set({ status: "PAID", paidAt: new Date() })[m
+           .where(eq(invoices.id, invoice.id));[m
+ [m
+[31m-        await db.update(taxReturns)[m
+[31m-          .set({ paymentStatus: "PAID" })[m
+[31m-          .where(eq(taxReturns.id, invoice.returnId));[m
+[32m+[m[32m        const [updatedReturn] = await db.update(taxReturns)[m
+[32m+[m[32m          .set({ paymentStatus: "PAID", updatedAt: new Date() })[m
+[32m+[m[32m          .where(eq(taxReturns.id, invoice.returnId))[m
+[32m+[m[32m          .returning();[m
+[32m+[m
+[32m+[m[32m        if (updatedReturn && ["AWAITING_PAYMENT", "READY_FOR_SIGNATURE"].includes(updatedReturn.status)) {[m
+[32m+[m[32m          console.log(`[HelcimWebhook] Auto-transitioning return ${updatedReturn.id} to READY_TO_FILE`);[m
+[32m+[m[32m          await db.update(taxReturns)[m
+[32m+[m[32m            .set({ status: "READY_TO_FILE" as any, updatedAt: new Date() })[m
+[32m+[m[32m            .where(eq(taxReturns.id, updatedReturn.id));[m
+[32m+[m[32m        }[m
+ [m
+         // Release documents on payment[m
+         await releaseReturnDocuments(invoice.returnId);[m
+[1mdiff --git a/src/components/Navbar.tsx b/src/components/Navbar.tsx[m
+[1mindex 10837d9..67f4c64 100644[m
+[1m--- a/src/components/Navbar.tsx[m
+[1m+++ b/src/components/Navbar.tsx[m
+[36m@@ -3,7 +3,8 @@[m
+ import Link from "next/link";[m
+ import Image from "next/image";[m
+ import { useState, useEffect } from "react";[m
+[31m-import { Menu, X, ChevronRight, LogIn, UserPlus, LayoutDashboard, CalendarDays } from "lucide-react";[m
+[32m+[m[32mimport { Menu, X, ChevronRight, LogIn, UserPlus, LayoutDashboard, CalendarDays, LogOut, User } from "lucide-react";[m
+[32m+[m[32mimport { useSession, signOut } from "next-auth/react";[m
+ import { BookingButton } from "@/components/BookingButton";[m
+ import { clsx, type ClassValue } from "clsx";[m
+ import { twMerge } from "tailwind-merge";[m
+[36m@@ -13,7 +14,9 @@[m [mfunction cn(...inputs: ClassValue[]) {[m
+ }[m
+ [m
+ export const Navbar = () => {[m
+[32m+[m[32m  const { data: session, status } = useSession();[m
+   const [isOpen, setIsOpen] = useState(false);[m
+[32m+[m[32m  const loading = status === "loading";[m
+ [m
+   // Prevent scrolling when menu is open[m
+   useEffect(() => {[m
+[36m@@ -32,10 +35,15 @@[m [mexport const Navbar = () => {[m
+     { name: "Pricing", href: "/pricing" },[m
+     { name: "About", href: "/about" },[m
+     { name: "Resources", href: "/resources" },[m
+[32m+[m[32m    { name: "Blog", href: "/blog" },[m
+     { name: "FAQ", href: "/faq" },[m
+     { name: "Contact", href: "/contact" },[m
+   ];[m
+ [m
+[32m+[m[32m  const portalHref = session?.user?.role === "ADMIN" || session?.user?.role === "STAFF"[m[41m [m
+[32m+[m[32m    ? "/admin"[m[41m [m
+[32m+[m[32m    : "/portal";[m
+[32m+[m
+   return ([m
+     <nav className="bg-white border-b border-gray-100 sticky top-0 z-50">[m
+       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">[m
+[36m@@ -82,12 +90,23 @@[m [mexport const Navbar = () => {[m
+             </div>[m
+ [m
+             <div className="hidden sm:flex items-center gap-3 md:gap-4">[m
+[31m-              <Link [m
+[31m-                href="/auth/login" [m
+[31m-                className="text-brand-purple font-black hover:text-brand-black transition-colors text-[10px] uppercase tracking-widest flex items-center gap-1.5"[m
+[31m-              >[m
+[31m-                Login[m
+[31m-              </Link>[m
+[32m+[m[32m              {!session ? ([m
+[32m+[m[32m                <Link[m[41m [m
+[32m+[m[32m                  href="/auth/login"[m[41m [m
+[32m+[m[32m                  className="text-brand-purple font-black hover:text-brand-black transition-colors text-[10px] uppercase tracking-widest flex items-center gap-1.5"[m
+[32m+[m[32m                >[m
+[32m+[m[32m                  <LogIn size={14} />[m
+[32m+[m[32m                  Login[m
+[32m+[m[32m                </Link>[m
+[32m+[m[32m              ) : ([m
+[32m+[m[32m                <button[m[41m [m
+[32m+[m[32m                  onClick={() => signOut()}[m
+[32m+[m[32m                  className="text-brand-purple font-black hover:text-brand-black transition-colors text-[10px] uppercase tracking-widest flex items-center gap-1.5"[m
+[32m+[m[32m                >[m
+[32m+[m[32m                  <LogOut size={14} />[m
+[32m+[m[32m                  Logout[m
+[32m+[m[32m                </button>[m
+[32m+[m[32m              )}[m
+               <BookingButton [m
+                 label="Book"[m
+                 className="bg-brand-purple text-white px-4 py-2 rounded-lg font-black hover:bg-[#5a3a74] transition-all shadow-md text-[10px] uppercase tracking-widest flex items-center gap-1.5"[m
+[36m@@ -95,10 +114,20 @@[m [mexport const Navbar = () => {[m
+             </div>[m
+ [m
+             <Link [m
+[31m-              href="/portal" [m
+[32m+[m[32m              href={portalHref}[m[41m [m
+               className="bg-brand-black text-white px-4 py-2 rounded-lg font-black hover:bg-brand-purple transition-all shadow-md flex items-center gap-2 text-[10px] uppercase tracking-widest whitespace-nowrap"[m
+             >[m
+[31m-              Portal[m
+[32m+[m[32m              {session ? ([m
+[32m+[m[32m                <>[m
+[32m+[m[32m                  <LayoutDashboard size={14} />[m
+[32m+[m[32m                  Dashboard[m
+[32m+[m[32m                </>[m
+[32m+[m[32m              ) : ([m
+[32m+[m[32m                <>[m
+[32m+[m[32m                  <User size={14} />[m
+[32m+[m[32m                  Portal[m
+[32m+[m[32m                </>[m
+[32m+[m[32m              )}[m
+             </Link>[m
+           </div>[m
+         </div>[m
+[36m@@ -164,29 +193,44 @@[m [mexport const Navbar = () => {[m
+             <div className="space-y-2">[m
+               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-charcoal/40 mb-4">Account</p>[m
+               <Link [m
+[31m-                href="/portal" [m
+[32m+[m[32m                href={portalHref}[m[41m [m
+                 onClick={() => setIsOpen(false)}[m
+                 className="flex items-center gap-3 p-4 rounded-2xl bg-brand-black text-white font-bold hover:bg-brand-purple transition-all"[m
+               >[m
+                 <LayoutDashboard size={20} />[m
+[31m-                Client Portal[m
+[31m-              </Link>[m
+[31m-              <Link [m
+[31m-                href="/auth/signup" [m
+[31m-                onClick={() => setIsOpen(false)}[m
+[31m-                className="flex items-center gap-3 p-4 rounded-2xl bg-brand-purple text-white font-bold hover:bg-[#5a3a74] transition-all"[m
+[31m-              >[m
+[31m-                <UserPlus size={20} />[m
+[31m-                Start Intake[m
+[31m-              </Link>[m
+[31m-              <Link [m
+[31m-                href="/auth/login" [m
+[31m-                onClick={() => setIsOpen(false)}[m
+[31m-                className="flex items-center gap-3 p-4 rounded-2xl border border-brand-purple/20 text-brand-purple font-bold hover:bg-brand-purple/5 transition-all"[m
+[31m-              >[m
+[31m-                <LogIn size={20} />[m
+[31m-                Login[m
+[32m+[m[32m                {session ? "My Dashboard" : "Client Portal"}[m
+               </Link>[m
+[32m+[m[32m              {!session ? ([m
+[32m+[m[32m                <>[m
+[32m+[m[32m                  <Link[m[41m [m
+[32m+[m[32m                    href="/auth/signup"[m[41m [m
+[32m+[m[32m                    onClick={() => setIsOpen(false)}[m
+[32m+[m[32m                    className="flex items-center gap-3 p-4 rounded-2xl bg-brand-purple text-white font-bold hover:bg-[#5a3a74] transition-all"[m
+[32m+[m[32m                  >[m
+[32m+[m[32m                    <UserPlus size={20} />[m
+[32m+[m[32m                    Start Intake[m
+[32m+[m[32m                  </Link>[m
+[32m+[m[32m                  <Link[m[41m [m
+[32m+[m[32m                    href="/auth/login"[m[41m [m
+[32m+[m[32m                    onClick={() => setIsOpen(false)}[m
+[32m+[m[32m                    className="flex items-center gap-3 p-4 rounded-2xl border border-brand-purple/20 text-brand-purple font-bold hover:bg-brand-purple/5 transition-all"[m
+[32m+[m[32m                  >[m
+[32m+[m[32m                    <LogIn size={20} />[m
+[32m+[m[32m                    Login[m
+[32m+[m[32m                  </Link>[m
+[32m+[m[32m                </>[m
+[32m+[m[32m              ) : ([m
+[32m+[m[32m                <button[m[41m [m
+[32m+[m[32m                  onClick={() => {[m
+[32m+[m[32m                    setIsOpen(false);[m
+[32m+[m[32m                    signOut();[m
+[32m+[m[32m                  }}[m
+[32m+[m[32m                  className="w-full flex items-center gap-3 p-4 rounded-2xl border border-red-200 text-red-600 font-bold hover:bg-red-50 transition-all text-left"[m
+[32m+[m[32m                >[m
+[32m+[m[32m                  <LogOut size={20} />[m
+[32m+[m[32m                  Sign Out[m
+[32m+[m[32m                </button>[m
+[32m+[m[32m              )}[m
+             </div>[m
+           </div>[m
+ [m
+[1mdiff --git a/src/components/admin/WorkflowManagementTable.tsx b/src/components/admin/WorkflowManagementTable.tsx[m
+[1mindex 54baca8..8661e8b 100644[m
+[1m--- a/src/components/admin/WorkflowManagementTable.tsx[m
+[1m+++ b/src/components/admin/WorkflowManagementTable.tsx[m
+[36m@@ -139,7 +139,7 @@[m [mexport function WorkflowManagementTable({ returns: initialReturns }: WorkflowMan[m
+                     Client <ArrowUpDown size={12} />[m
+                   </div>[m
+                 </th>[m
+[31m-                <th className="px-6 py-5">Return Status (5 Steps)</th>[m
+[32m+[m[32m                <th className="px-6 py-5">Return Status (6 Steps)</th>[m
+                 <th className="px-6 py-5">Results (Fed/State)</th>[m
+                 <th className="px-6 py-5">Financials</th>[m
+                 <th className="px-6 py-5">Activity</th>[m
+[36m@@ -173,7 +173,7 @@[m [mexport function WorkflowManagementTable({ returns: initialReturns }: WorkflowMan[m
+                   <td className="px-6 py-4 whitespace-nowrap">[m
+                     <div className="flex flex-col gap-2">[m
+                       <div className="flex gap-1">[m
+[31m-                        {[1, 2, 3, 4, 5].map((s) => ([m
+[32m+[m[32m                        {[1, 2, 3, 4, 5, 6].map((s) => ([m
+                           <div [m
+                             key={s}[m
+                             title={getStepLabel(s)}[m
+[36m@@ -312,7 +312,8 @@[m [mfunction mapStatusToStep(status: string): number {[m
+     case 'IN_PROCESS': return 2;[m
+     case 'READY_FOR_SIGNATURE': return 3;[m
+     case 'AWAITING_PAYMENT': return 4;[m
+[31m-    case 'FILED': return 5;[m
+[32m+[m[32m    case 'READY_TO_FILE': return 5;[m
+[32m+[m[32m    case 'COMPLETED': return 6;[m
+     default: return 1;[m
+   }[m
+ }[m
+[36m@@ -323,7 +324,8 @@[m [mfunction getStepLabel(step: number): string {[m
+     "In Process",[m
+     "Ready for Signature",[m
+     "Awaiting Payment",[m
+[31m-    "Filed"[m
+[32m+[m[32m    "Ready to File",[m
+[32m+[m[32m    "Completed"[m
+   ];[m
+   return steps[step - 1] || "Unknown";[m
+ }[m
+[1mdiff --git a/src/components/admin/WorkflowStatus.tsx b/src/components/admin/WorkflowStatus.tsx[m
+[1mindex c53cbf5..3433989 100644[m
+[1m--- a/src/components/admin/WorkflowStatus.tsx[m
+[1m+++ b/src/components/admin/WorkflowStatus.tsx[m
+[36m@@ -1,18 +1,17 @@[m
+[31m-"use client";[m
+[31m-[m
+ import { useState, useEffect } from "react";[m
+[31m-import { Clock, CheckCircle2, XCircle, Loader2, RefreshCw } from "lucide-react";[m
+[32m+[m[32mimport { Clock, CheckCircle2, XCircle, Loader2, RefreshCw, Activity, Trash2, HelpCircle } from "lucide-react";[m
+ import { format } from "date-fns";[m
+ [m
+ export default function WorkflowStatus() {[m
+   const [workflows, setWorkflows] = useState<any[]>([]);[m
+   const [loading, setLoading] = useState(true);[m
+[32m+[m[32m  const [dismissing, setDismissing] = useState(false);[m
+ [m
+   const fetchWorkflows = async () => {[m
+     try {[m
+       const res = await fetch("/api/admin/workflows");[m
+       const data = await res.json();[m
+[31m-      setWorkflows(data);[m
+[32m+[m[32m      setWorkflows(Array.isArray(data) ? data : []);[m
+     } catch (error) {[m
+       console.error("Failed to fetch workflows:", error);[m
+     } finally {[m
+[36m@@ -20,6 +19,19 @@[m [mexport default function WorkflowStatus() {[m
+     }[m
+   };[m
+ [m
+[32m+[m[32m  const dismissAll = async () => {[m
+[32m+[m[32m    if (!confirm("Are you sure you want to clear all job history?")) return;[m
+[32m+[m[32m    setDismissing(true);[m
+[32m+[m[32m    try {[m
+[32m+[m[32m      await fetch("/api/admin/workflows", { method: "DELETE" });[m
+[32m+[m[32m      await fetchWorkflows();[m
+[32m+[m[32m    } catch (error) {[m
+[32m+[m[32m      console.error("Failed to dismiss workflows:", error);[m
+[32m+[m[32m    } finally {[m
+[32m+[m[32m      setDismissing(false);[m
+[32m+[m[32m    }[m
+[32m+[m[32m  };[m
+[32m+[m
+   useEffect(() => {[m
+     fetchWorkflows();[m
+     const interval = setInterval(fetchWorkflows, 10000); // Refresh every 10s[m
+[36m@@ -33,15 +45,39 @@[m [mexport default function WorkflowStatus() {[m
+   return ([m
+     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">[m
+       <div className="p-6 border-b border-gray-50 bg-gray-50/50 flex justify-between items-center">[m
+[31m-        <h2 className="text-lg font-bold text-brand-navy flex items-center gap-2">[m
+[31m-          <Activity size={20} className="text-brand-orange" />[m
+[31m-          Background Jobs[m
+[31m-        </h2>[m
+[31m-        <button onClick={fetchWorkflows} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">[m
+[31m-          <RefreshCw size={16} className="text-gray-400" />[m
+[31m-        </button>[m
+[32m+[m[32m        <div className="flex items-center gap-2">[m
+[32m+[m[32m          <h2 className="text-lg font-bold text-brand-navy flex items-center gap-2">[m
+[32m+[m[32m            <Activity size={20} className="text-brand-orange" />[m
+[32m+[m[32m            Background Jobs[m
+[32m+[m[32m          </h2>[m
+[32m+[m[32m          <div className="group relative">[m
+[32m+[m[32m            <HelpCircle size={14} className="text-gray-400 cursor-help" />[m
+[32m+[m[32m            <div className="absolute left-0 bottom-full mb-2 w-64 p-3 bg-brand-navy text-white text-[10px] rounded-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-xl border border-white/10">[m
+[32m+[m[32m              <p className="font-bold mb-1">Upstash Workflows</p>[m
+[32m+[m[32m              <p className="leading-relaxed opacity-80">[m
+[32m+[m[32m                These are automated processes running in the background (like QBO sync or PDF generation).[m[41m [m
+[32m+[m[32m                They handle long-running tasks reliably and retry automatically if they fail.[m
+[32m+[m[32m              </p>[m
+[32m+[m[32m            </div>[m
+[32m+[m[32m          </div>[m
+[32m+[m[32m        </div>[m
+[32m+[m[32m        <div className="flex items-center gap-1">[m
+[32m+[m[32m          {workflows.length > 0 && ([m
+[32m+[m[32m            <button[m[41m [m
+[32m+[m[32m              onClick={dismissAll}[m[41m [m
+[32m+[m[32m              disabled={dismissing}[m
+[32m+[m[32m              className="p-2 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-lg transition-colors"[m
+[32m+[m[32m              title="Clear All"[m
+[32m+[m[32m            >[m
+[32m+[m[32m              {dismissing ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}[m
+[32m+[m[32m            </button>[m
+[32m+[m[32m          )}[m
+[32m+[m[32m          <button onClick={fetchWorkflows} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">[m
+[32m+[m[32m            <RefreshCw size={16} className={loading ? "animate-spin text-brand-purple" : "text-gray-400"} />[m
+[32m+[m[32m          </button>[m
+[32m+[m[32m        </div>[m
+       </div>[m
+[31m-      <div className="divide-y divide-gray-50">[m
+[32m+[m[32m      <div className="divide-y divide-gray-50 max-h-[400px] overflow-y-auto">[m
+         {workflows.length === 0 ? ([m
+           <div className="p-8 text-center text-gray-400 text-sm">No background jobs found.</div>[m
+         ) : ([m
+[36m@@ -94,5 +130,3 @@[m [mfunction getStatusStyles(status: string) {[m
+       return "bg-gray-50 text-gray-600 border-gray-100";[m
+   }[m
+ }[m
+[31m-[m
+[31m-import { Activity } from "lucide-react";[m
+[1mdiff --git a/src/lib/db/schema.ts b/src/lib/db/schema.ts[m
+[1mindex 6b4de56..08d85db 100755[m
+[1m--- a/src/lib/db/schema.ts[m
+[1m+++ b/src/lib/db/schema.ts[m
+[36m@@ -72,7 +72,7 @@[m [mexport const taxReturns = sqliteTable("tax_returns", {[m
+     .references(() => users.id)[m
+     .notNull(),[m
+   year: integer("year").notNull(),[m
+[31m-  status: text("status").default("NOT_STARTED").notNull(), // 'NOT_STARTED', 'IN_PROCESS', 'READY_FOR_SIGNATURE', 'AWAITING_PAYMENT', 'FILED'[m
+[32m+[m[32m  status: text("status").default("NOT_STARTED").notNull(), // 'NOT_STARTED', 'IN_PROCESS', 'READY_FOR_SIGNATURE', 'AWAITING_PAYMENT', 'READY_TO_FILE', 'COMPLETED'[m
+   paymentStatus: text("payment_status").default("UNPAID").notNull(),[m
+   assignedStaffId: text("assigned_staff_id").references(() => users.id),[m
+   federalResult: real("federal_result"),[m
+[36m@@ -342,6 +342,7 @@[m [mexport const posts = sqliteTable("posts", {[m
+   socialTitle: text("social_title"),[m
+   socialDescription: text("social_description"),[m
+   socialImage: text("social_image"),[m
+[32m+[m[32m  fileUrl: text("file_url"),[m
+   createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),[m
+   updatedAt: integer("updated_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),[m
+ }, (table) => ({[m
+[1mdiff --git a/tasks.json b/tasks.json[m
+[1mindex 2ca72dc..6232351 100644[m
+[1m--- a/tasks.json[m
+[1m+++ b/tasks.json[m
+[36m@@ -1,374 +1,107 @@[m
+ [[m
+[31m-  {[m
+[31m-    "id": "ee998a8f-8592-426e-9ad1-89c39a0d7326",[m
+[31m-    "title": "System Architecture and Tech Stack Selection",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-lead-engineer"[m
+[31m-  },[m
+[31m-  {[m
+[31m-    "id": "7c49b0b9-d41c-43d7-9941-eba1d7e843c8",[m
+[31m-    "title": "Brand Identity and Wireframes",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-designer"[m
+[31m-  },[m
+[31m-  {[m
+[31m-    "id": "db6287f8-d658-40a3-93dd-8f859cc5ff94",[m
+[31m-    "title": "Authentication and MFA Implementation",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-lead-engineer"[m
+[31m-  },[m
+[31m-  {[m
+[31m-    "id": "1517c4e6-09ea-4d95-8f7a-4daa9e0cb589",[m
+[31m-    "title": "High-Fidelity Mockups and Component Library Design",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-designer"[m
+[31m-  },[m
+[31m-  {[m
+[31m-    "id": "f130b5a1-3478-445f-9b7a-6811749908e2",[m
+[31m-    "title": "Public Website Implementation",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-designer"[m
+[31m-  },[m
+[31m-  {[m
+[31m-    "id": "e7a379c1-5009-4d9a-97e9-1759e6792860",[m
+[31m-    "title": "Portal Core: Documents and Questionnaires",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-lead-engineer"[m
+[31m-  },[m
+[31m-  {[m
+[31m-    "id": "b8a9cca9-5ba9-4a2c-a8eb-e34996440e24",[m
+[31m-    "title": "Payments and Notifications Implementation",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-lead-engineer"[m
+[31m-  },[m
+[31m-  {[m
+[31m-    "id": "6228a941-cc61-4875-afbe-79ffebb20dfd",[m
+[31m-    "title": "Calendar Booking Integration",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-lead-engineer"[m
+[31m-  },[m
+[31m-  {[m
+[31m-    "id": "4268542f-4dda-4bc3-96bb-72cca9722ed0",[m
+[31m-    "title": "Final Admin Tools and Staging Deployment",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-lead-engineer"[m
+[31m-  },[m
+[31m-  {[m
+[31m-    "id": "0f114b19-35a8-454f-b8a4-540269a9e71e",[m
+[31m-    "title": "Emergency Re-deployment and URL Verification",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-lead-engineer"[m
+[31m-  },[m
+[31m-  {[m
+[31m-    "id": "05552a87-eec0-458f-8c66-8222023a6f7c",[m
+[31m-    "title": "Final Launch Review and Handover",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-lead-engineer"[m
+[31m-  },[m
+[31m-  {[m
+[31m-    "id": "b564a81f-359c-4cbf-b316-68e5d8b75a10",[m
+[31m-    "title": "Emergency Fix: Portal Functionality & Contact Form",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-lead-engineer"[m
+[31m-  },[m
+[31m-  {[m
+[31m-    "id": "97a38a1e-ec1f-49a2-a396-525e20fcf0e1",[m
+[31m-    "title": "Design Overhaul & Content Accuracy Fix",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-designer"[m
+[31m-  },[m
+[31m-  {[m
+[31m-    "id": "9b28893a-779d-4794-8c5b-2e76d77db0a0",[m
+[31m-    "title": "Pivot to Digital-First Copy & Brand Personalization",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-designer"[m
+[31m-  },[m
+[31m-  {[m
+[31m-    "id": "ef4ddb07-9a11-4174-8f2a-3b791c7b9267",[m
+[31m-    "title": "Production Readiness & Security Hardening",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-lead-engineer"[m
+[31m-  },[m
+[31m-  {[m
+[31m-    "id": "aed36daf-1625-4d2e-a3b8-14cad3437e03",[m
+[31m-    "title": "Staff Portal / Admin Dashboard UI Design",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-designer"[m
+[31m-  },[m
+[31m-  {[m
+[31m-    "id": "7aeb22f7-cff6-4a22-bf2e-345655d63e16",[m
+[31m-    "title": "Admin Dashboard Backend API Implementation",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-lead-engineer"[m
+[31m-  },[m
+[31m-  {[m
+[31m-    "id": "3a659122-d92b-4c51-b4b3-a12935bba4cf",[m
+[31m-    "title": "Homepage Content & Layout Revision",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-designer"[m
+[31m-  },[m
+[31m-  {[m
+[31m-    "id": "a95d6512-4048-4939-a5f5-dc5232bba16a",[m
+[31m-    "title": "Correction: Use Exact Owner Copy on Homepage",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-designer"[m
+[31m-  },[m
+[31m-  {[m
+[31m-    "id": "313e09c4-1878-4c0d-9ead-63d343ed12c3",[m
+[31m-    "title": "Services & Pricing Page Full Revision",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-designer"[m
+[31m-  },[m
+[31m-  {[m
+[31m-    "id": "3a361cda-3638-4099-a6fb-b2b596ed1492",[m
+[31m-    "title": "About Jenn Page Full Implementation",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-designer"[m
+[31m-  },[m
+[31m-  {[m
+[31m-    "id": "3aef45bc-8de3-4e8b-bc2f-14df6e0cc870",[m
+[31m-    "title": "Who We Help Page Full Implementation",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-designer"[m
+[31m-  },[m
+[31m-  {[m
+[31m-    "id": "5525dfdf-ce3b-4143-9dae-18899cb1c7f3",[m
+[31m-    "title": "FAQ Page Full Implementation & Real Asset Integration",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-designer"[m
+[31m-  },[m
+[31m-  {[m
+[31m-    "id": "7c5f5229-2b64-4332-946b-8bd0c87c0ed9",[m
+[31m-    "title": "Integrate 'LOGO LONG' into Navbar (Top Right)",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-designer"[m
+[31m-  },[m
+[31m-  {[m
+[31m-    "id": "a03b7d12-544b-46a3-9b5f-2dd907598886",[m
+[31m-    "title": "Create Testimonials & Reviews Page",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-designer"[m
+[31m-  },[m
+[31m-  {[m
+[31m-    "id": "6ce85337-0629-4b29-8a73-427805f448ef",[m
+[31m-    "title": "Create 'New Clients' Onboarding Page",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-designer"[m
+[31m-  },[m
+[31m-  {[m
+[31m-    "id": "94b3cd8b-1666-47a2-9f09-071c67c9f832",[m
+[31m-    "title": "Client Database & Backend API Development",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-lead-engineer"[m
+[31m-  },[m
+[31m-  {[m
+[31m-    "id": "52da6f2b-3306-455a-9752-1b202ec2ad6c",[m
+[31m-    "title": "Create Client Portal UI & Annual Update Form",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-designer"[m
+[31m-  },[m
+[31m-  {[m
+[31m-    "id": "4892c873-25e6-47bf-b9d8-2593d649cdc7",[m
+[31m-    "title": "Link Repository to Vercel & Setup Deployment",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-lead-engineer"[m
+[31m-  },[m
+[31m-  {[m
+[31m-    "id": "444cf527-6b43-4438-94b0-dc0b466a7280",[m
+[31m-    "title": "Create Resources Knowledge Center Page",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-designer"[m
+[31m-  },[m
+[31m-  {[m
+[31m-    "id": "4cf870cf-8ba6-4fce-b86c-2048801f5458",[m
+[31m-    "title": "Blog / Tax Tips Frontend & CMS UI Implementation",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-designer"[m
+[31m-  },[m
+[31m-  {[m
+[31m-    "id": "947d81f1-bff7-4353-98b5-860841558a20",[m
+[31m-    "title": "Blog / Tax Tips Database Schema & API implementation",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-lead-engineer"[m
+[31m-  },[m
+[31m-  {[m
+[31m-    "id": "9df3d3e1-12b0-48f7-9bb8-aad39058b83b",[m
+[31m-    "title": "Integrate Helcim Payment Processing",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-lead-engineer"[m
+[31m-  },[m
+[31m-  {[m
+[31m-    "id": "93d3a40b-7cb4-40db-9672-a156d82c2f5d",[m
+[31m-    "title": "Implement Email & SMS Notification System",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-lead-engineer"[m
+[31m-  },[m
+[31m-  {[m
+[31m-    "id": "7af1432c-9e22-4e48-8e11-047de331a8ae",[m
+[31m-    "title": "Final QA & Branding Sweep",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-designer"[m
+[31m-  },[m
+[31m-  {[m
+[31m-    "id": "7ceeef23-55c1-4242-8433-9292091e1e91",[m
+[31m-    "title": "Implement Mobile Navigation Menu",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-designer"[m
+[31m-  },[m
+[31m-  {[m
+[31m-    "id": "4e7af96a-d08d-4d00-b32f-59f2ca54be33",[m
+[31m-    "title": "Homepage & Branding Refinements",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-designer"[m
+[31m-  },[m
+[31m-  {[m
+[31m-    "id": "b5638104-a072-486e-b090-4bc721dc4c3a",[m
+[31m-    "title": "Implement 'Action Needed' Section in Client Portal",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-lead-engineer"[m
+[31m-  },[m
+[31m-  {[m
+[31m-    "id": "5b2a0e7d-7259-4acb-95db-c5eb0b11b434",[m
+[31m-    "title": "Portal UI/UX & Branding Refinements",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-designer"[m
+[31m-  },[m
+   {[m
+     "id": "c6edd484-d6a3-4407-8054-7ea3f3d4e34b",[m
+     "title": "Payment Notifications & Backend Branding Refinements",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-lead-engineer-2"[m
+[31m-  },[m
+[31m-  {[m
+[31m-    "id": "bcb695b7-a528-4962-9c58-3fe93e0c26bd",[m
+[31m-    "title": "Refactor S3 Storage Hierarchy",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-lead-engineer"[m
+[31m-  },[m
+[31m-  {[m
+[31m-    "id": "4226da83-424d-4142-95a6-cdfcc95aed0b",[m
+[31m-    "title": "Annual Update PDF Summary Generator",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-designer"[m
+[31m-  },[m
+[31m-  {[m
+[31m-    "id": "d24e3943-1a05-4032-8035-d0948c47a89a",[m
+[31m-    "title": "UI: Replace Booking buttons with 'Request Appointment' (Temp)",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-designer"[m
+[32m+[m[32m    "status": "done"[m
+   },[m
+   {[m
+     "id": "7d12f047-782e-4a5c-a54e-223847d0b79d",[m
+     "title": "Backend: Microsoft Bookings Integration & Onboarding Automation",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-lead-engineer-2"[m
+[32m+[m[32m    "status": "done"[m
+   },[m
+   {[m
+     "id": "71ee6287-be81-4291-8ad9-9bb733d6690e",[m
+     "title": "Database: Schema Expansion & Return Release Logic",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-lead-engineer-2"[m
+[32m+[m[32m    "status": "done"[m
+   },[m
+   {[m
+[31m-    "id": "73b619cc-bb67-4bfa-97f9-80b8fbce7dec",[m
+[31m-    "title": "UI: Tax Workflow Management Dashboard Design",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-designer"[m
+[32m+[m[32m    "id": "220cb02f-5dec-4965-982b-2f1c0345aec5",[m
+[32m+[m[32m    "title": "UI: Integrate Production Payment Handles",[m
+[32m+[m[32m    "status": "done"[m
+   },[m
+   {[m
+[31m-    "id": "43d9c389-495c-45c1-8db2-b78ce90ff495",[m
+[31m-    "title": "UI: Logo Size & Visibility Priority Audit",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-designer"[m
+[32m+[m[32m    "id": "003e6a3c-e8ba-4d35-a292-dc1ce14ffff0",[m
+[32m+[m[32m    "title": "Fix Missing Build Dependencies",[m
+[32m+[m[32m    "status": "done"[m
+   },[m
+   {[m
+[31m-    "id": "6e14108c-cb48-45c8-9995-1ea571218cc3",[m
+[31m-    "title": "Branding Consistency & Homepage Content Refresh",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-designer"[m
+[32m+[m[32m    "id": "56ab1417-a272-4b39-ba92-76f5bfdeffb3",[m
+[32m+[m[32m    "title": "Phase 2: Client Portal Architecture & Plan",[m
+[32m+[m[32m    "status": "done"[m
+   },[m
+   {[m
+[31m-    "id": "416f5887-6aff-4dbc-9d80-c8de3cd955e9",[m
+[31m-    "title": "UI: Comprehensive Resources Page Overhaul",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-designer"[m
+[32m+[m[32m    "id": "47464113-4b16-423d-b901-9bab553ca26a",[m
+[32m+[m[32m    "title": "Phase 2: Database Schema Updates",[m
+[32m+[m[32m    "status": "done"[m
+   },[m
+   {[m
+[31m-    "id": "220cb02f-5dec-4965-982b-2f1c0345aec5",[m
+[31m-    "title": "UI: Integrate Production Payment Handles",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-lead-engineer-2"[m
+[32m+[m[32m    "id": "836c7a32-1b8d-4cf9-848a-4d5b9313cf31",[m
+[32m+[m[32m    "title": "Phase 2: Portal Frontend Components",[m
+[32m+[m[32m    "status": "done"[m
+   },[m
+   {[m
+[31m-    "id": "003e6a3c-e8ba-4d35-a292-dc1ce14ffff0",[m
+[31m-    "title": "Fix Missing Build Dependencies",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-lead-engineer-2"[m
+[32m+[m[32m    "id": "6ed541e6-85a0-499a-85d0-61d93a76793b",[m
+[32m+[m[32m    "title": "EMERGENCY: Fix About Page Portrait",[m
+[32m+[m[32m    "status": "done"[m
+   },[m
+   {[m
+[31m-    "id": "b667828d-39f6-4112-af6d-d26857d2b6a6",[m
+[31m-    "title": "Branding Overhaul: Image Placement & Logo Scaling",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-designer"[m
+[32m+[m[32m    "id": "19810e86-7e74-4e43-ae6b-a36694255e00",[m
+[32m+[m[32m    "title": "Redeploy Production Site and Verify Images (Urgent)",[m
+[32m+[m[32m    "status": "done"[m
+   },[m
+   {[m
+[31m-    "id": "53e0a160-d5c4-4619-9e05-80bb7c2adad1",[m
+[31m-    "title": "Final Implementation of Authentic Branding Photography",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-designer"[m
+[32m+[m[32m    "id": "4e2f22f8-fe8f-4495-95bf-dce2117be34d",[m
+[32m+[m[32m    "title": "Restore Vercel Secrets and Trigger Deployment",[m
+[32m+[m[32m    "status": "done"[m
+   },[m
+   {[m
+[31m-    "id": "6d41b33e-be7c-41e5-bca7-66061115c6a2",[m
+[31m-    "title": "Fix Production Image Deployment",[m
+[31m-    "status": "in-progress",[m
+[31m-    "assigned_to": "agent-lead-engineer"[m
+[32m+[m[32m    "id": "0442edfc-2df8-44cb-be0d-09d00954d7bc",[m
+[32m+[m[32m    "title": "Investigate Intuit Payments Integration",[m
+[32m+[m[32m    "status": "done"[m
+   },[m
+   {[m
+[31m-    "id": "2ae3c980-8531-446d-a216-c6d10a4b13c9",[m
+[31m-    "title": "Fix Production Image Deployment (Urgent)",[m
+[31m-    "status": "in-progress",[m
+[31m-    "assigned_to": "agent-lead-engineer-2"[m
+[32m+[m[32m    "id": "0ae0ca83-9863-4212-8f10-d7199f3e9291",[m
+[32m+[m[32m    "title": "Automated Client Reminder System (Email & SMS)",[m
+[32m+[m[32m    "status": "done"[m
+   },[m
+   {[m
+[31m-    "id": "ab7b9ce3-09d6-4979-8e16-391efb1076a1",[m
+[31m-    "title": "Integrate Authentic Images from Google Drive (Urgent)",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-designer"[m
+[32m+[m[32m    "id": "48d707aa-77a3-4f33-87c3-0c7c37a00338",[m
+[32m+[m[32m    "title": "Secure Document Storage (AWS S3) Production Readiness",[m
+[32m+[m[32m    "status": "done"[m
+   },[m
+   {[m
+[31m-    "id": "56ab1417-a272-4b39-ba92-76f5bfdeffb3",[m
+[31m-    "title": "Phase 2: Client Portal Architecture & Plan",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-lead-engineer-2"[m
+[32m+[m[32m    "id": "7509937b-be24-4147-8622-f22e9c726007",[m
+[32m+[m[32m    "title": "Admin Dashboard: Document Review & Approval Workflow",[m
+[32m+[m[32m    "status": "done"[m
+   },[m
+   {[m
+[31m-    "id": "ffb4fe9b-00e0-4a30-853f-9db51b7a4e60",[m
+[31m-    "title": "Update Website Images and Fix Cropping",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-designer"[m
+[32m+[m[32m    "id": "0dad8d92-6062-4778-9099-ba1bfd39d63e",[m
+[32m+[m[32m    "title": "Implement Background Job Strategy (Upstash Workflow)",[m
+[32m+[m[32m    "status": "done"[m
+   },[m
+   {[m
+[31m-    "id": "47464113-4b16-423d-b901-9bab553ca26a",[m
+[31m-    "title": "Phase 2: Database Schema Updates",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-lead-engineer-2"[m
+[32m+[m[32m    "id": "2f8e256c-c9e2-40dc-904c-6695172f470c",[m
+[32m+[m[32m    "title": "Implement Intuit Payments (QuickBooks Payments) Integration",[m
+[32m+[m[32m    "status": "done"[m
+   },[m
+   {[m
+[31m-    "id": "836c7a32-1b8d-4cf9-848a-4d5b9313cf31",[m
+[31m-    "title": "Phase 2: Portal Frontend Components",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-lead-engineer-2"[m
+[32m+[m[32m    "id": "d2bd02b2-f087-4a99-b648-6b111d17543d",[m
+[32m+[m[32m    "title": "Fix Admin Access and Disable MFA Lock",[m
+[32m+[m[32m    "status": "done"[m
+   },[m
+   {[m
+[31m-    "id": "6ed541e6-85a0-499a-85d0-61d93a76793b",[m
+[31m-    "title": "EMERGENCY: Fix About Page Portrait",[m
+[31m-    "status": "done",[m
+[31m-    "assigned_to": "agent-lead-engineer-2"[m
+[32m+[m[32m    "id": "35b79831-a475-4687-bcbd-a88aeb13bfea",[m
+[32m+[m[32m    "title": "Implement Appointment Type Selection & Teams/Address Logic",[m
+[32m+[m[32m    "status": "done"[m
+[32m+[m[32m  },[m
+[32m+[m[32m  {[m
+[32m+[m[32m    "id": "5e7a04b4-ff1e-41e8-a34b-7ad1524cdcbd",[m
+[32m+[m[32m    "title": "Implement Resource Center & CMS",[m
+[32m+[m[32m    "status": "done"[m
+   },[m
+   {[m
+[31m-    "id": "e63ee438-afce-4ec4-8445-ece23bb06fd6",[m
+[31m-    "title": "EMERGENCY: Fix Homepage AI Images",[m
+[31m-    "status": "in-progress",[m
+[31m-    "assigned_to": "80198a45-9188-4db0-86e1-a79c1ae0326a"[m
+[32m+[m[32m    "id": "dea9eafa-7c25-44d0-bc3e-176b69451bcd",[m
+[32m+[m[32m    "title": "Fix 'Ready to File' Admin Workflow & Dashboard Surfacing",[m
+[32m+[m[32m    "status": "in-progress"[m
+   }[m
+ ][m
+[1mdiff --git a/tasks_output.json b/tasks_output.json[m
+[1mnew file mode 100644[m
+[1mindex 0000000..fe51488[m
+[1m--- /dev/null[m
+[1m+++ b/tasks_output.json[m
+[36m@@ -0,0 +1 @@[m
+[32m+[m[32m[][m
