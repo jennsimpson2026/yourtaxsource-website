@@ -51,7 +51,7 @@ export function ResourceForm({ initialData, categories }: ResourceFormProps) {
       // 1. Upload file if selected
       if (file) {
         setUploadProgress(10);
-        const { uploadUrl, s3Key } = await getResourceUploadUrl(file.name, file.type);
+        const { uploadUrl, s3Key, fileUrl: serverFileUrl } = await getResourceUploadUrl(file.name, file.type);
         setUploadProgress(30);
 
         const uploadResponse = await fetch(uploadUrl, {
@@ -65,10 +65,7 @@ export function ResourceForm({ initialData, categories }: ResourceFormProps) {
         if (!uploadResponse.ok) throw new Error("Failed to upload file to S3");
         
         setUploadProgress(70);
-        // Construct the public URL
-        const bucketName = process.env.NEXT_PUBLIC_AWS_S3_BUCKET || "your-tax-source-docs";
-        const region = "us-east-2"; // Standard for this project
-        fileUrl = `https://${bucketName}.s3.${region}.amazonaws.com/${s3Key}`;
+        fileUrl = serverFileUrl;
       }
 
       // 2. Save to database

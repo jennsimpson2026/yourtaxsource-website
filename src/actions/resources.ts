@@ -72,8 +72,10 @@ export async function getResourceUploadUrl(fileName: string, fileType: string) {
   });
 
   const uploadUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
+  const region = process.env.AWS_REGION || "us-east-2";
+  const fileUrl = `https://${BUCKET_NAME}.s3.${region}.amazonaws.com/${s3Key}`;
 
-  return { uploadUrl, s3Key };
+  return { uploadUrl, s3Key, fileUrl };
 }
 
 // Admin Actions

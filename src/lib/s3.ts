@@ -9,7 +9,7 @@ if (!accessKeyId || !secretAccessKey) {
   console.warn("⚠️ AWS Credentials missing. S3 operations will fail in production.");
 }
 
-console.log(`S3 Config: Region=${region}, Bucket=${process.env.AWS_S3_BUCKET || "your-tax-source-docs"}`);
+console.log(`S3 Config: Region=${region}, Bucket=${process.env.AWS_S3_BUCKET || "yourtaxsource-client-documents"}`);
 
 export const s3Client = new S3Client({
   region,
@@ -19,7 +19,7 @@ export const s3Client = new S3Client({
   },
 });
 
-export const BUCKET_NAME = process.env.AWS_S3_BUCKET || "your-tax-source-docs";
+export const BUCKET_NAME = process.env.AWS_S3_BUCKET || "yourtaxsource-client-documents";
 
 export async function getPresignedUrl(key: string) {
   const command = new GetObjectCommand({
