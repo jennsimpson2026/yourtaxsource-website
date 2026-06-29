@@ -3,8 +3,9 @@ import Link from "next/link";
 import { getPostBySlug } from "@/actions/resources";
 import { notFound } from "next/navigation";
 
-export default async function ResourceDetailPage({ params }: { params: { slug: string } }) {
-  const post = await getPostBySlug(params.slug);
+export default async function ResourceDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const post = await getPostBySlug(slug);
 
   if (!post) {
     notFound();

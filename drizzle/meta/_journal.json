@@ -43,6 +43,13 @@
       "when": 1781928683802,
       "tag": "0005_nostalgic_black_panther",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1782429431160,
+      "tag": "0006_third_masque",
+      "breakpoints": true
     }
   ]
 }

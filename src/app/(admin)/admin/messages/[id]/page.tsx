@@ -5,7 +5,8 @@ import { auth } from "@/lib/auth";
 import { MessageCenter } from "@/components/portal/MessageCenter";
 import { notFound, redirect } from "next/navigation";
 
-export default async function AdminConversationPage({ params }: { params: { id: string } }) {
+export default async function AdminConversationPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const session = await auth();
   if (!session || !session.user) {
     redirect("/auth/login");
@@ -17,7 +18,7 @@ export default async function AdminConversationPage({ params }: { params: { id: 
   }
 
   const client = await db.query.users.findFirst({
-    where: eq(users.id, params.id),
+    where: eq(users.id, id),
   });
 
   if (!client) {
