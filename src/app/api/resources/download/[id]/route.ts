@@ -7,11 +7,13 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
+  let downloadUrl: string;
   try {
-    const downloadUrl = await getResourceDownloadUrl(id);
-    redirect(downloadUrl);
+    downloadUrl = await getResourceDownloadUrl(id);
   } catch (error) {
     console.error("Resource download error:", error);
     return new Response("Resource not found", { status: 404 });
   }
+
+  redirect(downloadUrl);
 }

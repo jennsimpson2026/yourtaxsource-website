@@ -79,20 +79,32 @@ export async function getResourceUploadUrl(fileName: string, fileType: string) {
 }
 
 export async function getResourceDownloadUrl(id: string) {
+  console.log(`[DOWNLOAD] Requesting URL for resource ID: ${id}`);
   const resource = await db.query.posts.findFirst({
     where: eq(posts.id, id),
   });
 
   if (!resource || !resource.fileUrl) {
+    console.error(`[DOWNLOAD] Resource or file not found for ID: ${id}`);
     throw new Error("Resource or file not found");
   }
+
+  console.log(`[DOWNLOAD] Found resource: ${resource.title}, fileUrl: ${resource.fileUrl}`);
 
   // If it's a direct S3 URL, get a pre-signed URL
   if (resource.fileUrl.includes("amazonaws.com")) {
     const urlParts = resource.fileUrl.split(".com/");
     if (urlParts.length > 1) {
-      const s3Key = urlParts[1];
-      return await getPresignedUrl(s3Key);
+      const s3Key = decodeURIComponent(urlParts[1]);
+      console.log(`[DOWNLOAD] Generating pre-signed URL for key: ${s3Key}`);
+      try {
+        const signedUrl = await getPresignedUrl(s3Key);
+        console.log(`[DOWNLOAD] Generated signed URL successfully`);
+        return signedUrl;
+      } catch (err: any) {
+        console.error(`[DOWNLOAD] Error generating signed URL: ${err.message}`);
+        throw err;
+      }
     }
   }
 
