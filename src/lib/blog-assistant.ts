@@ -4,8 +4,10 @@ import { posts, categories, users } from "./db/schema";
 import { eq, and } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-const TAVILY_API_KEY = process.env.TAVILY_API_KEY;
+import { validatedEnv } from "./env";
+
+const OPENAI_API_KEY = validatedEnv.OPENAI_API_KEY;
+const TAVILY_API_KEY = validatedEnv.TAVILY_API_KEY;
 
 interface ResearchResult {
   title: string;

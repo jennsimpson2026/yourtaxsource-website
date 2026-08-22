@@ -52,6 +52,10 @@ const envSchema = z.object({
   AXIOM_DATASET: z.string().optional(),
   AXIOM_TOKEN: z.string().optional(),
 
+  // AI Assistant
+  OPENAI_API_KEY: z.string().optional(),
+  TAVILY_API_KEY: z.string().optional(),
+
   // Admin/Misc
   ADMIN_EMAIL: z.string().email(),
   CONTACT_FORM_RECIPIENT: z.string().email(),
