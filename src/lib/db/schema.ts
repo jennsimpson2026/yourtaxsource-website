@@ -343,6 +343,8 @@ export const posts = sqliteTable("posts", {
   socialTitle: text("social_title"),
   socialDescription: text("social_description"),
   socialImage: text("social_image"),
+  researchSources: text("research_sources"), // JSON string
+  socialHashtags: text("social_hashtags"), // JSON string
   fileUrl: text("file_url"),
   createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),

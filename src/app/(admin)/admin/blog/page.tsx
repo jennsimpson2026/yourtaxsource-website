@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { BlogCMSTable } from "@/components/admin/BlogCMSTable";
+import { AIBlogGenerator } from "@/components/admin/AIBlogGenerator";
 
 export default async function BlogCMSPage() {
   console.log("[BLOG_CMS] Loading BlogCMSPage...");
@@ -32,12 +33,15 @@ export default async function BlogCMSPage() {
           <h1 className="text-3xl font-heading font-bold text-brand-black">Blog CMS</h1>
           <p className="text-brand-charcoal/60 text-sm">Manage your tax tips, insights, and news articles.</p>
         </div>
-        <Link 
-          href="/admin/blog/new"
-          className="bg-brand-purple text-white px-6 py-3 rounded-xl font-bold hover:bg-opacity-90 transition-all flex items-center gap-2 shadow-lg shadow-brand-purple/20"
-        >
-          <Plus size={20} /> Create New Post
-        </Link>
+        <div className="flex items-center gap-3">
+          <AIBlogGenerator />
+          <Link 
+            href="/admin/blog/new"
+            className="bg-brand-purple text-white px-6 py-3 rounded-xl font-bold hover:bg-opacity-90 transition-all flex items-center gap-2 shadow-lg shadow-brand-purple/20"
+          >
+            <Plus size={20} /> Create New Post
+          </Link>
+        </div>
       </div>
 
       {/* Stats */}

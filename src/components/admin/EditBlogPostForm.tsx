@@ -9,20 +9,29 @@ import {
   Eye, 
   Image as ImageIcon,
   Loader2,
-  CheckCircle2
+  CheckCircle2,
+  Calendar
 } from "lucide-react";
 import Link from "next/link";
+import { toast } from "sonner";
 
 export function EditBlogPostForm({ post, categories }: { post: any, categories: any[] }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [showSchedule, setShowSchedule] = useState(false);
   const [formData, setFormData] = useState({
     title: post.title,
     slug: post.slug,
     content: post.content,
     categoryId: post.categoryId,
-    status: post.status as "draft" | "published",
+    status: post.status as "draft" | "published" | "scheduled",
     featuredImageUrl: post.featuredImageUrl || "",
+    publishDate: post.publishDate ? new Date(post.publishDate).toISOString().split('T')[0] : "",
+    seoTitle: post.seoTitle || "",
+    seoDescription: post.seoDescription || "",
+    socialDescription: post.socialDescription || "",
+    socialHashtags: post.socialHashtags || "[]",
+    researchSources: post.researchSources || "[]",
   });
 
   const generateSlug = (title: string) => {
@@ -75,6 +84,74 @@ export function EditBlogPostForm({ post, categories }: { post: any, categories: 
           >
             <Eye size={18} /> Preview
           </button>
+          
+          {formData.status === 'draft' && (
+            <div className="flex gap-2">
+              <button 
+                type="button"
+                onClick={async () => {
+                  setLoading(true);
+                  try {
+                    await updatePost(post.id, { ...formData, status: 'published' });
+                    toast.success("Article published!");
+                    router.push("/admin/blog");
+                    router.refresh();
+                  } catch (e) {
+                    toast.error("Failed to publish");
+                  } finally {
+                    setLoading(false);
+                  }
+                }}
+                disabled={loading}
+                className="bg-green-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-green-700 transition-all flex items-center gap-2 shadow-lg shadow-green-600/20"
+              >
+                <CheckCircle2 size={18} /> Approve & Publish
+              </button>
+
+              <div className="relative">
+                <button 
+                  type="button"
+                  onClick={() => setShowSchedule(!showSchedule)}
+                  className="bg-brand-black text-white px-6 py-3 rounded-xl font-bold hover:bg-opacity-90 transition-all flex items-center gap-2"
+                >
+                  <Calendar size={18} /> Approve & Schedule
+                </button>
+                
+                {showSchedule && (
+                  <div className="absolute top-full right-0 mt-2 p-4 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 w-64 animate-in fade-in slide-in-from-top-2">
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Publish Date</label>
+                    <input 
+                      type="date"
+                      value={formData.publishDate}
+                      onChange={(e) => setFormData(prev => ({ ...prev, publishDate: e.target.value }))}
+                      className="w-full p-2 bg-gray-50 border border-gray-100 rounded-lg text-sm mb-4"
+                    />
+                    <button 
+                      type="button"
+                      disabled={loading || !formData.publishDate}
+                      onClick={async () => {
+                        setLoading(true);
+                        try {
+                          await updatePost(post.id, { ...formData, status: 'scheduled' });
+                          toast.success("Article scheduled!");
+                          router.push("/admin/blog");
+                          router.refresh();
+                        } catch (e) {
+                          toast.error("Failed to schedule");
+                        } finally {
+                          setLoading(false);
+                        }
+                      }}
+                      className="w-full bg-brand-purple text-white py-2 rounded-lg font-bold text-xs"
+                    >
+                      Confirm Schedule
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           <button 
             form="post-form"
             type="submit"
@@ -82,7 +159,7 @@ export function EditBlogPostForm({ post, categories }: { post: any, categories: 
             className="bg-brand-purple text-white px-8 py-3 rounded-xl font-bold hover:bg-opacity-90 transition-all flex items-center gap-2 shadow-lg shadow-brand-purple/20 disabled:opacity-50"
           >
             {loading ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
-            Update Post
+            {formData.status === 'published' ? 'Update Post' : 'Save Changes'}
           </button>
         </div>
       </div>
@@ -127,6 +204,63 @@ export function EditBlogPostForm({ post, categories }: { post: any, categories: 
                 placeholder="Write your post content here..."
                 className="w-full p-6 rounded-xl border border-gray-100 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-brand-purple/20 outline-none transition-all font-mono text-sm leading-relaxed"
               ></textarea>
+            </div>
+          </div>
+
+          {/* AI Metadata Section */}
+          <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-8">
+            <div>
+              <h3 className="text-xl font-heading font-bold text-brand-black mb-1">SEO & Social Metadata</h3>
+              <p className="text-xs text-brand-charcoal/40 font-medium uppercase tracking-widest mb-6">Generated by AI Assistant</p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-xs font-bold text-brand-black mb-2 uppercase tracking-widest">SEO Title</label>
+                  <input 
+                    type="text"
+                    value={formData.seoTitle}
+                    onChange={(e) => setFormData(prev => ({ ...prev, seoTitle: e.target.value }))}
+                    className="w-full p-3 rounded-xl border border-gray-100 bg-gray-50 text-sm outline-none focus:bg-white transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-brand-black mb-2 uppercase tracking-widest">SEO Description</label>
+                  <input 
+                    type="text"
+                    value={formData.seoDescription}
+                    onChange={(e) => setFormData(prev => ({ ...prev, seoDescription: e.target.value }))}
+                    className="w-full p-3 rounded-xl border border-gray-100 bg-gray-50 text-sm outline-none focus:bg-white transition-all"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-brand-black mb-2 uppercase tracking-widest">Social Media Caption</label>
+              <textarea 
+                value={formData.socialDescription}
+                onChange={(e) => setFormData(prev => ({ ...prev, socialDescription: e.target.value }))}
+                rows={3}
+                className="w-full p-4 rounded-xl border border-gray-100 bg-gray-50 text-sm outline-none focus:bg-white transition-all"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-brand-black mb-2 uppercase tracking-widest">Hashtags</label>
+              <input 
+                type="text"
+                value={formData.socialHashtags}
+                onChange={(e) => setFormData(prev => ({ ...prev, socialHashtags: e.target.value }))}
+                placeholder='["tax", "business"]'
+                className="w-full p-3 rounded-xl border border-gray-100 bg-gray-50 text-xs font-mono outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-brand-black mb-2 uppercase tracking-widest">Research Sources</label>
+              <div className="p-4 bg-gray-50 rounded-xl border border-gray-100 text-xs font-mono overflow-x-auto whitespace-pre">
+                {formData.researchSources}
+              </div>
             </div>
           </div>
         </div>

@@ -11,7 +11,7 @@ const client = createClient({
 
 async function main() {
   try {
-    const result = await client.execute("SELECT id, title, slug, content, status FROM posts WHERE slug = 'markdown-rendering-verification'");
+    const result = await client.execute("SELECT id, title, slug, content, status FROM posts WHERE slug = 'tax-season-starts-before-tax-season'");
     console.log(JSON.stringify(result.rows, null, 2));
   } catch (error) {
     console.error(error);

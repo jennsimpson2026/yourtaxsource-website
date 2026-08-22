@@ -44,8 +44,14 @@ export async function updatePost(id: string, data: Partial<{
   slug: string;
   content: string;
   categoryId: string;
-  status: "draft" | "published";
+  status: "draft" | "published" | "scheduled";
+  publishDate?: Date | string | null;
   featuredImageUrl?: string;
+  seoTitle?: string;
+  seoDescription?: string;
+  socialDescription?: string;
+  socialHashtags?: string;
+  researchSources?: string;
 }>) {
   console.log(`[BLOG_CMS] Updating post: ${id}`);
   const session = await auth();
@@ -56,7 +62,9 @@ export async function updatePost(id: string, data: Partial<{
 
   try {
     const updateData: any = { ...data, updatedAt: new Date() };
-    if (data.status === "published") {
+    if (data.publishDate) {
+      updateData.publishDate = new Date(data.publishDate);
+    } else if (data.status === "published") {
       updateData.publishDate = new Date();
     } else if (data.status === "draft") {
       updateData.publishDate = null;
