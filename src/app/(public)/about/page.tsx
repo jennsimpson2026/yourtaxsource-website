@@ -6,7 +6,7 @@ export default function AboutPage() {
   return (
     <div className="flex flex-col">
       {/* Hero Section */}
-      <section className="bg-brand-purple py-16 md:py-32 text-white relative overflow-hidden">
+      <section className="bg-brand-purple py-12 md:py-20 text-white relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-10"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="max-w-3xl animate-in fade-in slide-in-from-bottom duration-700">

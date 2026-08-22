@@ -5,7 +5,7 @@ import { ContactForm } from "@/components/ContactForm";
 export default function ContactPage() {
   return (
     <div className="flex flex-col">
-      <section className="bg-brand-black py-16 md:py-32 text-white relative overflow-hidden">
+      <section className="bg-brand-black py-12 md:py-20 text-white relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-10"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
           <h1 className="text-4xl md:text-6xl font-heading font-bold mb-8">Let's Talk <span className="text-brand-purple italic">Taxes</span>.</h1>

@@ -6,7 +6,7 @@ import { BookingButton } from "@/components/BookingButton";
 export default function ServicesPage() {
   return (
     <div className="flex flex-col">
-      <section className="bg-brand-purple py-16 md:py-32 text-white relative overflow-hidden">
+      <section className="bg-brand-purple py-12 md:py-20 text-white relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-10"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 animate-in fade-in slide-in-from-top duration-700">
           <div className="max-w-3xl">
