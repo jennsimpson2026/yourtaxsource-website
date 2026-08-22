@@ -36,10 +36,10 @@ export default async function BlogPage() {
   return (
     <div className="bg-white min-h-screen">
       {/* Hero Section */}
-      <section className="bg-brand-black text-white pt-20 pb-12 relative overflow-hidden">
+      <section className="bg-brand-black text-white pt-10 pb-6 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-96 h-96 bg-brand-purple opacity-20 rounded-full -mr-32 -mt-32 blur-3xl"></div>
         <div className="max-w-7xl mx-auto px-4 relative z-10 text-center">
-          <h1 className="text-5xl md:text-7xl font-heading font-bold mb-6">Tax Tips & <span className="text-brand-purple">Insights</span></h1>
+          <h1 className="text-5xl md:text-7xl font-heading font-bold mb-4">Tax Tips & <span className="text-brand-purple">Insights</span></h1>
           <p className="text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed">
             Expert advice on tax planning, business growth, and financial confidence from your partners at Your Tax Source.
           </p>
