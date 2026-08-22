@@ -5,7 +5,7 @@ import { posts, categories, users, auditLogs } from "@/lib/db/schema";
 import { eq, desc, and, sql } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
-import { s3Client, BUCKET_NAME } from "@/lib/s3";
+import { s3Client, BUCKET_NAME, getPresignedUrl } from "@/lib/s3";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
@@ -78,7 +78,26 @@ export async function getResourceUploadUrl(fileName: string, fileType: string) {
   return { uploadUrl, s3Key, fileUrl };
 }
 
-// Admin Actions
+export async function getResourceDownloadUrl(id: string) {
+  const resource = await db.query.posts.findFirst({
+    where: eq(posts.id, id),
+  });
+
+  if (!resource || !resource.fileUrl) {
+    throw new Error("Resource or file not found");
+  }
+
+  // If it's a direct S3 URL, get a pre-signed URL
+  if (resource.fileUrl.includes("amazonaws.com")) {
+    const urlParts = resource.fileUrl.split(".com/");
+    if (urlParts.length > 1) {
+      const s3Key = urlParts[1];
+      return await getPresignedUrl(s3Key);
+    }
+  }
+
+  return resource.fileUrl;
+}
 export async function createResource(data: any) {
   const session = await auth();
   if (!session?.user || ((session.user as any).role !== 'ADMIN' && (session.user as any).role !== 'STAFF')) {

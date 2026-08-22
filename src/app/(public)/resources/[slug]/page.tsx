@@ -44,7 +44,7 @@ export default async function ResourceDetailPage({ params }: { params: Promise<{
             {post.fileUrl && (
               <div className="shrink-0">
                 <a
-                  href={post.fileUrl}
+                  href={`/api/resources/download/${post.id}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-3 bg-brand-purple text-white px-8 py-4 rounded-2xl font-bold hover:bg-opacity-90 transition-all shadow-xl shadow-brand-purple/20"

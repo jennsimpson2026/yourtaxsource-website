@@ -56,7 +56,7 @@ export default async function ResourcesPage() {
           name: p.title,
           description: p.seoDescription || "",
           type: displayType,
-          href: fileUrl || (isDirectLink ? p.featuredImageUrl! : (isExternalSlug ? p.slug : `/resources/${p.slug}`)),
+          href: fileUrl ? `/api/resources/download/${p.id}` : (isDirectLink ? p.featuredImageUrl! : (isExternalSlug ? p.slug : `/resources/${p.slug}`)),
           isExternal: (p.categoryId === govCat?.id) || isDirectLink || isExternalSlug,
           isDownload: !!fileUrl
         };
@@ -66,6 +66,26 @@ export default async function ResourcesPage() {
   const checklists = getItemsByCatId(checklistCat?.id);
   const governmentResources = getItemsByCatId(govCat?.id);
   const helpfulForms = getItemsByCatId(formsCat?.id);
+
+  // Manual ordering for government resources
+  const orderedGovResources = [...governmentResources].sort((a, b) => {
+    const order = [
+      "Where’s My Refund?",
+      "Make a Federal Tax Payment",
+      "IRS.gov",
+      "Where’s My Amended Return?",
+      "NC DOR Where’s My Refund?",
+      "NC Pay Balance Due",
+      "SC Where’s My Refund?",
+      "SC Pay Balance Due"
+    ];
+    const aIdx = order.indexOf(a.name);
+    const bIdx = order.indexOf(b.name);
+    if (aIdx !== -1 && bIdx !== -1) return aIdx - bIdx;
+    if (aIdx !== -1) return -1;
+    if (bIdx !== -1) return 1;
+    return a.name.localeCompare(b.name);
+  });
 
   // Manual ordering for checklists
   const orderedChecklists = [...checklists].sort((a, b) => {
@@ -90,7 +110,7 @@ export default async function ResourcesPage() {
       title: "Government Resources", 
       description: "Official links to federal and state tax resources and helpful government websites.", 
       icon: <Globe className="text-brand-purple" size={24} />,
-      items: governmentResources,
+      items: orderedGovResources,
       slug: 'government-resources',
       buttonText: "View All Resources"
     },
