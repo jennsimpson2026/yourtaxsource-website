@@ -78,7 +78,7 @@ export function BlogCMSTable({ initialPosts }: BlogCMSTableProps) {
             <tr key={post.id} className="hover:bg-gray-50 transition-colors group">
               <td className="px-8 py-6">
                 <Link 
-                  href={`/blog/${post.slug}${post.status === 'draft' ? '?preview=true' : ''}`} 
+                  href={`/blog/${post.slug}${post.status === 'draft' ? `?preview=true&id=${post.id}` : ''}`} 
                   target="_blank" 
                   className="font-bold text-brand-black group-hover:text-brand-purple transition-colors block max-w-md truncate flex items-center gap-2"
                 >
@@ -100,7 +100,7 @@ export function BlogCMSTable({ initialPosts }: BlogCMSTableProps) {
               <td className="px-8 py-6 text-right">
                 <div className="flex justify-end gap-2">
                   <Link 
-                    href={`/blog/${post.slug}?preview=true`}
+                    href={`/blog/${post.slug}?preview=true&id=${post.id}`}
                     target="_blank"
                     className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-all"
                     title="Preview"

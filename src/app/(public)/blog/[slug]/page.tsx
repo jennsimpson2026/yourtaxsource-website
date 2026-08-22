@@ -4,6 +4,10 @@ import { eq, and, or } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Calendar, User, Clock, Share2 } from "lucide-react";
+import { marked } from "marked";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function BlogPostPage({ 
   params,
@@ -21,15 +25,19 @@ export default async function BlogPostPage({
   if (cleanSlug.startsWith("/")) cleanSlug = cleanSlug.substring(1);
   if (cleanSlug.endsWith("/")) cleanSlug = cleanSlug.substring(0, cleanSlug.length - 1);
 
-  console.log(`[BLOG_POST] Fetching post slug: "${cleanSlug}" (original: "${slug}"), id: "${id}", isPreview: ${isPreview}`);
+  console.log(`[BLOG_POST] Fetching post slug: "${cleanSlug}", id: "${id}", isPreview: ${isPreview}`);
+
+  let queryWhere;
+  if (id) {
+    queryWhere = eq(posts.id, id as string);
+  } else if (isPreview) {
+    queryWhere = eq(posts.slug, cleanSlug);
+  } else {
+    queryWhere = and(eq(posts.slug, cleanSlug), eq(posts.status, "published"));
+  }
 
   const post = await db.query.posts.findFirst({
-    where: id 
-      ? eq(posts.id, id as string)
-      : (isPreview 
-          ? eq(posts.slug, cleanSlug)
-          : and(eq(posts.slug, cleanSlug), eq(posts.status, "published"))
-        ),
+    where: queryWhere,
     with: {
       category: true,
       author: true,
@@ -37,20 +45,43 @@ export default async function BlogPostPage({
   });
 
   if (!post) {
-    console.warn(`[BLOG_POST] Post not found for slug: "${cleanSlug}"`);
-    // Try a case-insensitive fallback if possible
+    console.warn(`[BLOG_POST] Post not found for query: ${JSON.stringify({ slug: cleanSlug, id, isPreview })}`);
     notFound();
+  }
+
+  // Parse markdown content to HTML
+  let htmlContent = "";
+  try {
+    // Handle potential double-escaped newlines and then parse
+    const rawContent = (post.content || "").replace(/\\n/g, "\n");
+    
+    // Force wait for marked parse
+    const result = marked.parse(rawContent, {
+      breaks: true,
+      gfm: true
+    });
+    
+    if (typeof (result as any).then === 'function') {
+      htmlContent = await (result as any);
+    } else {
+      htmlContent = result as string;
+    }
+    
+    console.log(`[BLOG_POST] Parsed HTML length: ${htmlContent.length}`);
+  } catch (err) {
+    console.error("[BLOG_POST] Markdown parsing error:", err);
+    htmlContent = post.content || "";
   }
 
   const displayPost = {
     title: post.title,
-    content: post.content,
+    content: htmlContent,
     date: post.publishDate ? new Date(post.publishDate).toLocaleDateString() : new Date(post.createdAt).toLocaleDateString(),
     author: (post as any).author?.name || "Jenn Simpson",
     authorTitle: "Founder & Lead Advisor",
     category: (post as any).category?.name || "Uncategorized",
-    readTime: `${Math.ceil(post.content.split(/\s+/).length / 200)} min read`,
-    image: post.featuredImageUrl || "https://images.unsplash.com/photo-1454165833767-027ffea9e7a7?q=80&w=1200&auto=format&fit=crop"
+    readTime: `${Math.ceil((post.content || "").split(/\s+/).length / 200)} min read`,
+    featuredImageUrl: post.featuredImageUrl
   };
 
   const relatedPosts = await db.query.posts.findMany({
@@ -62,34 +93,45 @@ export default async function BlogPostPage({
   return (
     <div className="bg-white min-h-screen pb-20">
       {/* Hero Section */}
-      <section className="bg-brand-black text-white pt-32 pb-20 relative overflow-hidden">
+      <section className="bg-brand-black text-white pt-10 pb-8 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-96 h-96 bg-brand-purple opacity-20 rounded-full -mr-32 -mt-32 blur-3xl"></div>
         <div className="max-w-4xl mx-auto px-4 relative z-10">
           <Link 
             href="/blog" 
-            className="inline-flex items-center gap-2 text-brand-lavender/60 hover:text-brand-purple font-bold text-sm mb-8 transition-colors group"
+            className="inline-flex items-center gap-2 text-brand-lavender/60 hover:text-brand-purple font-bold text-sm mb-6 transition-colors group"
           >
             <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> Back to Blog
           </Link>
-          <div className="inline-block bg-brand-purple text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest mb-6">
+          <div className="inline-block bg-brand-purple text-white px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-4">
             {displayPost.category}
           </div>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-heading font-bold mb-8 leading-tight">
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-heading font-bold mb-6 leading-tight">
             {displayPost.title}
           </h1>
-          <div className="flex flex-wrap items-center gap-6 text-sm font-medium text-gray-400">
-            <span className="flex items-center gap-2"><Calendar size={18} className="text-brand-purple" /> {displayPost.date}</span>
-            <span className="flex items-center gap-2"><Clock size={18} className="text-brand-purple" /> {displayPost.readTime}</span>
-            <span className="flex items-center gap-2"><User size={18} className="text-brand-purple" /> {displayPost.author}</span>
+          <div className="flex flex-wrap items-center gap-6 text-xs font-bold text-gray-400 uppercase tracking-widest">
+            <span className="flex items-center gap-2"><Calendar size={14} className="text-brand-purple" /> {displayPost.date}</span>
+            <span className="flex items-center gap-2"><Clock size={14} className="text-brand-purple" /> {displayPost.readTime}</span>
+            <span className="flex items-center gap-2"><User size={14} className="text-brand-purple" /> {displayPost.author}</span>
           </div>
         </div>
       </section>
 
       {/* Article Content */}
       <article className="max-w-4xl mx-auto px-4 -mt-10 relative z-20">
-        <div className="rounded-[2.5rem] overflow-hidden shadow-2xl mb-12 border border-gray-100">
-          <img src={displayPost.image} alt={displayPost.title} className="w-full h-auto" />
-        </div>
+        {displayPost.featuredImageUrl && (
+          <div className="rounded-[2.5rem] overflow-hidden shadow-2xl mb-12 border border-gray-100 bg-gray-50">
+            <img 
+              src={displayPost.featuredImageUrl} 
+              alt={displayPost.title} 
+              className="w-full h-auto" 
+              onError={(e) => {
+                // If image fails to load, hide the container
+                (e.target as HTMLElement).parentElement?.classList.add('hidden');
+              }}
+            />
+          </div>
+        )}
+        {!displayPost.featuredImageUrl && <div className="h-10"></div>}
         
         <div className="flex flex-col lg:flex-row gap-12">
           {/* Main Content */}
