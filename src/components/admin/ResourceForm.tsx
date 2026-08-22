@@ -9,10 +9,23 @@ import {
   FileText, 
   Loader2,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Plus,
+  Trash2,
+  FileSpreadsheet,
+  File
 } from "lucide-react";
 import Link from "next/link";
 import { getResourceUploadUrl, createResource, updateResource } from "@/actions/resources";
+
+interface Attachment {
+  id?: string;
+  file?: File | null;
+  fileUrl?: string;
+  fileName: string;
+  label: string;
+  fileType: string;
+}
 
 interface Category {
   id: string;
@@ -29,14 +42,59 @@ export function ResourceForm({ initialData, categories }: ResourceFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const [file, setFile] = useState<File | null>(null);
+  
+  const [attachments, setAttachments] = useState<Attachment[]>(
+    initialData?.attachments?.map((att: any) => ({
+      id: att.id,
+      fileUrl: att.fileUrl,
+      fileName: att.fileName,
+      label: att.label,
+      fileType: att.fileType,
+    })) || []
+  );
 
   const isEdit = !!initialData;
+
+  const addAttachment = () => {
+    setAttachments([
+      ...attachments,
+      {
+        fileName: "",
+        label: "",
+        fileType: "",
+        file: null,
+      }
+    ]);
+  };
+
+  const removeAttachment = (index: number) => {
+    setAttachments(attachments.filter((_, i) => i !== index));
+  };
+
+  const updateAttachment = (index: number, updates: Partial<Attachment>) => {
+    const newAttachments = [...attachments];
+    newAttachments[index] = { ...newAttachments[index], ...updates };
+    setAttachments(newAttachments);
+  };
+
+  const handleFileChange = (index: number, file: File | null) => {
+    if (!file) return;
+    
+    const ext = file.name.split('.').pop()?.toUpperCase() || "FILE";
+    updateAttachment(index, {
+      file,
+      fileName: file.name,
+      fileType: ext,
+      // Only set label if it's empty
+      label: attachments[index].label || file.name.split('.')[0],
+    });
+  };
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsSubmitting(true);
     setError(null);
+    setUploadProgress(0);
 
     const formData = new FormData(event.currentTarget);
     const title = formData.get("title") as string;
@@ -46,26 +104,54 @@ export function ResourceForm({ initialData, categories }: ResourceFormProps) {
     const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
     try {
-      let fileUrl = initialData?.fileUrl;
+      if (attachments.length === 0) {
+        throw new Error("Please add at least one file attachment.");
+      }
 
-      // 1. Upload file if selected
-      if (file) {
-        setUploadProgress(10);
-        const { uploadUrl, s3Key, fileUrl: serverFileUrl } = await getResourceUploadUrl(file.name, file.type);
-        setUploadProgress(30);
+      // Check if all attachments have files (either existing or new) and labels
+      attachments.forEach((att, i) => {
+        if (!att.fileUrl && !att.file) {
+          throw new Error(`Attachment #${i + 1} is missing a file.`);
+        }
+        if (!att.label.trim()) {
+          throw new Error(`Attachment #${i + 1} is missing a label.`);
+        }
+      });
 
-        const uploadResponse = await fetch(uploadUrl, {
-          method: "PUT",
-          body: file,
-          headers: {
-            "Content-Type": file.type,
-          },
+      const processedAttachments = [];
+      const totalSteps = attachments.length * 2; // Upload + Save metadata
+      let currentStep = 0;
+
+      for (let i = 0; i < attachments.length; i++) {
+        const att = attachments[i];
+        let fileUrl = att.fileUrl;
+
+        if (att.file) {
+          const { uploadUrl, fileUrl: serverFileUrl } = await getResourceUploadUrl(att.file.name, att.file.type);
+          
+          const uploadResponse = await fetch(uploadUrl, {
+            method: "PUT",
+            body: att.file,
+            headers: {
+              "Content-Type": att.file.type,
+            },
+          });
+
+          if (!uploadResponse.ok) throw new Error(`Failed to upload file: ${att.file.name}`);
+          fileUrl = serverFileUrl;
+        }
+
+        processedAttachments.push({
+          id: att.id,
+          fileUrl,
+          fileName: att.fileName,
+          label: att.label,
+          fileType: att.fileType,
+          sortOrder: i,
         });
 
-        if (!uploadResponse.ok) throw new Error("Failed to upload file to S3");
-        
-        setUploadProgress(70);
-        fileUrl = serverFileUrl;
+        currentStep += 2;
+        setUploadProgress(Math.round((currentStep / totalSteps) * 100));
       }
 
       // 2. Save to database
@@ -75,7 +161,9 @@ export function ResourceForm({ initialData, categories }: ResourceFormProps) {
         content,
         categoryId,
         status,
-        fileUrl,
+        attachments: processedAttachments,
+        // Legacy support
+        fileUrl: processedAttachments[0]?.fileUrl || null,
       };
 
       if (isEdit) {
@@ -135,48 +223,104 @@ export function ResourceForm({ initialData, categories }: ResourceFormProps) {
             </div>
           </div>
 
-          <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
-            <label className="block text-sm font-bold text-brand-black mb-4 uppercase tracking-widest">Resource File</label>
+          <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
+            <div className="flex items-center justify-between">
+              <label className="block text-sm font-bold text-brand-black uppercase tracking-widest">Resource Files</label>
+              <button 
+                type="button" 
+                onClick={addAttachment}
+                className="flex items-center gap-2 text-xs font-bold text-brand-purple hover:bg-brand-purple/5 px-3 py-2 rounded-xl transition-all"
+              >
+                <Plus size={16} />
+                Add Attachment
+              </button>
+            </div>
             
-            <div className={`relative border-2 border-dashed rounded-2xl p-8 transition-all flex flex-col items-center justify-center text-center ${file ? 'border-brand-purple bg-brand-purple/5' : 'border-gray-200 hover:border-brand-purple/50'}`}>
-              <input 
-                type="file" 
-                onChange={(e) => setFile(e.target.files?.[0] || null)}
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                accept=".pdf,.xlsx,.xls,.docx,.doc"
-              />
-              
-              <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mb-4 text-gray-400">
-                {file ? <FileText className="text-brand-purple" size={32} /> : <Upload size={32} />}
-              </div>
-              
-              {file ? (
-                <div>
-                  <p className="font-bold text-brand-black">{file.name}</p>
-                  <p className="text-xs text-gray-400">{(file.size / 1024).toFixed(1)} KB</p>
+            <div className="space-y-4">
+              {attachments.map((att, index) => (
+                <div key={index} className="p-6 border border-gray-100 rounded-2xl bg-gray-50/50 space-y-4 relative">
+                  <div className="absolute top-4 left-6">
+                    <span className="text-[10px] font-black text-brand-purple bg-brand-purple/10 px-2 py-1 rounded-md uppercase tracking-widest">
+                      Attachment #{index + 1}
+                    </span>
+                  </div>
+                  <div className="flex items-start justify-between gap-4 pt-6">
+                    <div className="flex-1 space-y-4">
+                      <div>
+                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">Display Label (e.g. Printable PDF)</label>
+                        <input 
+                          type="text"
+                          value={att.label}
+                          onChange={(e) => updateAttachment(index, { label: e.target.value })}
+                          className="w-full bg-white border border-gray-100 rounded-xl py-2 px-3 text-sm outline-none focus:ring-2 focus:ring-brand-purple/20 transition-all font-medium"
+                          placeholder="How this file appears to clients"
+                        />
+                      </div>
+
+                      <div className={`relative border-2 border-dashed rounded-xl p-4 transition-all flex items-center gap-4 ${att.file || att.fileUrl ? 'border-brand-purple/30 bg-white' : 'border-gray-200 bg-white hover:border-brand-purple/50'}`}>
+                        <input 
+                          type="file" 
+                          onChange={(e) => handleFileChange(index, e.target.files?.[0] || null)}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                          accept=".pdf,.xlsx,.xls,.docx,.doc"
+                        />
+                        
+                        <div className="w-10 h-10 bg-gray-50 rounded-lg flex items-center justify-center text-gray-400">
+                          {att.fileType === 'PDF' ? <FileText className="text-red-500" size={20} /> : 
+                           ['XLSX', 'XLS'].includes(att.fileType) ? <FileSpreadsheet className="text-green-600" size={20} /> :
+                           <File className="text-brand-purple" size={20} />}
+                        </div>
+                        
+                        <div className="flex-1 min-w-0">
+                          {att.fileName ? (
+                            <>
+                              <p className="text-xs font-bold text-brand-black truncate">{att.fileName}</p>
+                              <p className="text-[10px] text-gray-400 uppercase tracking-widest">{att.fileType} {att.file ? '(New)' : '(Existing)'}</p>
+                            </>
+                          ) : (
+                            <p className="text-xs font-bold text-gray-400">Click to upload file</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <button 
+                      type="button"
+                      onClick={() => removeAttachment(index)}
+                      className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                      title="Remove Attachment"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+
+              {attachments.length > 0 && (
+                <button 
+                  type="button" 
+                  onClick={addAttachment}
+                  className="w-full py-6 border-2 border-dashed border-gray-100 rounded-2xl flex flex-col items-center justify-center gap-2 text-gray-400 hover:text-brand-purple hover:border-brand-purple/30 hover:bg-brand-purple/5 transition-all"
+                >
+                  <Plus size={24} />
+                  <span className="text-sm font-bold uppercase tracking-widest">Add Another File</span>
+                </button>
+              )}
+
+              {attachments.length === 0 && (
+                <div className="py-12 border-2 border-dashed border-gray-100 rounded-3xl flex flex-col items-center justify-center text-gray-400">
+                  <Upload size={32} className="mb-2 opacity-20" />
+                  <p className="text-sm font-medium">No attachments yet</p>
                   <button 
                     type="button" 
-                    onClick={() => setFile(null)}
-                    className="mt-4 text-xs font-bold text-red-500 hover:underline"
+                    onClick={addAttachment}
+                    className="mt-4 text-xs font-bold text-brand-purple hover:underline"
                   >
-                    Remove File
+                    Click to add your first file
                   </button>
-                </div>
-              ) : (
-                <div>
-                  <p className="font-bold text-brand-black">Click or drag to upload</p>
-                  <p className="text-xs text-gray-400 mt-1">PDF, Excel, or Word (Max 10MB)</p>
                 </div>
               )}
             </div>
-
-            {initialData?.fileUrl && !file && (
-              <div className="mt-4 flex items-center gap-2 p-3 bg-gray-50 rounded-xl border border-gray-100">
-                <FileText size={16} className="text-gray-400" />
-                <span className="text-xs font-medium text-brand-charcoal/60 truncate flex-1">{initialData.fileUrl}</span>
-                <span className="text-[10px] font-black uppercase tracking-widest text-green-600 bg-green-50 px-2 py-0.5 rounded border border-green-100">Current</span>
-              </div>
-            )}
           </div>
         </div>
 

@@ -352,7 +352,7 @@ export const posts = sqliteTable("posts", {
   categoryIdIdx: index("posts_category_id_idx").on(table.categoryId),
 }));
 
-export const postsRelations = relations(posts, ({ one }) => ({
+export const postsRelations = relations(posts, ({ one, many }) => ({
   category: one(categories, {
     fields: [posts.categoryId],
     references: [categories.id],
@@ -360,6 +360,29 @@ export const postsRelations = relations(posts, ({ one }) => ({
   author: one(users, {
     fields: [posts.authorId],
     references: [users.id],
+  }),
+  attachments: many(resourceAttachments),
+}));
+
+export const resourceAttachments = sqliteTable("resource_attachments", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  resourceId: text("resource_id")
+    .references(() => posts.id, { onDelete: "cascade" })
+    .notNull(),
+  fileUrl: text("file_url").notNull(),
+  fileName: text("file_name").notNull(),
+  label: text("label").notNull(),
+  fileType: text("file_type").notNull(),
+  sortOrder: integer("sort_order").default(0).notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),
+}, (table) => ({
+  resourceIdIdx: index("resource_attachments_resource_id_idx").on(table.resourceId),
+}));
+
+export const resourceAttachmentsRelations = relations(resourceAttachments, ({ one }) => ({
+  resource: one(posts, {
+    fields: [resourceAttachments.resourceId],
+    references: [posts.id],
   }),
 }));
 

@@ -10,6 +10,9 @@ export default async function EditResourcePage({ params }: { params: Promise<{ i
   const { id } = await params;
   const resource = await db.query.posts.findFirst({
     where: eq(posts.id, id),
+    with: {
+      attachments: true
+    }
   });
 
   if (!resource) {

@@ -34,31 +34,18 @@ export default async function ResourcesPage() {
       .filter(p => p.categoryId === id)
       .map(p => {
         const fileUrl = p.fileUrl;
-        const isDirectLink = !!fileUrl || p.featuredImageUrl?.startsWith('http');
+        const isExternal = p.categoryId === govCat?.id;
         const isExternalSlug = p.slug.startsWith('http');
         
-        // Detect type from file extension
-        let displayType = "PDF";
-        if (p.categoryId === govCat?.id) {
-          displayType = "External";
-        } else if (fileUrl) {
-          const ext = fileUrl.split('.').pop()?.toLowerCase();
-          if (ext === 'xlsx' || ext === 'xls') displayType = "Excel";
-          else if (ext === 'docx' || ext === 'doc') displayType = "Word";
-          else if (ext === 'pdf') displayType = "PDF";
-          else displayType = "File";
-        } else if (isDirectLink) {
-          displayType = "File";
-        }
-
         return {
           id: p.id,
           name: p.title,
+          slug: p.slug,
           description: p.seoDescription || "",
-          type: displayType,
-          href: fileUrl ? `/api/resources/download/${p.id}` : (isDirectLink ? p.featuredImageUrl! : (isExternalSlug ? p.slug : `/resources/${p.slug}`)),
-          isExternal: (p.categoryId === govCat?.id) || isDirectLink || isExternalSlug,
-          isDownload: !!fileUrl
+          attachments: (p as any).attachments || [],
+          fileUrl: fileUrl,
+          isExternal: isExternal || isExternalSlug,
+          externalUrl: isExternalSlug ? p.slug : (isExternal ? p.featuredImageUrl : null)
         };
       });
   };
@@ -314,14 +301,65 @@ export default async function ResourcesPage() {
 }
 
 function ResourceCard({ item, sectionSlug }: { item: any; sectionSlug: string }) {
+  const attachments = item.attachments || [];
+  const hasMultiple = attachments.length > 1;
+  const hasSingle = attachments.length === 1;
   const isExternal = item.isExternal;
+  
   let Icon = FileText;
   if (sectionSlug === 'government-resources') Icon = Globe;
   if (sectionSlug === 'helpful-forms' || sectionSlug === 'useful-forms') Icon = BookOpen;
 
+  // Multiple attachments behavior
+  if (hasMultiple) {
+    return (
+      <div className="bg-white border border-gray-100 p-5 rounded-2xl space-y-4">
+        <div className="flex items-start gap-4">
+          <div className="w-10 h-10 bg-brand-soft-gray rounded-xl flex items-center justify-center text-brand-purple shrink-0">
+            <Icon size={20} />
+          </div>
+          <div className="flex-1">
+            <h4 className="font-bold text-brand-black leading-tight mb-1">
+              {item.name}
+            </h4>
+            {item.description && (
+              <p className="text-xs text-brand-charcoal/60 leading-relaxed font-medium mt-1">
+                {item.description}
+              </p>
+            )}
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pl-0 sm:pl-14">
+          {attachments.map((att: any) => (
+            <a
+              key={att.id}
+              href={`/api/resources/download/${att.id}`}
+              className="flex items-center gap-2 p-2 rounded-xl border border-gray-50 hover:border-brand-purple/30 hover:bg-brand-purple/5 transition-all group"
+            >
+              <div className="w-7 h-7 rounded-lg bg-brand-soft-gray flex items-center justify-center group-hover:bg-white transition-colors">
+                <Download size={12} className="text-brand-purple" />
+              </div>
+              <div className="flex-1 min-w-0">
+                 <p className="text-[10px] font-bold text-brand-black truncate">{att.label}</p>
+                 <p className="text-[8px] font-black uppercase text-brand-purple/60 tracking-wider">{att.fileType}</p>
+              </div>
+            </a>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Single download or external link behavior
+  const downloadId = hasSingle ? attachments[0].id : item.id;
+  const href = item.isExternal ? item.externalUrl : (item.fileUrl || hasSingle ? `/api/resources/download/${downloadId}` : `/resources/${item.slug}`);
+  const isDownload = item.fileUrl || hasSingle;
+  const displayType = hasSingle ? attachments[0].fileType : (item.fileUrl ? item.fileUrl.split('.').pop()?.toUpperCase() : null);
+
   return (
     <a
-      href={item.href}
+      href={href}
       target={isExternal ? "_blank" : undefined}
       rel={isExternal ? "noopener noreferrer" : undefined}
       className="group block bg-white border border-gray-100 p-5 rounded-2xl hover:border-brand-purple hover:shadow-xl hover:shadow-brand-purple/5 transition-all duration-300"
@@ -335,9 +373,9 @@ function ResourceCard({ item, sectionSlug }: { item: any; sectionSlug: string })
             <h4 className="font-bold text-brand-black group-hover:text-brand-purple transition-colors leading-tight">
               {item.name}
             </h4>
-            {item.type && item.type !== "File" && item.type !== "Info" && (
+            {displayType && displayType !== "FILE" && (
               <span className="text-[9px] font-black uppercase tracking-widest text-brand-purple bg-brand-lavender/40 px-1.5 py-0.5 rounded-md">
-                {item.type}
+                {displayType}
               </span>
             )}
           </div>
@@ -348,7 +386,7 @@ function ResourceCard({ item, sectionSlug }: { item: any; sectionSlug: string })
           )}
         </div>
         <div className="text-brand-charcoal/20 group-hover:text-brand-purple transition-colors mt-1">
-          {item.isDownload ? (
+          {isDownload ? (
             <Download size={18} />
           ) : isExternal ? (
             <ExternalLink size={18} />
