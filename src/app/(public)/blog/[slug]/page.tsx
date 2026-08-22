@@ -78,6 +78,7 @@ export default async function BlogPostPage({
     content: htmlContent,
     date: post.publishDate ? new Date(post.publishDate).toLocaleDateString() : new Date(post.createdAt).toLocaleDateString(),
     author: (post as any).author?.name || "Jenn Simpson",
+    authorImageUrl: (post as any).author?.image,
     authorTitle: "Founder & Lead Advisor",
     category: (post as any).category?.name || "Uncategorized",
     readTime: `${Math.ceil((post.content || "").split(/\s+/).length / 200)} min read`,
@@ -147,9 +148,19 @@ export default async function BlogPostPage({
             
             <div className="mt-16 pt-10 border-t border-gray-100 flex flex-wrap justify-between items-center gap-6">
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-brand-purple/20">
-                  <img src="/jenn.jpg" alt={displayPost.author} className="w-full h-full object-cover" />
-                </div>
+                {displayPost.authorImageUrl && (
+                  <div className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-brand-purple/20">
+                    <img 
+                      src={displayPost.authorImageUrl} 
+                      alt={displayPost.author} 
+                      className="w-full h-full object-cover" 
+                      onError={(e) => {
+                        // If image fails to load, hide the container
+                        (e.target as HTMLElement).parentElement?.classList.add('hidden');
+                      }}
+                    />
+                  </div>
+                )}
                 <div>
                   <p className="font-bold text-brand-black">{displayPost.author}</p>
                   <p className="text-xs text-brand-charcoal/40 font-medium">{displayPost.authorTitle}</p>

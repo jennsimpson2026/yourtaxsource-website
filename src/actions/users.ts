@@ -30,3 +30,31 @@ export async function updateUserRole(userId: string, newRole: string) {
 
   revalidatePath("/admin/users");
 }
+
+export async function updateProfile(data: { name?: string; image?: string }) {
+  const session = await auth();
+  if (!session?.user) {
+    throw new Error("Unauthorized");
+  }
+
+  const userId = (session.user as any).id;
+
+  await db.update(users)
+    .set({ 
+      name: data.name,
+      image: data.image,
+      updatedAt: new Date()
+    })
+    .where(eq(users.id, userId));
+
+  await db.insert(auditLogs).values({
+    userId,
+    action: "UPDATE_PROFILE",
+    targetType: "USER",
+    targetId: userId,
+    metadata: JSON.stringify(data),
+  });
+
+  revalidatePath("/admin/profile");
+  revalidatePath("/blog"); // Revalidate blog pages as author info might have changed
+}

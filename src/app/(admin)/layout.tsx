@@ -3,7 +3,7 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { SignOutButton } from "@/components/SignOutButton";
-import { Users, FileText, LayoutDashboard, ShieldCheck, Home, BookOpen, Settings, MessageSquare } from "lucide-react";
+import { Users, FileText, LayoutDashboard, ShieldCheck, Home, BookOpen, Settings, MessageSquare, User } from "lucide-react";
 
 export default async function AdminLayout({
   children,
@@ -40,6 +40,7 @@ export default async function AdminLayout({
           <AdminNavLink href="/admin/blog" icon={<FileText size={20} />} label="Blog CMS" />
           <AdminNavLink href="/admin/resources" icon={<BookOpen size={20} />} label="Resources CMS" />
           <AdminNavLink href="/admin/audit" icon={<ShieldCheck size={20} />} label="Audit Logs" />
+          <AdminNavLink href="/admin/profile" icon={<User size={20} />} label="My Profile" />
           <AdminNavLink href="/admin/settings" icon={<Settings size={20} />} label="Settings" />
           
           <div className="pt-8">
