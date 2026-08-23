@@ -34,18 +34,26 @@ export default async function ResourcesPage() {
       .filter(p => p.categoryId === id)
       .map(p => {
         const fileUrl = p.fileUrl;
-        const isExternal = p.categoryId === govCat?.id;
-        const isExternalSlug = p.slug.startsWith('http');
+        const attachments = (p as any).attachments || [];
+        const hasAttachments = attachments.length > 0;
         
+        // Priority logic for link destination
+        const isExternalSlug = p.slug.startsWith('http');
+        const isFeaturedUrl = p.featuredImageUrl?.startsWith('http');
+        
+        // A resource is external if it has an external link and NO uploaded files
+        const isExternal = !fileUrl && !hasAttachments && (isExternalSlug || isFeaturedUrl || p.categoryId === govCat?.id);
+        const externalUrl = isExternalSlug ? p.slug : (p.featuredImageUrl?.startsWith('http') ? p.featuredImageUrl : null);
+
         return {
           id: p.id,
           name: p.title,
           slug: p.slug,
           description: p.seoDescription || "",
-          attachments: (p as any).attachments || [],
+          attachments: attachments,
           fileUrl: fileUrl,
-          isExternal: isExternal || isExternalSlug,
-          externalUrl: isExternalSlug ? p.slug : (isExternal ? p.featuredImageUrl : null)
+          isExternal: !!isExternal,
+          externalUrl: externalUrl
         };
       });
   };
