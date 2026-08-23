@@ -40,7 +40,7 @@ export default async function BlogPage() {
       .replace(/#{1,6}\s+/g, '') // Strip headers
       .replace(/(\*\*|__)(.*?)\1/g, '$2') // Strip bold
       .replace(/(\*|_)(.*?)\1/g, '$2') // Strip italic
-      .replace(/`{1,3}.*?`{1,3}/gs, '') // Strip code
+      .replace(/`{1,3}[\s\S]*?`{1,3}/g, '') // Strip code
       .replace(/>\s+/g, '') // Strip blockquotes
       .replace(/\n+/g, ' ') // Replace newlines with spaces
       .trim();
@@ -66,7 +66,7 @@ export default async function BlogPage() {
       author: (p as any).author?.name || "Jenn Simpson",
       category: (p as any).category?.name || "Tax Tips",
       slug: p.slug,
-      image: p.featuredImageUrl && p.featuredImageUrl.startsWith('http') ? p.featuredImageUrl : null
+      image: p.featuredImageUrl && p.featuredImageUrl.startsWith('http') ? p.featuredImageUrl : "/images/boutique-office.png"
     };
   });
 
