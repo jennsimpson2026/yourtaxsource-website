@@ -66,7 +66,7 @@ export default async function BlogPage() {
       author: (p as any).author?.name || "Jenn Simpson",
       category: (p as any).category?.name || "Tax Tips",
       slug: p.slug,
-      image: p.featuredImageUrl && p.featuredImageUrl.startsWith('http') ? p.featuredImageUrl : "/images/boutique-office.png"
+      image: p.featuredImageUrl && p.featuredImageUrl.startsWith('http') ? p.featuredImageUrl : null
     };
   });
 
