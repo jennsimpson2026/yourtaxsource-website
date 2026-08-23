@@ -73,11 +73,15 @@ export default async function BlogPostPage({
     htmlContent = post.content || "";
   }
 
+  const dateObj = post.publishDate ? new Date(post.publishDate) : new Date(post.createdAt);
+  const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  const formattedDate = `${months[dateObj.getMonth()]} ${dateObj.getDate()}, ${dateObj.getFullYear()}`;
+
   const displayPost = {
     title: post.title,
     content: htmlContent,
-    date: post.publishDate ? new Date(post.publishDate).toLocaleDateString() : new Date(post.createdAt).toLocaleDateString(),
-    author: (post as any).author?.name || "Jenn Simpson",
+    date: formattedDate,
+    author: (post as any).author?.name || "Jennifer Simpson",
     authorImageUrl: (post as any).author?.image,
     authorTitle: "Founder & Lead Advisor",
     category: (post as any).category?.name || "Uncategorized",
@@ -191,14 +195,18 @@ export default async function BlogPostPage({
             <div>
               <h4 className="text-lg font-heading font-bold text-brand-black mb-6">Related Articles</h4>
               <div className="space-y-6">
-                {relatedPosts.map(rel => (
-                  <RelatedPost 
-                    key={rel.id}
-                    title={rel.title} 
-                    date={rel.publishDate ? new Date(rel.publishDate).toLocaleDateString() : "Recently"} 
-                    slug={rel.slug}
-                  />
-                ))}
+                {relatedPosts.map(rel => {
+                  const relDate = rel.publishDate ? new Date(rel.publishDate) : null;
+                  const relFormattedDate = relDate ? `${months[relDate.getMonth()]} ${relDate.getDate()}, ${relDate.getFullYear()}` : "Recently Published";
+                  return (
+                    <RelatedPost 
+                      key={rel.id}
+                      title={rel.title} 
+                      date={relFormattedDate} 
+                      slug={rel.slug}
+                    />
+                  );
+                })}
                 {relatedPosts.length === 0 && <p className="text-xs text-gray-400">No related articles found.</p>}
               </div>
             </div>

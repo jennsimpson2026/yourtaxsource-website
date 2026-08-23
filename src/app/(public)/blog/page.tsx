@@ -54,20 +54,20 @@ export default async function BlogPage() {
 
     const excerpt = cleanContent.substring(0, 160) + (cleanContent.length > 160 ? "..." : "");
 
-    return {
-      id: p.id,
-      title: p.title,
-      excerpt,
-      date: p.publishDate ? new Date(p.publishDate).toLocaleDateString('en-US', { 
-        month: 'long', 
-        day: 'numeric', 
-        year: 'numeric' 
-      }) : "Recently Published",
-      author: (p as any).author?.name || "Jenn Simpson",
-      category: (p as any).category?.name || "Tax Tips",
-      slug: p.slug,
-      image: p.featuredImageUrl && p.featuredImageUrl.startsWith('http') ? p.featuredImageUrl : null
-    };
+      const dateObj = p.publishDate ? new Date(p.publishDate) : null;
+      const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+      const formattedDate = dateObj ? `${months[dateObj.getMonth()]} ${dateObj.getDate()}, ${dateObj.getFullYear()}` : "Recently Published";
+
+      return {
+        id: p.id,
+        title: p.title,
+        excerpt,
+        date: formattedDate,
+        author: (p as any).author?.name || "Jennifer Simpson",
+        category: (p as any).category?.name || "Tax Tips",
+        slug: p.slug,
+        image: p.featuredImageUrl && p.featuredImageUrl.startsWith('http') ? p.featuredImageUrl : null
+      };
   });
 
   return (
