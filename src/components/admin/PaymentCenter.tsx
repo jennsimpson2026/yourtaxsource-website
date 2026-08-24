@@ -17,7 +17,7 @@ import {
   Banknote,
   MinusCircle,
   Clock,
-  ShieldCheck
+  Shield
 } from "lucide-react";
 import { 
   toggleManualRelease, 
@@ -475,7 +475,7 @@ export function PaymentCenter({
       </div>
 
       <div className="p-6 bg-brand-navy text-white/40 text-[10px] font-bold uppercase tracking-[0.2em] text-center border-t border-white/5">
-        <ShieldCheck size={12} className="inline mr-2 text-brand-orange" />
+        <Shield size={12} className="inline mr-2 text-brand-orange" />
         Boutique Advisory Secure Financial System
       </div>
     </div>
