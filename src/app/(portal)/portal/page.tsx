@@ -8,6 +8,7 @@ import { eq, desc, and, gte, inArray, not } from "drizzle-orm";
 import Link from "next/link";
 import { BookingButton } from "@/components/BookingButton";
 import { PayInvoiceButton } from "@/components/portal/PayInvoiceButton";
+import { FinancialSummary } from "@/components/portal/FinancialSummary";
 import { OpenRequests } from "@/components/portal/OpenRequests";
 import { DownloadEngagementLetterButton } from "@/components/portal/DownloadEngagementLetterButton";
 import { 
@@ -27,7 +28,6 @@ import {
   PenTool,
   Download,
   Clock,
-  DollarSign
 } from "lucide-react";
 
 export default async function PortalDashboard() {
@@ -85,12 +85,6 @@ export default async function PortalDashboard() {
       ),
     });
 
-    // Calculate balance based on Tax Prep Fee vs Payments
-    const totalPrepFees = returns.reduce((sum, r) => {
-      const fee = Number(r.taxPrepFee || 0);
-      return sum + (isNaN(fee) ? 0 : fee);
-    }, 0);
-
     const totalPaidInvoices = await db.query.invoices.findMany({
       where: and(
         eq(invoices.userId, userId),
@@ -98,12 +92,20 @@ export default async function PortalDashboard() {
       ),
     });
 
-    const totalPaid = totalPaidInvoices.reduce((sum, inv) => {
-      const amount = Number(inv.amount || 0);
-      return sum + (isNaN(amount) ? 0 : amount);
-    }, 0);
-
-    const outstandingBalance = Math.max(0, totalPrepFees - totalPaid);
+    // Financial Summary (per current return): Original Fee → Waivers → Adjusted Fee → Payments → Balance
+    const currentOriginalFee = Number(currentReturn?.taxPrepFee || 0);
+    const currentWaived = Number(currentReturn?.waivedAmount || 0);
+    const surchargeEnabled = Boolean(currentReturn?.isSurchargeEnabled);
+    const currentReturnPayments = totalPaidInvoices
+      .filter(inv => inv.returnId === currentReturn?.id)
+      .reduce((sum, inv) => sum + (Number(inv.amount) || 0), 0);
+    const currentAdjustedFee = Math.max(0, currentOriginalFee - currentWaived);
+    const currentBalance = Math.max(0, currentAdjustedFee - currentReturnPayments);
+    // Documents unlock at a $0 balance OR via manual/staff override (never on payment alone).
+    const documentsReleased =
+      currentBalance === 0 ||
+      currentReturn?.manualRelease === true ||
+      currentReturn?.isComplimentary === true;
 
     const openRequests = await db.query.auditLogs.findMany({
       where: and(
@@ -162,33 +164,15 @@ export default async function PortalDashboard() {
           pendingLetters={pendingLetters}
         />
 
-        {/* Financial Overview Card */}
-        {outstandingBalance > 0 && (
-          <section className="bg-brand-lavender/20 rounded-[2rem] p-8 md:p-12 border border-brand-lavender/50 shadow-sm overflow-hidden relative">
-            <div className="absolute -right-10 -bottom-10 opacity-5">
-              <DollarSign size={240} />
-            </div>
-            <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-8">
-              <div className="flex flex-col items-center md:items-start text-center md:text-left">
-                <div className="inline-flex items-center gap-2 px-3 py-1 bg-brand-purple/10 text-brand-purple rounded-full text-[10px] font-black uppercase tracking-widest mb-4">
-                  <CreditCard size={12} /> Payment Balance
-                </div>
-                <h3 className="text-3xl font-heading font-black text-brand-black">Outstanding Balance</h3>
-                <p className="text-brand-charcoal/60 mt-2 font-medium">Your total balance for tax preparation services.</p>
-              </div>
-              
-              <div className="bg-white p-8 rounded-3xl shadow-xl shadow-brand-purple/5 border border-brand-lavender flex flex-col items-center min-w-[240px]">
-                <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">Total Due</span>
-                <span className="text-5xl font-black text-brand-navy">${outstandingBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-                <div className="mt-6 w-full">
-                  <Link href="#invoices" className="bg-brand-purple text-white w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-opacity-90 transition-all">
-                    Pay Now <ArrowRight size={18} />
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </section>
-        )}
+        {/* Financial Summary */}
+        <FinancialSummary
+          originalFee={currentOriginalFee}
+          waivedAmount={currentWaived}
+          payments={currentReturnPayments}
+          surchargeEnabled={surchargeEnabled}
+          documentsReleased={documentsReleased}
+          taxYear={currentReturn?.year}
+        />
 
         {/* 6-Step Visual Timeline */}
         <section className="bg-white rounded-[2rem] p-8 md:p-12 border border-gray-100 shadow-sm">

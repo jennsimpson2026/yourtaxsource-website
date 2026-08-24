@@ -78,7 +78,9 @@ export const taxReturns = sqliteTable("tax_returns", {
   federalResult: real("federal_result"),
   stateResults: text("state_results"), // JSON string
   taxPrepFee: real("tax_prep_fee").default(0),
+  waivedAmount: real("waived_amount").default(0), // Total fee amount waived for this return
   manualRelease: integer("manual_release", { mode: "boolean" }).default(false).notNull(),
+  isSurchargeEnabled: integer("is_surcharge_enabled", { mode: "boolean" }).default(false).notNull(),
   isComplimentary: integer("is_complimentary", { mode: "boolean" }).default(false).notNull(),
   notes: text("notes"),
   createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),
@@ -208,7 +210,9 @@ export const invoices = sqliteTable("invoices", {
   helcimInvoiceId: text("helcim_invoice_id"),
   qboInvoiceId: text("qbo_invoice_id"),
   qboSalesReceiptId: text("qbo_sales_receipt_id"),
+  stripePaymentIntentId: text("stripe_payment_intent_id"), // Stripe TEST MODE PaymentIntent ID
   amount: real("amount").notNull(),
+  surchargeAmount: real("surcharge_amount").default(0), // 'Credit Card Surcharge' amount charged (if enabled)
   currency: text("currency").default("USD").notNull(),
   status: text("status").default("UNPAID").notNull(),
   paidAt: integer("paid_at", { mode: "timestamp" }),
