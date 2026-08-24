@@ -4,6 +4,7 @@ import { notifyContactFormSubmission } from "@/lib/notifications";
 import { contactFormLimiter } from "@/lib/ratelimit";
 import { headers } from "next/headers";
 import { z } from "zod";
+import { logger } from "@/lib/logger";
 
 const contactSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -39,7 +40,7 @@ export async function submitContactForm(formData: FormData) {
     await notifyContactFormSubmission(validated.data);
     return { success: true };
   } catch (error) {
-    console.error("Contact form error:", error);
+    logger.error("Contact form error", { error, data: validated.data });
     return { error: "Something went wrong. Please try again later." };
   }
 }

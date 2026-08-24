@@ -27,7 +27,7 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          console.log("Auth: Missing email or password");
+          logger.info("Auth: Missing email or password");
           return null;
         }
 
@@ -41,10 +41,10 @@ export const authOptions: NextAuthOptions = {
 
         const normalizedEmail = credentials.email.toLowerCase().trim();
         logger.info("Login attempt", { email: normalizedEmail, ip });
-        console.log(`Auth: Attempting login for ${normalizedEmail}`);
+        logger.info(`Auth: Attempting login for ${normalizedEmail}`);
         
         // Debug DB connection
-        console.log(`Auth: DB URL configured: ${process.env.DATABASE_URL?.substring(0, 15)}...`);
+        logger.info(`Auth: DB URL configured: ${process.env.DATABASE_URL?.substring(0, 15)}...`);
 
         try {
           const user = await db.query.users.findFirst({
@@ -52,19 +52,19 @@ export const authOptions: NextAuthOptions = {
           });
 
           if (!user) {
-            console.log(`Auth: User not found: ${normalizedEmail}`);
+            logger.info(`Auth: User not found: ${normalizedEmail}`);
             // Check if ANY users exist to verify DB connectivity
             const userCount = await db.select({ count: sql`count(*)` }).from(users);
-            console.log(`Auth: Total users in DB: ${JSON.stringify(userCount)}`);
+            logger.info(`Auth: Total users in DB: ${JSON.stringify(userCount)}`);
             return null;
           }
 
           if (!user.password) {
-            console.log(`Auth: User has no password set: ${normalizedEmail}`);
+            logger.info(`Auth: User has no password set: ${normalizedEmail}`);
             return null;
           }
 
-          console.log(`Auth: Found user, comparing password...`);
+          logger.info(`Auth: Found user, comparing password...`);
           const isPasswordValid = await bcrypt.compare(
             credentials.password,
             user.password
@@ -72,11 +72,11 @@ export const authOptions: NextAuthOptions = {
 
           if (!isPasswordValid) {
             logger.warn("Invalid password", { email: normalizedEmail, ip });
-            console.log(`Auth: Invalid password for ${normalizedEmail}`);
+            logger.info(`Auth: Invalid password for ${normalizedEmail}`);
             return null;
           }
 
-          console.log(`Auth: Login successful for ${normalizedEmail}, role: ${user.role}`);
+          logger.info(`Auth: Login successful for ${normalizedEmail}, role: ${user.role}`);
 
           // Check MFA if enabled
           if (user.mfaEnabled) {
@@ -106,10 +106,10 @@ export const authOptions: NextAuthOptions = {
             mfaEnabled: user.mfaEnabled || false,
           };
         } catch (dbError: any) {
-          console.error("Auth: Database error during authorize:", dbError);
+          logger.error("Auth: Database error during authorize:", dbError);
           // Log specific Turso/LibSQL errors if possible
           if (dbError.message) {
-             console.error("Auth: Error message:", dbError.message);
+             logger.error("Auth: Error message:", dbError.message);
           }
           return null;
         }
@@ -135,7 +135,7 @@ export const authOptions: NextAuthOptions = {
             token.role = dbUser.role;
           }
         } catch (e) {
-          console.error("Error fetching user role in JWT callback:", e);
+          logger.error("Error fetching user role in JWT callback:", e);
         }
       }
       return token;
@@ -167,7 +167,7 @@ export const authOptions: NextAuthOptions = {
           targetId: user.id,
         });
       } catch (e) {
-        console.error("Error in signIn event:", e);
+        logger.error("Error in signIn event:", e);
       }
     },
     async signOut({ token }) {
@@ -180,7 +180,7 @@ export const authOptions: NextAuthOptions = {
             targetId: token.id as string,
           });
         } catch (e) {
-          console.error("Error in signOut event:", e);
+          logger.error("Error in signOut event:", e);
         }
       }
     },

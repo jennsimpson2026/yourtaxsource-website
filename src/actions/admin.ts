@@ -8,6 +8,7 @@ import { eq } from "drizzle-orm";
 import { notifyDocumentRequest } from "@/lib/notifications";
 import { decrypt } from "@/lib/crypto";
 import { logAction, logPiiRead } from "@/lib/audit";
+import { logger } from "@/lib/logger";
 
 export async function getSensitiveClientData(clientId: string) {
   const session = await auth();
@@ -30,7 +31,7 @@ export async function getSensitiveClientData(clientId: string) {
     try {
       data.ssn = decrypt(profile.encryptedSsn);
     } catch (e) {
-      console.error("Failed to decrypt SSN", e);
+      logger.error("Failed to decrypt SSN", { error: e, clientId });
     }
   }
 
@@ -42,7 +43,7 @@ export async function getSensitiveClientData(clientId: string) {
       }
       data.banking = banking;
     } catch (e) {
-      console.error("Failed to decrypt banking info", e);
+      logger.error("Failed to decrypt banking info", { error: e, clientId });
     }
   }
 
@@ -54,7 +55,7 @@ export async function getSensitiveClientData(clientId: string) {
       });
       data.dependents = dependents;
     } catch (e) {
-      console.error("Failed to decrypt dependents", e);
+      logger.error("Failed to decrypt dependents", { error: e, clientId });
     }
   }
 

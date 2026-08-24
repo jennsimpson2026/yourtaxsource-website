@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { posts, categories } from "@/lib/db/schema";
+import { logger } from "@/lib/logger";
 import { eq, desc, and } from "drizzle-orm";
 
 export async function GET(req: Request) {
@@ -42,7 +43,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json(filteredPosts);
   } catch (error: any) {
-    console.error("GET /api/blog error:", error);
+    logger.error("GET /api/blog error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

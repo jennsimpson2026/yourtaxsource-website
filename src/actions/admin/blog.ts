@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { posts, categories } from "@/lib/db/schema";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+import { logger } from "@/lib/logger";
 import { eq } from "drizzle-orm";
 
 export async function createPost(data: {
@@ -14,10 +15,10 @@ export async function createPost(data: {
   status: "draft" | "published";
   featuredImageUrl?: string;
 }) {
-  console.log(`[BLOG_CMS] Creating post: ${data.title}`);
+  logger.info(`[BLOG_CMS] Creating post: ${data.title}`);
   const session = await auth();
   if (!session?.user || (session.user as any).role !== "ADMIN") {
-    console.error("[BLOG_CMS] Unauthorized create attempt");
+    logger.error("[BLOG_CMS] Unauthorized create attempt");
     throw new Error("Unauthorized");
   }
 
@@ -29,12 +30,12 @@ export async function createPost(data: {
       publishDate: data.status === "published" ? new Date() : null,
     }).returning();
 
-    console.log(`[BLOG_CMS] Post created successfully: ${newPost.id}`);
+    logger.info(`[BLOG_CMS] Post created successfully: ${newPost.id}`);
     revalidatePath("/admin/blog");
     revalidatePath("/blog");
     return newPost;
   } catch (err) {
-    console.error("[BLOG_CMS] Create post failed:", err);
+    logger.error("[BLOG_CMS] Create post failed:", err);
     throw err;
   }
 }
@@ -53,10 +54,10 @@ export async function updatePost(id: string, data: Partial<{
   socialHashtags?: string;
   researchSources?: string;
 }>) {
-  console.log(`[BLOG_CMS] Updating post: ${id}`);
+  logger.info(`[BLOG_CMS] Updating post: ${id}`);
   const session = await auth();
   if (!session?.user || (session.user as any).role !== "ADMIN") {
-    console.error("[BLOG_CMS] Unauthorized update attempt");
+    logger.error("[BLOG_CMS] Unauthorized update attempt");
     throw new Error("Unauthorized");
   }
 
@@ -75,43 +76,43 @@ export async function updatePost(id: string, data: Partial<{
       .where(eq(posts.id, id))
       .returning();
 
-    console.log(`[BLOG_CMS] Post updated successfully: ${id}`);
+    logger.info(`[BLOG_CMS] Post updated successfully: ${id}`);
     revalidatePath("/admin/blog");
     revalidatePath("/blog");
     revalidatePath(`/blog/${updatedPost.slug}`);
     return updatedPost;
   } catch (err) {
-    console.error("[BLOG_CMS] Update post failed:", err);
+    logger.error("[BLOG_CMS] Update post failed:", err);
     throw err;
   }
 }
 
 export async function deletePost(id: string) {
-  console.log(`[BLOG_CMS] Deleting post: ${id}`);
+  logger.info(`[BLOG_CMS] Deleting post: ${id}`);
   const session = await auth();
   if (!session?.user || (session.user as any).role !== "ADMIN") {
-    console.error("[BLOG_CMS] Unauthorized delete attempt");
+    logger.error("[BLOG_CMS] Unauthorized delete attempt");
     throw new Error("Unauthorized");
   }
 
   try {
     await db.delete(posts).where(eq(posts.id, id));
-    console.log(`[BLOG_CMS] Post deleted successfully: ${id}`);
+    logger.info(`[BLOG_CMS] Post deleted successfully: ${id}`);
     revalidatePath("/admin/blog");
     revalidatePath("/blog");
   } catch (err) {
-    console.error("[BLOG_CMS] Delete post failed:", err);
+    logger.error("[BLOG_CMS] Delete post failed:", err);
     throw err;
   }
 }
 
 export async function getCategories() {
-  console.log("[BLOG_CMS] Fetching categories...");
+  logger.info("[BLOG_CMS] Fetching categories...");
   const cats = await db.query.categories.findMany();
   
   // If no categories exist, create some defaults to ensure the CMS is functional
   if (cats.length === 0) {
-    console.log("[BLOG_CMS] No categories found, creating defaults...");
+    logger.info("[BLOG_CMS] No categories found, creating defaults...");
     try {
       const defaults = [
         { name: "Tax Tips", slug: "tax-tips" },
@@ -123,10 +124,10 @@ export async function getCategories() {
         await db.insert(categories).values(cat);
       }
       const newCats = await db.query.categories.findMany();
-      console.log(`[BLOG_CMS] Default categories created: ${newCats.length}`);
+      logger.info(`[BLOG_CMS] Default categories created: ${newCats.length}`);
       return newCats;
     } catch (err) {
-      console.error("[BLOG_CMS] Failed to create default categories:", err);
+      logger.error("[BLOG_CMS] Failed to create default categories:", err);
       throw err;
     }
   }

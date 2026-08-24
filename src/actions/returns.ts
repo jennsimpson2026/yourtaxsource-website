@@ -6,6 +6,7 @@ import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { eq, and } from "drizzle-orm";
 import { notifyStatusUpdate, notifyAdminPaymentReceived } from "@/lib/notifications";
+import { logger } from "@/lib/logger";
 import { releaseReturnDocuments } from "@/lib/returns";
 import { logAction } from "@/lib/audit";
 
@@ -58,7 +59,7 @@ export async function updateReturnDetails(returnId: string, data: {
   const isFullyPaid = balanceDue <= 0 && !hasUnpaidInvoices;
 
   if (isFullyPaid && ["AWAITING_PAYMENT", "READY_FOR_SIGNATURE"].includes(finalStatus)) {
-    console.log(`[updateReturnDetails] Auto-transitioning return ${returnId} to READY_TO_FILE`);
+    logger.info(`[updateReturnDetails] Auto-transitioning return ${returnId} to READY_TO_FILE`);
     finalStatus = "READY_TO_FILE";
     updateData.status = "READY_TO_FILE";
   }
@@ -66,12 +67,12 @@ export async function updateReturnDetails(returnId: string, data: {
   // FORCE: If status is READY_TO_FILE but balance is due or unpaid invoices exist, force status back to AWAITING_PAYMENT
   // This handles manual status changes that don't respect the payment rule
   if (finalStatus === "READY_TO_FILE" && !isFullyPaid && data.paymentStatus !== "PAID") {
-    console.log(`[updateReturnDetails] FORCING status back to AWAITING_PAYMENT because balance is due or unpaid invoices exist`);
+    logger.info(`[updateReturnDetails] FORCING status back to AWAITING_PAYMENT because balance is due or unpaid invoices exist`);
     finalStatus = "AWAITING_PAYMENT";
     updateData.status = "AWAITING_PAYMENT";
   }
 
-  console.log(`[updateReturnDetails] Updating return ${returnId}`, updateData);
+  logger.info(`[updateReturnDetails] Updating return ${returnId}`, updateData);
 
   const [updatedReturn] = await db.update(taxReturns)
     .set(updateData)
@@ -86,7 +87,7 @@ export async function updateReturnDetails(returnId: string, data: {
       });
 
       if (existingInvoices.length === 0) {
-        console.log(`[updateReturnDetails] Creating initial UNPAID invoice for fee: ${updatedReturn.taxPrepFee}`);
+        logger.info(`[updateReturnDetails] Creating initial UNPAID invoice for fee: ${updatedReturn.taxPrepFee}`);
         await db.insert(invoices).values({
           userId: updatedReturn.clientId,
           returnId: returnId,
@@ -110,7 +111,7 @@ export async function updateReturnDetails(returnId: string, data: {
 
       if (updatedReturn.paymentStatus === "PAID" || data.manualRelease === true || data.isComplimentary === true) {
         // Release documents on payment or manual release
-        console.log(`[updateReturnDetails] Releasing documents for return ${returnId}`);
+        logger.info(`[updateReturnDetails] Releasing documents for return ${returnId}`);
         await releaseReturnDocuments(returnId, (session.user as any).id);
 
         if (updatedReturn.paymentStatus === "PAID") {
@@ -127,7 +128,7 @@ export async function updateReturnDetails(returnId: string, data: {
           
           // Mark invoices as paid if manual payment entry
           if (unpaidInvoices.length > 0) {
-            console.log(`[updateReturnDetails] Marking ${unpaidInvoices.length} invoices as PAID`);
+            logger.info(`[updateReturnDetails] Marking ${unpaidInvoices.length} invoices as PAID`);
             await db.update(invoices)
               .set({ status: "PAID", paidAt: new Date() })
               .where(and(eq(invoices.returnId, returnId), eq(invoices.status, "UNPAID")));
@@ -136,7 +137,7 @@ export async function updateReturnDetails(returnId: string, data: {
             // Only create a new PAID invoice if the total paid so far is less than the fee
             const remainingToPay = Math.max(0, Number(updatedReturn.taxPrepFee) - totalPaid);
             if (remainingToPay > 0) {
-              console.log(`[updateReturnDetails] Creating a PAID invoice for remaining balance: ${remainingToPay}`);
+              logger.info(`[updateReturnDetails] Creating a PAID invoice for remaining balance: ${remainingToPay}`);
               await db.insert(invoices).values({
                 userId: updatedReturn.clientId,
                 returnId: returnId,
@@ -147,7 +148,7 @@ export async function updateReturnDetails(returnId: string, data: {
               totalAmount = remainingToPay;
             }
           } else {
-            console.log(`[updateReturnDetails] Return is already fully paid (Paid: ${totalPaid}, Fee: ${updatedReturn.taxPrepFee}). No new invoice created.`);
+            logger.info(`[updateReturnDetails] Return is already fully paid (Paid: ${totalPaid}, Fee: ${updatedReturn.taxPrepFee}). No new invoice created.`);
             totalAmount = totalPaid;
           }
 
@@ -159,7 +160,7 @@ export async function updateReturnDetails(returnId: string, data: {
               invoiceReference: `Return ${updatedReturn.year}`,
             });
           } catch (notifErr) {
-            console.error("[updateReturnDetails] Notification failed but proceeding:", notifErr);
+            logger.error("[updateReturnDetails] Notification failed but proceeding:", notifErr);
           }
         }
       }
@@ -204,7 +205,7 @@ export async function updateReturnStatus(returnId: string, status: string) {
     const hasUnpaidInvoices = currentReturn.invoices.some(inv => inv.status === "UNPAID");
 
     if ((balanceDue > 0 || hasUnpaidInvoices) && currentReturn.paymentStatus !== "PAID") {
-      console.log(`[updateReturnStatus] Blocking transition to READY_TO_FILE because balance is due or unpaid invoices exist`);
+      logger.info(`[updateReturnStatus] Blocking transition to READY_TO_FILE because balance is due or unpaid invoices exist`);
       // Fallback to AWAITING_PAYMENT if they try to move to READY_TO_FILE with balance
       finalStatus = "AWAITING_PAYMENT";
     }

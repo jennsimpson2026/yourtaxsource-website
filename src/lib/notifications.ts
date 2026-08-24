@@ -10,7 +10,7 @@ function getResend() {
     const apiKey = process.env.RESEND_API_KEY;
     if (!apiKey || apiKey === "re_123") {
       if (process.env.NODE_ENV === "production" && !process.env.VERCEL) {
-         console.warn("RESEND_API_KEY is not set, using mock during build");
+         logger.warn("RESEND_API_KEY is not set, using mock during build");
          return { emails: { send: async () => ({ id: "mock" }) } } as any;
       }
       throw new Error("RESEND_API_KEY is not set");
@@ -48,7 +48,7 @@ export async function sendEmailDirect({
   html: string;
 }) {
   if (!process.env.RESEND_API_KEY) {
-    console.warn("Skipping email: RESEND_API_KEY not set");
+    logger.warn("Skipping email: RESEND_API_KEY not set");
     return;
   }
   try {
@@ -61,7 +61,7 @@ export async function sendEmailDirect({
     });
     return data;
   } catch (error) {
-    console.error("Email sending error:", error);
+    logger.error("Email sending error:", error);
   }
 }
 
@@ -77,7 +77,7 @@ export async function sendSMSDirect({
   body: string;
 }) {
   if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN) {
-    console.warn("Skipping SMS: Twilio credentials not set");
+    logger.warn("Skipping SMS: Twilio credentials not set");
     return;
   }
   try {
@@ -89,7 +89,7 @@ export async function sendSMSDirect({
     });
     return message;
   } catch (error) {
-    console.error("SMS sending error:", error);
+    logger.error("SMS sending error:", error);
   }
 }
 
@@ -113,10 +113,10 @@ async function triggerNotificationWorkflow(payload: {
         url: `${process.env.NEXTAUTH_URL}/api/workflow/notifications`,
         body: payload,
       });
-      console.log(`[Notifications] Offloaded ${payload.name} to background workflow`);
+      logger.info(`[Notifications] Offloaded ${payload.name} to background workflow`);
       return;
     } catch (error) {
-      console.error(`[Notifications] Failed to trigger workflow for ${payload.name}:`, error);
+      logger.error(`[Notifications] Failed to trigger workflow for ${payload.name}:`, error);
       logger.error(`[Notifications] Failed to trigger workflow for ${payload.name}`, { error, payload });
       // Fallback to sync
     }

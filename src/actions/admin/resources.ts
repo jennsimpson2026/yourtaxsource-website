@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { posts, categories } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { auth } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 import { revalidatePath } from "next/cache";
 
 export async function createResource(data: {
@@ -15,10 +16,10 @@ export async function createResource(data: {
   featuredImageUrl?: string;
   seoDescription?: string;
 }) {
-  console.log(`[RESOURCES_CMS] Creating resource: ${data.title}`);
+  logger.info(`[RESOURCES_CMS] Creating resource: ${data.title}`);
   const session = await auth();
   if (!session?.user || (session.user as any).role !== "ADMIN") {
-    console.error("[RESOURCES_CMS] Unauthorized creation attempt");
+    logger.error("[RESOURCES_CMS] Unauthorized creation attempt");
     throw new Error("Unauthorized");
   }
 
@@ -30,12 +31,12 @@ export async function createResource(data: {
       publishDate: data.status === "published" ? new Date() : null,
     }).returning();
     
-    console.log(`[RESOURCES_CMS] Resource created successfully: ${newPost.id}`);
+    logger.info(`[RESOURCES_CMS] Resource created successfully: ${newPost.id}`);
     revalidatePath("/admin/resources");
     revalidatePath("/resources");
     return newPost;
   } catch (err) {
-    console.error("[RESOURCES_CMS] Create resource failed:", err);
+    logger.error("[RESOURCES_CMS] Create resource failed:", err);
     throw err;
   }
 }
@@ -49,10 +50,10 @@ export async function updateResource(id: string, data: Partial<{
   featuredImageUrl?: string;
   seoDescription?: string;
 }>) {
-  console.log(`[RESOURCES_CMS] Updating resource: ${id}`);
+  logger.info(`[RESOURCES_CMS] Updating resource: ${id}`);
   const session = await auth();
   if (!session?.user || (session.user as any).role !== "ADMIN") {
-    console.error("[RESOURCES_CMS] Unauthorized update attempt");
+    logger.error("[RESOURCES_CMS] Unauthorized update attempt");
     throw new Error("Unauthorized");
   }
 
@@ -69,13 +70,13 @@ export async function updateResource(id: string, data: Partial<{
       .where(eq(posts.id, id))
       .returning();
 
-    console.log(`[RESOURCES_CMS] Resource updated successfully: ${id}`);
+    logger.info(`[RESOURCES_CMS] Resource updated successfully: ${id}`);
     revalidatePath("/admin/resources");
     revalidatePath("/resources");
     revalidatePath(`/resources/${updatedPost.slug}`);
     return updatedPost;
   } catch (err) {
-    console.error("[RESOURCES_CMS] Update resource failed:", err);
+    logger.error("[RESOURCES_CMS] Update resource failed:", err);
     throw err;
   }
 }

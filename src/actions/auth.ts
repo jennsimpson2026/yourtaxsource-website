@@ -56,7 +56,7 @@ export async function signUp(formData: FormData) {
 
     return { success: true };
   } catch (error) {
-    console.error("Signup error:", error);
+    logger.error("Signup error", { error, email, name, phone });
     return { error: "Failed to create account" };
   }
 }
@@ -112,7 +112,7 @@ export async function setupPassword(formData: FormData) {
 
     return { success: true };
   } catch (error) {
-    console.error("Setup password error:", error);
+    logger.error("Setup password error", { error, email });
     return { error: "Failed to set up password" };
   }
 }
@@ -180,7 +180,7 @@ export async function forgotPassword(formData: FormData) {
 
     // Security best practice: don't reveal if user exists
     if (!user) {
-      console.log(`Forgot password requested for non-existent email: ${email}`);
+      logger.info("Forgot password requested for non-existent email", { email });
       return { success: true };
     }
 
@@ -194,7 +194,7 @@ export async function forgotPassword(formData: FormData) {
     });
 
     const resetLink = `${process.env.NEXTAUTH_URL}/auth/reset-password?email=${encodeURIComponent(email.toLowerCase().trim())}&token=${token}`;
-    console.log(`Sending reset link to ${email}: ${resetLink}`);
+    logger.info("Sending reset link", { email, token });
 
     await sendEmail({
       to: email.toLowerCase().trim(),
@@ -204,7 +204,7 @@ export async function forgotPassword(formData: FormData) {
 
     return { success: true };
   } catch (error: any) {
-    console.error("Forgot password error:", error);
+    logger.error("Forgot password error", { error, email });
     // Provide more specific feedback if it's a known connection issue
     if (error.message?.includes("database") || error.message?.includes("connect")) {
       return { error: "System currently unavailable. Our team has been notified. Please try again in a few minutes." };
@@ -261,7 +261,7 @@ export async function resetPassword(formData: FormData) {
 
     return { success: true };
   } catch (error: any) {
-    console.error("Reset password error:", error);
+    logger.error("Reset password error", { error, email });
     if (error.message?.includes("database") || error.message?.includes("connect")) {
       return { error: "System currently unavailable. Please try again shortly." };
     }

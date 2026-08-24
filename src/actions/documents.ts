@@ -11,6 +11,7 @@ import { eq, and, isNotNull, lt, sql, desc, not } from "drizzle-orm";
 import { notifyDocumentRequest, notifyDocumentUpload, notifyDocumentStatusUpdate } from "@/lib/notifications";
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { logAction } from "@/lib/audit";
+import { logger } from "@/lib/logger";
 
 export async function softDeleteDocument(documentId: string) {
   const session = await auth();
@@ -69,9 +70,9 @@ export async function permanentlyDeleteOldDocuments() {
       // 2. Delete from DB
       await db.delete(documents).where(eq(documents.id, doc.id));
 
-      console.log(`Permanently deleted document: ${doc.fileName} (${doc.id})`);
+      logger.info(`Permanently deleted document: ${doc.fileName} (${doc.id})`);
     } catch (error) {
-      console.error(`Failed to permanently delete document ${doc.id}:`, error);
+      logger.error(`Failed to permanently delete document ${doc.id}:`, error);
     }
   }
 
@@ -159,7 +160,7 @@ export async function registerDocument(data: {
 
   const userId = (session.user as any).id;
 
-  console.log(`registerDocument: Registering file ${data.fileName} for userId ${userId}, returnId ${data.returnId}`);
+  logger.info(`registerDocument: Registering file ${data.fileName} for userId ${userId}, returnId ${data.returnId}`);
 
   try {
     const [doc] = await db.insert(documents).values({
@@ -175,7 +176,7 @@ export async function registerDocument(data: {
       isLocked: data.category === "Final Returns" || (session.user as any).role !== "CLIENT",
     }).returning();
 
-    console.log(`registerDocument: Created record with ID ${doc.id}`);
+    logger.info(`registerDocument: Created record with ID ${doc.id}`);
 
     await logAction({
       userId,
@@ -199,7 +200,7 @@ export async function registerDocument(data: {
     
     return doc;
   } catch (err) {
-    console.error("registerDocument: Failed to insert document record", err);
+    logger.error("registerDocument: Failed to insert document record", err);
     throw err;
   }
 }

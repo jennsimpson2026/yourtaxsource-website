@@ -1,6 +1,7 @@
 "use server";
 
 import { getGraphClient, getBookingBusiness } from "@/lib/booking";
+import { logger } from "@/lib/logger";
 import { revalidatePath } from "next/cache";
 
 export async function setupBookingSubscription() {
@@ -27,10 +28,10 @@ export async function setupBookingSubscription() {
 
     const result = await client.api('/subscriptions').post(subscription);
     
-    console.log("Subscription created:", result);
+    logger.info("Subscription created:", result);
     return { success: true, subscriptionId: result.id };
   } catch (error: any) {
-    console.error("Failed to setup subscription:", error);
+    logger.error("Failed to setup subscription:", error);
     return { error: error.message || "Failed to setup subscription" };
   }
 }
@@ -41,7 +42,7 @@ export async function listSubscriptions() {
     const result = await client.api('/subscriptions').get();
     return { success: true, subscriptions: result.value };
   } catch (error: any) {
-    console.error("Failed to list subscriptions:", error);
+    logger.error("Failed to list subscriptions:", error);
     return { error: error.message || "Failed to list subscriptions" };
   }
 }
@@ -58,7 +59,7 @@ export async function renewSubscription(subscriptionId: string) {
 
     return { success: true, result };
   } catch (error: any) {
-    console.error("Failed to renew subscription:", error);
+    logger.error("Failed to renew subscription:", error);
     return { error: error.message || "Failed to renew subscription" };
   }
 }

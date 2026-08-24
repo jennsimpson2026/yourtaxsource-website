@@ -1,5 +1,7 @@
 "use server";
 
+import { logger } from "@/lib/logger";
+import { logAction } from "@/lib/audit";
 import { syncPaymentToQbo } from "@/lib/qbo";
 import { auth } from "@/lib/auth";
 
@@ -15,17 +17,17 @@ export async function manualSyncInvoice(invoiceId: string) {
   try {
     const qboSalesReceiptId = await syncPaymentToQbo(invoiceId);
     
-    await db.insert(auditLogs).values({
+    await logAction({
       userId: (session.user as any).id,
       action: "QBO_MANUAL_SYNC",
       targetType: "INVOICE",
       targetId: invoiceId,
-      metadata: JSON.stringify({ qboSalesReceiptId }),
+      metadata: { qboSalesReceiptId },
     });
 
     return { success: true, qboSalesReceiptId };
   } catch (error: any) {
-    console.error("Manual QBO Sync Error:", error.message);
+    logger.error("Manual QBO Sync Error:", error.message);
     return { success: false, error: error.message };
   }
 }

@@ -1,6 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
+import { logger } from "@/lib/logger";
 import { engagementLetters, auditLogs, users, workflows, taxReturns, invoices } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
@@ -50,11 +51,11 @@ export async function signEngagementLetter(
     const isUpstashConfigured = !!process.env.QSTASH_TOKEN;
 
     if (!isUpstashConfigured) {
-      console.log(`[SIGN_ENGAGEMENT] Upstash not configured for letter ${letterId}, performing synchronous signing...`);
+      logger.info(`[SIGN_ENGAGEMENT] Upstash not configured for letter ${letterId}, performing synchronous signing...`);
       
       try {
         // 1. Generate PDF
-        console.log("[SIGN_ENGAGEMENT] Generating PDF...");
+        logger.info("[SIGN_ENGAGEMENT] Generating PDF...");
         const pdfBuffer = await generateEngagementLetterPDF({
           clientName: (letter.taxReturn as any).client.name || "Valued Client",
           signedAt,
@@ -62,21 +63,21 @@ export async function signEngagementLetter(
           content: letter.content,
           year: (letter.taxReturn as any).year,
         });
-        console.log(`[SIGN_ENGAGEMENT] PDF generated, size: ${pdfBuffer.length} bytes`);
+        logger.info(`[SIGN_ENGAGEMENT] PDF generated, size: ${pdfBuffer.length} bytes`);
 
         // 2. Upload to S3
         const s3Key = `engagement-letters/${letterId}-signed.pdf`;
-        console.log(`[SIGN_ENGAGEMENT] Uploading to S3: ${BUCKET_NAME}/${s3Key}`);
+        logger.info(`[SIGN_ENGAGEMENT] Uploading to S3: ${BUCKET_NAME}/${s3Key}`);
         await s3Client.send(new PutObjectCommand({
           Bucket: BUCKET_NAME,
           Key: s3Key,
           Body: pdfBuffer,
           ContentType: 'application/pdf',
         }));
-        console.log("[SIGN_ENGAGEMENT] S3 upload successful");
+        logger.info("[SIGN_ENGAGEMENT] S3 upload successful");
 
         // 3. Update database
-        console.log("[SIGN_ENGAGEMENT] Updating database...");
+        logger.info("[SIGN_ENGAGEMENT] Updating database...");
         await db.update(engagementLetters)
           .set({
             status: "SIGNED",
@@ -111,7 +112,7 @@ export async function signEngagementLetter(
             .where(eq(taxReturns.id, (letter.taxReturn as any).id));
         }
 
-        console.log("[SIGN_ENGAGEMENT] Database update successful");
+        logger.info("[SIGN_ENGAGEMENT] Database update successful");
 
         await db.insert(auditLogs).values({
           userId,
@@ -124,7 +125,7 @@ export async function signEngagementLetter(
         revalidatePath("/portal/resources");
         return { success: true, message: "Letter signed successfully." };
       } catch (innerError) {
-        console.error("[SIGN_ENGAGEMENT] Inner failure during synchronous signing:", innerError);
+        logger.error("[SIGN_ENGAGEMENT] Inner failure during synchronous signing:", innerError);
         throw innerError;
       }
     }
@@ -179,7 +180,7 @@ export async function signEngagementLetter(
     revalidatePath("/portal/resources");
     return { success: true, message: "Processing signature..." };
   } catch (error: any) {
-    console.error("[SIGN_ENGAGEMENT] Critical failure:", error);
+    logger.error("[SIGN_ENGAGEMENT] Critical failure:", error);
     return { 
       error: `Failed to sign engagement letter: ${error.message || 'Unknown error'}. [${error.code || 'NO_CODE'}]` 
     };
@@ -255,7 +256,7 @@ export async function getEngagementLetterDownloadUrl(letterId: string) {
     const url = await getPresignedUrl(letter.s3Key);
     return { url };
   } catch (error) {
-    console.error("Get engagement letter URL error:", error);
+    logger.error("Get engagement letter URL error:", error);
     return { error: "Failed to generate download link" };
   }
 }

@@ -1,6 +1,8 @@
 "use server";
 
 import { db } from "@/lib/db";
+import { logger } from "@/lib/logger";
+import { logAction } from "@/lib/audit";
 import { posts, categories, users, auditLogs, resourceAttachments } from "@/lib/db/schema";
 import { eq, desc, and, sql, asc } from "drizzle-orm";
 import { auth } from "@/lib/auth";
@@ -85,7 +87,7 @@ export async function getResourceUploadUrl(fileName: string, fileType: string) {
 }
 
 export async function getResourceDownloadUrl(id: string) {
-  console.log(`[DOWNLOAD] Requesting URL for ID: ${id}`);
+  logger.info(`[DOWNLOAD] Requesting URL for ID: ${id}`);
   
   // 1. Try to find an attachment first
   const attachment = await db.query.resourceAttachments.findFirst({
@@ -93,7 +95,7 @@ export async function getResourceDownloadUrl(id: string) {
   });
 
   if (attachment) {
-    console.log(`[DOWNLOAD] Found attachment: ${attachment.label}, fileUrl: ${attachment.fileUrl}`);
+    logger.info(`[DOWNLOAD] Found attachment: ${attachment.label}, fileUrl: ${attachment.fileUrl}`);
     return await generateSignedUrlIfNeeded(attachment.fileUrl);
   }
 
@@ -103,11 +105,11 @@ export async function getResourceDownloadUrl(id: string) {
   });
 
   if (resource && resource.fileUrl) {
-    console.log(`[DOWNLOAD] Found resource: ${resource.title}, fileUrl: ${resource.fileUrl}`);
+    logger.info(`[DOWNLOAD] Found resource: ${resource.title}, fileUrl: ${resource.fileUrl}`);
     return await generateSignedUrlIfNeeded(resource.fileUrl);
   }
 
-  console.error(`[DOWNLOAD] Resource or attachment not found for ID: ${id}`);
+  logger.error(`[DOWNLOAD] Resource or attachment not found for ID: ${id}`);
   throw new Error("Resource or file not found");
 }
 
@@ -117,13 +119,13 @@ async function generateSignedUrlIfNeeded(fileUrl: string) {
     const urlParts = fileUrl.split(".com/");
     if (urlParts.length > 1) {
       const s3Key = decodeURIComponent(urlParts[1]);
-      console.log(`[DOWNLOAD] Generating pre-signed URL for key: ${s3Key}`);
+      logger.info(`[DOWNLOAD] Generating pre-signed URL for key: ${s3Key}`);
       try {
         const signedUrl = await getPresignedUrl(s3Key);
-        console.log(`[DOWNLOAD] Generated signed URL successfully`);
+        logger.info(`[DOWNLOAD] Generated signed URL successfully`);
         return signedUrl;
       } catch (err: any) {
-        console.error(`[DOWNLOAD] Error generating signed URL: ${err.message}`);
+        logger.error(`[DOWNLOAD] Error generating signed URL: ${err.message}`);
         throw err;
       }
     }
@@ -160,19 +162,19 @@ export async function createResource(data: any) {
       );
     }
 
-    await db.insert(auditLogs).values({
+    await logAction({
       userId: (session.user as any).id,
       action: "CREATE_RESOURCE",
       targetType: "POST",
       targetId: newPost.id,
-      metadata: JSON.stringify({ title: postData.title }),
+      metadata: { title: postData.title },
     });
 
     revalidatePath("/resources");
     revalidatePath("/admin/resources");
     return { success: true, post: newPost };
   } catch (error) {
-    console.error("Create resource error:", error);
+    logger.error("Create resource error:", error);
     return { error: "Failed to create resource" };
   }
 }
@@ -214,12 +216,12 @@ export async function updateResource(id: string, data: any) {
       }
     }
 
-    await db.insert(auditLogs).values({
+    await logAction({
       userId: (session.user as any).id,
       action: "UPDATE_RESOURCE",
       targetType: "POST",
       targetId: id,
-      metadata: JSON.stringify({ title: postData.title }),
+      metadata: { title: postData.title },
     });
 
     revalidatePath("/resources");
@@ -227,7 +229,7 @@ export async function updateResource(id: string, data: any) {
     revalidatePath("/admin/resources");
     return { success: true, post: updatedPost };
   } catch (error) {
-    console.error("Update resource error:", error);
+    logger.error("Update resource error:", error);
     return { error: "Failed to update resource" };
   }
 }
@@ -244,7 +246,7 @@ export async function deletePost(id: string) {
     revalidatePath("/admin/resources");
     return { success: true };
   } catch (error) {
-    console.error("Delete post error:", error);
+    logger.error("Delete post error:", error);
     return { error: "Failed to delete post" };
   }
 }
@@ -260,7 +262,7 @@ export async function createCategory(data: any) {
     revalidatePath("/admin/resources");
     return { success: true, category: newCategory };
   } catch (error) {
-    console.error("Create category error:", error);
+    logger.error("Create category error:", error);
     return { error: "Failed to create category" };
   }
 }
@@ -279,7 +281,7 @@ export async function updateCategory(id: string, data: any) {
     revalidatePath("/admin/resources");
     return { success: true, category: updatedCategory };
   } catch (error) {
-    console.error("Update category error:", error);
+    logger.error("Update category error:", error);
     return { error: "Failed to update category" };
   }
 }
@@ -302,7 +304,7 @@ export async function deleteCategory(id: string) {
     revalidatePath("/admin/resources");
     return { success: true };
   } catch (error) {
-    console.error("Delete category error:", error);
+    logger.error("Delete category error:", error);
     return { error: "Failed to delete category" };
   }
 }

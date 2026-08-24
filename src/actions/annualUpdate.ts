@@ -11,6 +11,8 @@ import { revalidatePath } from "next/cache";
 import React from "react";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { AnnualUpdatePDF } from "@/components/portal/AnnualUpdatePDF";
+import { logger } from "@/lib/logger";
+import { logAction } from "@/lib/audit";
 
 export async function submitAnnualUpdate(data: any) {
   const session = await auth();
@@ -161,12 +163,12 @@ export async function submitAnnualUpdate(data: any) {
     });
 
     // 8. Audit Log
-    await db.insert(auditLogs).values({
+    await logAction({
       userId,
       action: "SUBMIT_ANNUAL_UPDATE",
       targetType: "ANNUAL_UPDATE",
       targetId: updateId,
-      metadata: JSON.stringify({ fileName, s3Key }),
+      metadata: { fileName, s3Key },
     });
 
     // 9. Notify Admin (Jenn) via Email
@@ -189,7 +191,7 @@ export async function submitAnnualUpdate(data: any) {
         `,
       });
     } catch (emailError) {
-      console.error("Failed to send admin notification email:", emailError);
+      logger.error("Failed to send admin notification email", { error: emailError, userId });
     }
 
     revalidatePath("/portal");
@@ -197,7 +199,7 @@ export async function submitAnnualUpdate(data: any) {
     
     return { success: true };
   } catch (error) {
-    console.error("Error submitting annual update:", error);
+    logger.error("Error submitting annual update", { error, userId });
     throw new Error("Failed to submit annual update. Please try again.");
   }
 }
