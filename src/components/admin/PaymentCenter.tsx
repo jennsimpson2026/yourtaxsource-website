@@ -15,7 +15,9 @@ import {
   Unlock,
   Settings,
   Banknote,
-  MinusCircle
+  MinusCircle,
+  Clock,
+  ShieldCheck
 } from "lucide-react";
 import { 
   toggleManualRelease, 

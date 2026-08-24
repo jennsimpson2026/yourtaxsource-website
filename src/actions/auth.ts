@@ -163,6 +163,7 @@ export async function verifyAndEnableMfa(userId: string, token: string) {
 }
 
 export async function forgotPassword(formData: FormData) {
+  let email: string | null = null;
   try {
     const ip = (await headers()).get("x-forwarded-for") ?? "127.0.0.1";
     const { success: rateLimitSuccess } = await forgotPasswordLimiter.limit(ip);
@@ -171,7 +172,7 @@ export async function forgotPassword(formData: FormData) {
       return { error: "Too many requests. Please try again later." };
     }
 
-    const email = formData.get("email") as string;
+    email = formData.get("email") as string;
     if (!email) return { error: "Email is required" };
 
     const user = await db.query.users.findFirst({
@@ -214,6 +215,7 @@ export async function forgotPassword(formData: FormData) {
 }
 
 export async function resetPassword(formData: FormData) {
+  let email: string | null = null;
   try {
     const ip = (await headers()).get("x-forwarded-for") ?? "127.0.0.1";
     const { success: rateLimitSuccess } = await forgotPasswordLimiter.limit(ip);
@@ -222,7 +224,7 @@ export async function resetPassword(formData: FormData) {
       return { error: "Too many requests. Please try again later." };
     }
 
-    const email = formData.get("email") as string;
+    email = formData.get("email") as string;
     const token = formData.get("token") as string;
     const password = formData.get("password") as string;
 
