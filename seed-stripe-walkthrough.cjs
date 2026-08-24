@@ -1,0 +1,89 @@
+// Seed an unmistakably-TEST client + 2026 return into the APP Turso DB (NOT team-db)
+// for the owner's Stripe Test Mode walkthrough. Idempotent: re-running cleans prior seed.
+require("dotenv").config({ path: "/home/team/shared/repository/.env" });
+const { createClient } = require("@libsql/client");
+const bcrypt = require("bcryptjs");
+const crypto = require("crypto");
+
+const db = createClient({
+  url: process.env.DATABASE_URL,
+  authToken: process.env.DATABASE_AUTH_TOKEN,
+});
+
+const TEST_EMAIL = "stripe-walkthrough-test@yourtaxsource.com";
+const TEST_NAME = "Stripe Walkthrough TEST Client";
+const TEST_PASSWORD = "StripeWalkthrough2026!";
+const TEST_PHONE = "(555) 019-2026";
+const YEAR = 2026;
+const FEE = 350;
+const SURCHARGE_ENABLED = 1;
+
+const uuid = () => crypto.randomUUID();
+
+(async () => {
+  console.log("DB host:", new URL(process.env.DATABASE_URL).host);
+
+  // Idempotent cleanup of any prior seed rows for this test user.
+  const existing = await db.execute("SELECT id FROM users WHERE email = ?", [TEST_EMAIL]);
+  if (existing.rows.length > 0) {
+    const userId = existing.rows[0].id;
+    const rets = await db.execute("SELECT id FROM tax_returns WHERE client_id = ?", [userId]);
+    for (const r of rets.rows) {
+      await db.execute("DELETE FROM invoices WHERE return_id = ?", [r.id]);
+      await db.execute("DELETE FROM documents WHERE return_id = ?", [r.id]);
+      await db.execute("DELETE FROM tax_returns WHERE id = ?", [r.id]);
+    }
+    await db.execute("DELETE FROM profiles WHERE user_id = ?", [userId]);
+    await db.execute("DELETE FROM invoices WHERE user_id = ?", [userId]);
+    await db.execute("DELETE FROM users WHERE id = ?", [userId]);
+    console.log("Cleaned prior seed for", TEST_EMAIL);
+  }
+
+  const userId = uuid();
+  const profileId = uuid();
+  const returnId = uuid();
+  const invoiceId = uuid();
+
+  const passwordHash = bcrypt.hashSync(TEST_PASSWORD, 10);
+
+  // 1) Client user
+  await db.execute(
+    `INSERT INTO users (id, email, name, role, password, mfa_enabled, email_verified, created_at, updated_at)
+     VALUES (?, ?, ?, 'CLIENT', ?, 0, ?, strftime('%s','now'), strftime('%s','now'))`,
+    [userId, TEST_EMAIL, TEST_NAME, passwordHash, Math.floor(Date.now() / 1000)]
+  );
+
+  // 2) Profile
+  await db.execute(
+    `INSERT INTO profiles (id, user_id, phone, city, state, zip_code)
+     VALUES (?, ?, ?, 'Belmont', 'NC', '28012')`,
+    [profileId, userId, TEST_PHONE]
+  );
+
+  // 3) 2026 Tax Return — AWAITING_PAYMENT, UNPAID, surcharge enabled for Stripe walkthrough
+  await db.execute(
+    `INSERT INTO tax_returns
+       (id, client_id, year, status, payment_status, tax_prep_fee, waived_amount,
+        manual_release, is_surcharge_enabled, is_complimentary, notes, created_at, updated_at)
+     VALUES (?, ?, ?, 'AWAITING_PAYMENT', 'UNPAID', ?, 0, 0, ?, 0, ?, strftime('%s','now'), strftime('%s','now'))`,
+    [returnId, userId, YEAR, FEE, SURCHARGE_ENABLED,
+     "SEED — Stripe TEST MODE walkthrough (2026). Do not file. Delete after walkthrough."]
+  );
+
+  // 4) UNPAID invoice so the portal shows the Pay buttons (Stripe TEST MODE)
+  await db.execute(
+    `INSERT INTO invoices
+       (id, user_id, return_id, amount, surcharge_amount, currency, status, created_at, updated_at)
+     VALUES (?, ?, ?, ?, 0, 'USD', 'UNPAID', strftime('%s','now'), strftime('%s','now'))`,
+    [invoiceId, userId, returnId, FEE]
+  );
+
+  console.log("\n=== SEEDED (TEST MODE) ===");
+  console.log("Client email :", TEST_EMAIL);
+  console.log("Client name  :", TEST_NAME);
+  console.log("Client pw    :", TEST_PASSWORD);
+  console.log("User ID      :", userId);
+  console.log("2026 Return  :", returnId, "| status=AWAITING_PAYMENT | paymentStatus=UNPAID | fee=$" + FEE, "| surcharge=" + (SURCHARGE_ENABLED ? "ON" : "OFF"));
+  console.log("Invoice ID   :", invoiceId, "| amount=$" + FEE, "| status=UNPAID");
+  process.exit(0);
+})().catch((e) => { console.error("SEED ERROR", e); process.exit(1); });
