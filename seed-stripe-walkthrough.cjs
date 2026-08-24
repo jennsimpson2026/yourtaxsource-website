@@ -1,5 +1,7 @@
-// Seed an unmistakably-TEST client + 2026 return into the APP Turso DB (NOT team-db)
-// for the owner's Stripe Test Mode walkthrough. Idempotent per the lead's exact spec.
+// Seed the Stripe TEST MODE walkthrough data into the APP Turso DB (NOT team-db).
+// Canonical accepted seed: client stripe-walkthrough-test@yourtaxsource.com + 2026 return ($350)
+// + unpaid invoice + LOCKED final-return document (for the pay-to-unlock flow).
+// Idempotent & self-cleaning: re-running removes prior seed rows for this exact test email.
 require("dotenv").config({ path: "/home/team/shared/repository/.env" });
 const { createClient } = require("@libsql/client");
 const bcrypt = require("bcryptjs");
@@ -10,12 +12,12 @@ const db = createClient({
   authToken: process.env.DATABASE_AUTH_TOKEN,
 });
 
-const TEST_EMAIL = "stripe-test@yourtaxsource.com";
-const TEST_NAME = "TEST CLIENT — Stripe Walkthrough";
+const TEST_EMAIL = "stripe-walkthrough-test@yourtaxsource.com";
+const TEST_NAME = "Stripe Walkthrough TEST Client";
 const TEST_PASSWORD = "StripeWalkthrough2026!";
 const TEST_PHONE = "(555) 019-2026";
 const YEAR = 2026;
-const FEE = 500.0;
+const FEE = 350.0;
 const SURCHARGE_ENABLED = 1;
 const NOW = Math.floor(Date.now() / 1000);
 
@@ -24,7 +26,7 @@ const uuid = () => crypto.randomUUID();
 (async () => {
   console.log("DB host:", new URL(process.env.DATABASE_URL).host);
 
-  // Idempotent cleanup of any prior seed rows for THIS test user.
+  // Idempotent cleanup of prior seed rows for THIS test user (incl. locked doc).
   const existing = await db.execute("SELECT id FROM users WHERE email = ?", [TEST_EMAIL]);
   if (existing.rows.length > 0) {
     const userId = existing.rows[0].id;
@@ -46,7 +48,6 @@ const uuid = () => crypto.randomUUID();
   const returnId = uuid();
   const invoiceId = uuid();
   const docId = uuid();
-
   const passwordHash = bcrypt.hashSync(TEST_PASSWORD, 10);
 
   // 1) Client user (MFA disabled, emailVerified set so login works smoothly)
@@ -81,11 +82,11 @@ const uuid = () => crypto.randomUUID();
     [invoiceId, userId, returnId, FEE, NOW, NOW]
   );
 
-  // 5) Locked final-return document (is_locked=1) tied to the return
+  // 5) LOCKED final-return document (is_locked=1) — pay-to-unlock: only unlocks at $0 balance or manual release
   await db.execute(
     `INSERT INTO documents
        (id, user_id, return_id, s3_key, file_name, file_type, file_size, category, tax_year, is_locked, status, uploaded_at)
-     VALUES (?, ?, ?, ?, '2026_Final_Return.pdf', 'application/pdf', 0, 'FINAL_RETURN', ?, 1, 'PENDING', ?)`,
+     VALUES (?, ?, ?, ?, '2026_FINAL_RETURN_TEST.pdf', 'application/pdf', 0, 'FINAL_RETURN', ?, 1, 'PENDING', ?)`,
     [docId, userId, returnId, `test/seeded/${docId}.pdf`, YEAR, NOW]
   );
 
@@ -96,6 +97,6 @@ const uuid = () => crypto.randomUUID();
   console.log("User ID      :", userId);
   console.log("2026 Return  :", returnId, "| status=AWAITING_PAYMENT | paymentStatus=UNPAID | fee=$" + FEE, "| surcharge=" + (SURCHARGE_ENABLED ? "ON" : "OFF"));
   console.log("Invoice ID   :", invoiceId, "| amount=$" + FEE, "| status=UNPAID");
-  console.log("Doc ID       :", docId, "| category=FINAL_RETURN | is_locked=1");
+  console.log("Doc ID       :", docId, "| 2026_FINAL_RETURN_TEST.pdf | category=FINAL_RETURN | is_locked=1 | status=PENDING");
   process.exit(0);
 })().catch((e) => { console.error("SEED ERROR", e); process.exit(1); });
