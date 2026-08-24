@@ -53,9 +53,11 @@ export async function updateReturnDetails(returnId: string, data: {
   
   const hasUnpaidInvoices = allInvoices.some(inv => inv.status === "UNPAID");
   const taxPrepFee = data.taxPrepFee !== undefined ? data.taxPrepFee : Number(currentReturn.taxPrepFee || 0);
+  const waivedAmount = Number(currentReturn.waivedAmount || 0);
   
   // STRICT: Ready to File is ONLY allowed if balance is $0 and no unpaid invoices exist
-  const balanceDue = Math.max(0, taxPrepFee - totalPaid);
+  const adjustedFee = Math.max(0, taxPrepFee - waivedAmount);
+  const balanceDue = Math.max(0, adjustedFee - totalPaid);
   const isFullyPaid = balanceDue <= 0 && !hasUnpaidInvoices;
 
   if (isFullyPaid && ["AWAITING_PAYMENT", "READY_FOR_SIGNATURE"].includes(finalStatus)) {
@@ -133,9 +135,9 @@ export async function updateReturnDetails(returnId: string, data: {
               .set({ status: "PAID", paidAt: new Date() })
               .where(and(eq(invoices.returnId, returnId), eq(invoices.status, "UNPAID")));
             totalAmount = unpaidInvoices.reduce((sum, inv) => sum + Number(inv.amount), 0);
-          } else if (totalPaid < Number(updatedReturn.taxPrepFee)) {
+          } else if (totalPaid < adjustedFee) {
             // Only create a new PAID invoice if the total paid so far is less than the fee
-            const remainingToPay = Math.max(0, Number(updatedReturn.taxPrepFee) - totalPaid);
+            const remainingToPay = Math.max(0, adjustedFee - totalPaid);
             if (remainingToPay > 0) {
               logger.info(`[updateReturnDetails] Creating a PAID invoice for remaining balance: ${remainingToPay}`);
               await db.insert(invoices).values({
@@ -148,7 +150,7 @@ export async function updateReturnDetails(returnId: string, data: {
               totalAmount = remainingToPay;
             }
           } else {
-            logger.info(`[updateReturnDetails] Return is already fully paid (Paid: ${totalPaid}, Fee: ${updatedReturn.taxPrepFee}). No new invoice created.`);
+            logger.info(`[updateReturnDetails] Return is already fully paid (Paid: ${totalPaid}, Adjusted Fee: ${adjustedFee}). No new invoice created.`);
             totalAmount = totalPaid;
           }
 

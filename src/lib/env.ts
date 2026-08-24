@@ -37,6 +37,11 @@ const envSchema = z.object({
   QBO_CLIENT_SECRET: z.string().optional(),
   QBO_REDIRECT_URI: z.string().optional(),
   QBO_ENVIRONMENT: z.enum(["sandbox", "production"]).default("sandbox"),
+  // Stripe (TEST MODE ONLY - never use live keys here)
+  STRIPE_SECRET_KEY: z.string().optional(),
+  STRIPE_WEBHOOK_SECRET: z.string().optional(),
+  CARD_PROCESSING_COST_RATE: z.string().optional(),
+  CARD_PROCESSING_COST_FLAT_CENTS: z.string().optional(),
 
   // Upstash Workflow / QStash
   QSTASH_TOKEN: z.string().optional(),

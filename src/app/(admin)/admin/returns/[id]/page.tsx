@@ -379,9 +379,11 @@ export default async function ReviewReturnPage({ params }: { params: Promise<{ i
           {/* Payment Center */}
           <PaymentCenter 
             returnId={ret.id} 
-            taxPrepFee={Number(ret.taxPrepFee || 0)}
+            taxPrepFee={ret.taxPrepFee || 0}
+            waivedAmount={ret.waivedAmount || 0}
             paymentStatus={ret.paymentStatus}
             manualRelease={ret.manualRelease}
+            isSurchargeEnabled={ret.isSurchargeEnabled}
             existingInvoices={ret.invoices} 
             auditLogs={logs as any}
           />

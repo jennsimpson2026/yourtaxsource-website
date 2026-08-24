@@ -36,12 +36,12 @@ export function DocumentRequestTool({ clientId, returnId }: { clientId: string, 
       </div>
       
       <p className="text-xs text-brand-charcoal/60 font-medium leading-relaxed">
-        Need something more from the client? Enter the items below. They'll receive a friendly email and text with a link to upload them securely.
+        Enter the documents you need from the client. They will receive an email and SMS with a link to upload them to their secure portal.
       </p>
 
       <textarea
         className="w-full rounded-xl border border-gray-200 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange transition-all min-h-[100px]"
-        placeholder="e.g. Your W-2 from Acme Corp, 1099-INT from the bank, or a copy of your property tax bill..."
+        placeholder="e.g. 2023 W-2 from Acme Corp, 1099-INT from Bank of America..."
         value={documentList}
         onChange={(e) => setDocumentList(e.target.value)}
         disabled={isSending}

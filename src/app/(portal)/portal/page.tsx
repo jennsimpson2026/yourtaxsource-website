@@ -8,6 +8,7 @@ import { eq, desc, and, gte, inArray, not } from "drizzle-orm";
 import Link from "next/link";
 import { BookingButton } from "@/components/BookingButton";
 import { PayInvoiceButton } from "@/components/portal/PayInvoiceButton";
+import { PayWithStripeButton } from "@/components/portal/PayWithStripeButton";
 import { FinancialSummary } from "@/components/portal/FinancialSummary";
 import { OpenRequests } from "@/components/portal/OpenRequests";
 import { DownloadEngagementLetterButton } from "@/components/portal/DownloadEngagementLetterButton";
@@ -325,8 +326,9 @@ export default async function PortalDashboard() {
                     </div>
                     <div className="flex flex-col items-end gap-2">
                       <PayInvoiceButton invoiceId={invoice.id} />
+                      <PayWithStripeButton invoiceId={invoice.id} />
                       <p className="text-[10px] text-brand-charcoal/40 font-bold uppercase tracking-tight text-right">
-                        Credit Card (3% processing fee) or Bank Draft (eCheck)
+                        Credit Card Surcharge may apply; ACH (bank draft) first with no surcharge
                       </p>
                       <Link href="#manual-payment" className="text-[10px] text-brand-purple font-bold uppercase tracking-tight hover:underline">
                         Pay manually (No Fees)

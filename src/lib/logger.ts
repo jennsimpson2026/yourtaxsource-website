@@ -20,6 +20,10 @@ const PII_KEYS = [
   "zipCode",
   "birthDate",
   "dob",
+  "card",
+  "account",
+  "routing",
+  "cvc",
 ];
 
 function maskValue(value: any): any {

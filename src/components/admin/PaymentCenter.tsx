@@ -17,21 +17,34 @@ import {
   Banknote,
   MinusCircle
 } from "lucide-react";
+import { 
+  toggleManualRelease, 
+  toggleSurcharge, 
+  applyFeeAdjustment, 
+  recordManualPayment,
+  createOneOffInvoice
+} from "@/actions/admin-payments";
+import { deleteInvoice } from "@/actions/invoices";
+import { toast } from "sonner";
 
 interface PaymentCenterProps {
   returnId: string;
   taxPrepFee: number;
+  waivedAmount: number;
   paymentStatus: string;
   manualRelease: boolean;
+  isSurchargeEnabled: boolean;
   existingInvoices: any[];
-  auditLogs?: any[]; // Added for history tracking
+  auditLogs?: any[];
 }
 
 export function PaymentCenter({ 
   returnId, 
   taxPrepFee, 
+  waivedAmount,
   paymentStatus, 
   manualRelease: initialManualRelease,
+  isSurchargeEnabled: initialSurchargeEnabled,
   existingInvoices,
   auditLogs = []
 }: PaymentCenterProps) {
@@ -39,7 +52,7 @@ export function PaymentCenter({
   const [showInvoiceForm, setShowForm] = useState(false);
   const [showManualPaymentForm, setShowManualPaymentForm] = useState(false);
   const [manualRelease, setManualRelease] = useState(initialManualRelease);
-  const [surchargeEnabled, setSurchargeEnabled] = useState(true);
+  const [surchargeEnabled, setSurchargeEnabled] = useState(initialSurchargeEnabled);
   const [applyDeposit, setApplyDeposit] = useState(false);
 
   // Form states
@@ -53,14 +66,32 @@ export function PaymentCenter({
     .filter(inv => inv.status === 'PAID')
     .reduce((sum, inv) => sum + Number(inv.amount), 0);
   
-  const balanceDue = Math.max(0, taxPrepFee - totalPaid);
+  const adjustedFee = Math.max(0, taxPrepFee - waivedAmount);
+  const balanceDue = Math.max(0, adjustedFee - totalPaid);
 
   const handleToggleManualRelease = async () => {
     setLoading(true);
     try {
-      // Mock action
-      console.log("Toggling manual release for", returnId);
-      setManualRelease(!manualRelease);
+      const nextValue = !manualRelease;
+      await toggleManualRelease(returnId, nextValue);
+      setManualRelease(nextValue);
+      toast.success(`Manual release ${nextValue ? 'enabled' : 'disabled'}`);
+    } catch (e: any) {
+      toast.error(e.message || "Failed to toggle manual release");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleToggleSurcharge = async () => {
+    setLoading(true);
+    try {
+      const nextValue = !surchargeEnabled;
+      await toggleSurcharge(returnId, nextValue);
+      setSurchargeEnabled(nextValue);
+      toast.success(`Surcharge ${nextValue ? 'enabled' : 'disabled'}`);
+    } catch (e: any) {
+      toast.error(e.message || "Failed to toggle surcharge");
     } finally {
       setLoading(false);
     }
@@ -68,11 +99,15 @@ export function PaymentCenter({
 
   const handleApplyAdjustment = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!adjustmentAmount) return;
     setLoading(true);
     try {
-      console.log("Applying adjustment:", adjustmentAmount, adjustmentReason);
+      await applyFeeAdjustment(returnId, Number(adjustmentAmount), adjustmentReason || "Admin Adjustment");
       setAdjustmentAmount("");
       setAdjustmentReason("");
+      toast.success("Adjustment applied successfully");
+    } catch (e: any) {
+      toast.error(e.message || "Failed to apply adjustment");
     } finally {
       setLoading(false);
     }
@@ -80,13 +115,15 @@ export function PaymentCenter({
 
   const handleRecordManualPayment = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!manualPayAmount) return;
     setLoading(true);
     try {
-      console.log("Recording manual payment:", manualPayAmount, manualPayMethod);
-      // In a real implementation, this would call a server action
+      await recordManualPayment(returnId, Number(manualPayAmount), manualPayMethod);
       setManualPayAmount("");
       setShowManualPaymentForm(false);
-      alert(`Manual payment of ${manualPayAmount} via ${manualPayMethod} recorded.`);
+      toast.success(`Payment of ${manualPayAmount} recorded`);
+    } catch (e: any) {
+      toast.error(e.message || "Failed to record payment");
     } finally {
       setLoading(false);
     }
@@ -96,11 +133,38 @@ export function PaymentCenter({
     if (!invoiceAmount) return;
     setLoading(true);
     try {
-      console.log("Generating invoice for:", invoiceAmount);
-      // Mock action
+      await createOneOffInvoice(returnId, Number(invoiceAmount));
       setInvoiceAmount("");
       setShowForm(false);
-      alert(`Invoice for ${invoiceAmount} generated.`);
+      toast.success(`Invoice for ${invoiceAmount} generated`);
+    } catch (e: any) {
+      toast.error(e.message || "Failed to generate invoice");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteInvoice = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this invoice?")) return;
+    setLoading(true);
+    try {
+      await deleteInvoice(id);
+      toast.success("Invoice deleted");
+    } catch (e: any) {
+      toast.error(e.message || "Failed to delete invoice");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleApplyBookingDeposit = async () => {
+    setLoading(true);
+    try {
+      await applyFeeAdjustment(returnId, 25, "Booking Deposit Credit");
+      setApplyDeposit(true);
+      toast.success("Booking deposit applied");
+    } catch (e: any) {
+      toast.error(e.message || "Failed to apply deposit");
     } finally {
       setLoading(false);
     }
@@ -160,7 +224,7 @@ export function PaymentCenter({
               </div>
             </div>
             <button 
-              onClick={() => setSurchargeEnabled(!surchargeEnabled)}
+              onClick={handleToggleSurcharge}
               className={`relative w-12 h-6 rounded-full transition-colors duration-200 focus:outline-none ${surchargeEnabled ? 'bg-brand-orange' : 'bg-gray-200'}`}
             >
               <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform duration-200 ${surchargeEnabled ? 'translate-x-6' : 'translate-x-0'}`} />
@@ -177,7 +241,8 @@ export function PaymentCenter({
            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Apply Deposit */}
               <button 
-                onClick={() => setApplyDeposit(!applyDeposit)}
+                onClick={handleApplyBookingDeposit}
+                disabled={applyDeposit || loading}
                 className={`p-4 rounded-xl border flex flex-col items-center justify-center text-center transition-all ${applyDeposit ? 'bg-brand-purple border-brand-purple text-white' : 'bg-white border-gray-100 text-brand-navy hover:border-brand-purple/30'}`}
               >
                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center mb-2 ${applyDeposit ? 'bg-white/20' : 'bg-brand-soft-gray'}`}>
@@ -359,7 +424,11 @@ export function PaymentCenter({
                         <AlertCircle size={12} /> Unpaid
                       </span>
                     )}
-                    <button className="p-1.5 text-gray-300 hover:text-red-500 transition-colors">
+                    <button 
+                      onClick={() => handleDeleteInvoice(invoice.id)}
+                      disabled={loading}
+                      className="p-1.5 text-gray-300 hover:text-red-500 transition-colors disabled:opacity-30"
+                    >
                       <Trash2 size={14} />
                     </button>
                   </div>
