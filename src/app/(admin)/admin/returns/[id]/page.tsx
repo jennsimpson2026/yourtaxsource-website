@@ -23,7 +23,7 @@ import { CommunicationLog } from "@/components/admin/CommunicationLog";
 import { DocumentDownloadButton } from "@/components/admin/DocumentDownloadButton";
 import { DocumentDeleteButton } from "@/components/admin/DocumentDeleteButton";
 import { EngagementLetterManager } from "@/components/admin/EngagementLetterManager";
-import { InvoiceManager } from "@/components/admin/InvoiceManager";
+import { PaymentCenter } from "@/components/admin/PaymentCenter";
 import { SensitiveDataViewer } from "@/components/admin/SensitiveDataViewer";
 
 export default async function ReviewReturnPage({ params }: { params: Promise<{ id: string }> }) {
@@ -376,8 +376,15 @@ export default async function ReviewReturnPage({ params }: { params: Promise<{ i
           {/* Document Request Tool */}
           <DocumentRequestTool clientId={ret.clientId} returnId={ret.id} />
 
-          {/* Invoice Manager */}
-          <InvoiceManager returnId={ret.id} existingInvoices={ret.invoices} />
+          {/* Payment Center */}
+          <PaymentCenter 
+            returnId={ret.id} 
+            taxPrepFee={Number(ret.taxPrepFee || 0)}
+            paymentStatus={ret.paymentStatus}
+            manualRelease={ret.manualRelease}
+            existingInvoices={ret.invoices} 
+            auditLogs={logs as any}
+          />
 
           {/* Communication Log */}
           <CommunicationLog logs={logs as any} />
