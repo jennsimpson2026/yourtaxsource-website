@@ -97,7 +97,7 @@ export default async function ReviewReturnPage({ params }: { params: Promise<{ i
   }
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-8">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="space-y-2">
@@ -146,9 +146,145 @@ export default async function ReviewReturnPage({ params }: { params: Promise<{ i
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-8">
-          {/* Sensitive Data Viewer */}
+      {/* Workflow Management — full width across the top */}
+      <div className="bg-brand-navy p-6 md:p-8 rounded-3xl shadow-xl text-white">
+        <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
+          <Clock size={20} className="text-brand-orange" />
+          Workflow
+        </h2>
+        <form action={handleUpdateReturn} className="space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] ml-1">Return Status</label>
+              <select
+                name="status"
+                defaultValue={ret.status}
+                className="w-full rounded-xl border border-white/10 p-3 text-sm bg-white/5 focus:bg-white focus:text-brand-navy transition-all focus:outline-none focus:ring-2 focus:ring-brand-orange/50 appearance-none cursor-pointer"
+              >
+                <option value="NOT_STARTED">Not Started</option>
+                <option value="IN_PROCESS">In Process</option>
+                <option value="READY_FOR_SIGNATURE">Ready for Signature</option>
+                <option value="AWAITING_PAYMENT">Awaiting Payment</option>
+                <option value="READY_TO_FILE">Ready to File</option>
+                <option value="COMPLETED">Completed</option>
+              </select>
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] ml-1">Payment Status</label>
+              <select
+                name="paymentStatus"
+                defaultValue={ret.paymentStatus}
+                className="w-full rounded-xl border border-white/10 p-3 text-sm bg-white/5 focus:bg-white focus:text-brand-navy transition-all focus:outline-none focus:ring-2 focus:ring-brand-orange/50 appearance-none cursor-pointer"
+              >
+                <option value="UNPAID">Unpaid</option>
+                <option value="PAID">Paid</option>
+                <option value="VOID">Void</option>
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] ml-1">Tax Prep Fee ($)</label>
+              <input
+                type="number"
+                step="0.01"
+                name="taxPrepFee"
+                defaultValue={(ret as any).taxPrepFee || 0}
+                className="w-full rounded-xl border border-white/10 p-3 text-sm bg-white/5 focus:bg-white focus:text-brand-navy transition-all focus:outline-none focus:ring-2 focus:ring-brand-orange/50"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] ml-1">Federal Result ($)</label>
+              <input
+                type="number"
+                step="0.01"
+                name="federalResult"
+                defaultValue={ret.federalResult || 0}
+                className="w-full rounded-xl border border-white/10 p-3 text-sm bg-white/5 focus:bg-white focus:text-brand-navy transition-all focus:outline-none focus:ring-2 focus:ring-brand-orange/50"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] ml-1">State Result ($)</label>
+              <input
+                type="number"
+                step="0.01"
+                name="stateResult"
+                defaultValue={(() => {
+                  if (!ret.stateResults) return 0;
+                  try {
+                    let parsed = typeof ret.stateResults === 'string' ? JSON.parse(ret.stateResults) : ret.stateResults;
+                    // Handle double stringification
+                    if (typeof parsed === 'string') {
+                      parsed = JSON.parse(parsed);
+                    }
+                    if (typeof parsed === 'object' && parsed !== null) {
+                      return parsed.primary || 0;
+                    }
+                    return 0;
+                  } catch (e) {
+                    console.error("Error parsing stateResults:", e);
+                    return 0;
+                  }
+                })()}
+                className="w-full rounded-xl border border-white/10 p-3 text-sm bg-white/5 focus:bg-white focus:text-brand-navy transition-all focus:outline-none focus:ring-2 focus:ring-brand-orange/50"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] ml-1">&nbsp;</label>
+              <button type="submit" className="w-full bg-brand-purple text-white font-black py-4 rounded-2xl hover:bg-brand-purple/90 transition-all shadow-lg hover:shadow-purple-500/20 active:scale-95">
+                SAVE CHANGES
+              </button>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] ml-1">Internal Staff Notes</label>
+            <textarea
+              name="notes"
+              defaultValue={ret.notes || ""}
+              rows={2}
+              className="w-full rounded-xl border border-white/10 p-4 text-sm bg-white/5 focus:bg-white focus:text-brand-navy transition-all focus:outline-none focus:ring-2 focus:ring-brand-orange/50 placeholder:text-white/20"
+              placeholder="Only visible to staff..."
+            ></textarea>
+          </div>
+        </form>
+      </div>
+
+      {/* Groups — full width grid below */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 items-start">
+
+        {/* Group 1: Financial / Payment */}
+        <div className="space-y-6">
+          <SectionTitle icon={<CreditCard size={20} />} color="text-brand-green" title="Financial & Payment" />
+          {/* Financial Summary + Invoices & Payments + Stripe Payment Center */}
+          <PaymentCenter 
+            returnId={ret.id} 
+            taxPrepFee={ret.taxPrepFee || 0}
+            waivedAmount={ret.waivedAmount || 0}
+            paymentStatus={ret.paymentStatus}
+            manualRelease={ret.manualRelease}
+            isSurchargeEnabled={ret.isSurchargeEnabled}
+            existingInvoices={ret.invoices} 
+            auditLogs={logs as any}
+          />
+        </div>
+
+        {/* Group 2: Client Communication */}
+        <div className="space-y-6">
+          <SectionTitle icon={<MessageSquare size={20} />} color="text-brand-purple" title="Client Communication" />
+          <EngagementLetterManager 
+            returnId={ret.id} 
+            clientId={ret.clientId} 
+            existingLetter={ret.engagementLetters[0]} 
+          />
+          <DocumentRequestTool clientId={ret.clientId} returnId={ret.id} />
+          <CommunicationLog logs={logs as any} />
+        </div>
+
+        {/* Group 3: Return Information */}
+        <div className="space-y-6 lg:col-span-2 xl:col-span-1">
+          <SectionTitle icon={<FileText size={20} />} color="text-brand-orange" title="Return Information" />
           <SensitiveDataViewer clientId={ret.clientId} />
 
           {/* Intake Questionnaire */}
@@ -197,7 +333,7 @@ export default async function ReviewReturnPage({ params }: { params: Promise<{ i
             )}
           </div>
 
-          {/* Documents Section */}
+          {/* Client Documents */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
              <div className="p-6 border-b border-gray-50 bg-gray-50/50 flex justify-between items-center">
               <h2 className="text-lg font-bold text-brand-navy flex items-center gap-2">
@@ -260,139 +396,17 @@ export default async function ReviewReturnPage({ params }: { params: Promise<{ i
           </div>
         </div>
 
-        {/* Sidebar Controls */}
-        <div className="space-y-8">
-          {/* Workflow Management */}
-          <div className="bg-brand-navy p-8 rounded-3xl shadow-xl text-white">
-            <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
-              <Clock size={20} className="text-brand-orange" />
-              Workflow
-            </h2>
-            <form action={handleUpdateReturn} className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] ml-1">Return Status</label>
-                  <select
-                    name="status"
-                    defaultValue={ret.status}
-                    className="w-full rounded-xl border border-white/10 p-3 text-sm bg-white/5 focus:bg-white focus:text-brand-navy transition-all focus:outline-none focus:ring-2 focus:ring-brand-orange/50 appearance-none cursor-pointer"
-                  >
-                    <option value="NOT_STARTED">Not Started</option>
-                    <option value="IN_PROCESS">In Process</option>
-                    <option value="READY_FOR_SIGNATURE">Ready for Signature</option>
-                    <option value="AWAITING_PAYMENT">Awaiting Payment</option>
-                    <option value="READY_TO_FILE">Ready to File</option>
-                    <option value="COMPLETED">Completed</option>
-                  </select>
-                </div>
-                
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] ml-1">Payment Status</label>
-                  <select
-                    name="paymentStatus"
-                    defaultValue={ret.paymentStatus}
-                    className="w-full rounded-xl border border-white/10 p-3 text-sm bg-white/5 focus:bg-white focus:text-brand-navy transition-all focus:outline-none focus:ring-2 focus:ring-brand-orange/50 appearance-none cursor-pointer"
-                  >
-                    <option value="UNPAID">Unpaid</option>
-                    <option value="PAID">Paid</option>
-                    <option value="VOID">Void</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 gap-4">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] ml-1">Federal Result ($)</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    name="federalResult"
-                    defaultValue={ret.federalResult || 0}
-                    className="w-full rounded-xl border border-white/10 p-3 text-sm bg-white/5 focus:bg-white focus:text-brand-navy transition-all focus:outline-none focus:ring-2 focus:ring-brand-orange/50"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] ml-1">State Result ($)</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    name="stateResult"
-                    defaultValue={(() => {
-                      if (!ret.stateResults) return 0;
-                      try {
-                        let parsed = typeof ret.stateResults === 'string' ? JSON.parse(ret.stateResults) : ret.stateResults;
-                        // Handle double stringification
-                        if (typeof parsed === 'string') {
-                          parsed = JSON.parse(parsed);
-                        }
-                        if (typeof parsed === 'object' && parsed !== null) {
-                          return parsed.primary || 0;
-                        }
-                        return 0;
-                      } catch (e) {
-                        console.error("Error parsing stateResults:", e);
-                        return 0;
-                      }
-                    })()}
-                    className="w-full rounded-xl border border-white/10 p-3 text-sm bg-white/5 focus:bg-white focus:text-brand-navy transition-all focus:outline-none focus:ring-2 focus:ring-brand-orange/50"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] ml-1">Tax Prep Fee ($)</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    name="taxPrepFee"
-                    defaultValue={(ret as any).taxPrepFee || 0}
-                    className="w-full rounded-xl border border-white/10 p-3 text-sm bg-white/5 focus:bg-white focus:text-brand-navy transition-all focus:outline-none focus:ring-2 focus:ring-brand-orange/50"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] ml-1">Internal Staff Notes</label>
-                <textarea
-                  name="notes"
-                  defaultValue={ret.notes || ""}
-                  rows={4}
-                  className="w-full rounded-xl border border-white/10 p-4 text-sm bg-white/5 focus:bg-white focus:text-brand-navy transition-all focus:outline-none focus:ring-2 focus:ring-brand-orange/50 placeholder:text-white/20"
-                  placeholder="Only visible to staff..."
-                ></textarea>
-              </div>
-
-              <button type="submit" className="w-full bg-brand-purple text-white font-black py-4 rounded-2xl hover:bg-brand-purple/90 transition-all shadow-lg hover:shadow-purple-500/20 active:scale-95">
-                SAVE CHANGES
-              </button>
-            </form>
-          </div>
-
-          {/* Engagement Letter */}
-          <EngagementLetterManager 
-            returnId={ret.id} 
-            clientId={ret.clientId} 
-            existingLetter={ret.engagementLetters[0]} 
-          />
-
-          {/* Document Request Tool */}
-          <DocumentRequestTool clientId={ret.clientId} returnId={ret.id} />
-
-          {/* Payment Center */}
-          <PaymentCenter 
-            returnId={ret.id} 
-            taxPrepFee={ret.taxPrepFee || 0}
-            waivedAmount={ret.waivedAmount || 0}
-            paymentStatus={ret.paymentStatus}
-            manualRelease={ret.manualRelease}
-            isSurchargeEnabled={ret.isSurchargeEnabled}
-            existingInvoices={ret.invoices} 
-            auditLogs={logs as any}
-          />
-
-          {/* Communication Log */}
-          <CommunicationLog logs={logs as any} />
-        </div>
       </div>
     </div>
+  );
+}
+
+function SectionTitle({ icon, color, title }: { icon: React.ReactNode, color: string, title: string }) {
+  return (
+    <h2 className={`text-xl font-heading font-bold text-brand-navy flex items-center gap-2 ${color}`}>
+      {icon}
+      <span className="text-[11px] font-black uppercase tracking-[0.18em] text-brand-charcoal/50">{title}</span>
+    </h2>
   );
 }
 
