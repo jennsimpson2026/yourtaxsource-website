@@ -174,7 +174,7 @@ export function PaymentCenter({
 
   return (
     <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden">
-      <div className="p-8 border-b border-gray-50 bg-gray-50/30 flex justify-between items-center">
+      <div className="p-5 border-b border-gray-50 bg-gray-50/30 flex justify-between items-center">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 bg-brand-purple/10 rounded-2xl flex items-center justify-center text-brand-purple">
             <CreditCard size={24} />
@@ -192,7 +192,7 @@ export function PaymentCenter({
         </div>
       </div>
 
-      <div className="p-8 space-y-8">
+      <div className="p-5 space-y-6">
         {/* Master Controls */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Manual Release Toggle */}
@@ -446,7 +446,7 @@ export function PaymentCenter({
       </div>
 
       {/* Transaction & Adjustment History */}
-      <div className="px-8 pb-8 space-y-4">
+      <div className="px-5 pb-5 space-y-4">
         <h3 className="text-xs font-black text-brand-navy uppercase tracking-widest flex items-center gap-2">
           <Clock size={14} className="text-brand-orange" />
           Financial History

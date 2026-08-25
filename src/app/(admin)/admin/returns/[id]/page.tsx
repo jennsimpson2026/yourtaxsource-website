@@ -146,14 +146,14 @@ export default async function ReviewReturnPage({ params }: { params: Promise<{ i
         </div>
       )}
 
-      {/* Workflow Management — full width across the top */}
-      <div className="bg-brand-navy p-6 md:p-8 rounded-3xl shadow-xl text-white">
-        <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
-          <Clock size={20} className="text-brand-orange" />
+      {/* Workflow Management — compact control strip across the top */}
+      <div className="bg-brand-navy p-4 md:p-5 rounded-2xl shadow-xl text-white">
+        <h2 className="text-xs font-black mb-3 flex items-center gap-2 uppercase tracking-widest text-white/70">
+          <Clock size={16} className="text-brand-orange" />
           Workflow
         </h2>
-        <form action={handleUpdateReturn} className="space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <form action={handleUpdateReturn} className="space-y-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
             <div className="space-y-2">
               <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] ml-1">Return Status</label>
               <select
@@ -227,34 +227,33 @@ export default async function ReviewReturnPage({ params }: { params: Promise<{ i
                     return 0;
                   }
                 })()}
-                className="w-full rounded-xl border border-white/10 p-3 text-sm bg-white/5 focus:bg-white focus:text-brand-navy transition-all focus:outline-none focus:ring-2 focus:ring-brand-orange/50"
+                className="w-full rounded-xl border border-white/10 p-2.5 text-sm bg-white/5 focus:bg-white focus:text-brand-navy transition-all focus:outline-none focus:ring-2 focus:ring-brand-orange/50"
               />
-            </div>
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] ml-1">&nbsp;</label>
-              <button type="submit" className="w-full bg-brand-purple text-white font-black py-4 rounded-2xl hover:bg-brand-purple/90 transition-all shadow-lg hover:shadow-purple-500/20 active:scale-95">
-                SAVE CHANGES
-              </button>
             </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] ml-1">Internal Staff Notes</label>
-            <textarea
-              name="notes"
-              defaultValue={ret.notes || ""}
-              rows={2}
-              className="w-full rounded-xl border border-white/10 p-4 text-sm bg-white/5 focus:bg-white focus:text-brand-navy transition-all focus:outline-none focus:ring-2 focus:ring-brand-orange/50 placeholder:text-white/20"
-              placeholder="Only visible to staff..."
-            ></textarea>
+          <div className="flex flex-col xl:flex-row items-stretch xl:items-end gap-3">
+            <div className="flex-1 space-y-1.5">
+              <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] ml-1">Internal Staff Notes</label>
+              <textarea
+                name="notes"
+                defaultValue={ret.notes || ""}
+                rows={2}
+                className="w-full rounded-xl border border-white/10 p-3 text-sm bg-white/5 focus:bg-white focus:text-brand-navy transition-all focus:outline-none focus:ring-2 focus:ring-brand-orange/50 placeholder:text-white/20"
+                placeholder="Only visible to staff..."
+              ></textarea>
+            </div>
+            <button type="submit" className="shrink-0 bg-brand-purple text-white font-black px-8 py-3 rounded-xl hover:bg-brand-purple/90 transition-all shadow-lg active:scale-95 whitespace-nowrap">
+              SAVE CHANGES
+            </button>
           </div>
         </form>
       </div>
 
-      {/* Groups — full width grid below */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 items-start">
+      {/* Groups — Financial & Payment ~half width; comms & return info flow in the other half */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
 
-        {/* Group 1: Financial / Payment */}
+        {/* Group 1: Financial / Payment — left half, wide controls */}
         <div className="space-y-6">
           <SectionTitle icon={<CreditCard size={20} />} color="text-brand-green" title="Financial & Payment" />
           {/* Financial Summary + Invoices & Payments + Stripe Payment Center */}
@@ -270,7 +269,7 @@ export default async function ReviewReturnPage({ params }: { params: Promise<{ i
           />
         </div>
 
-        {/* Group 2: Client Communication */}
+        {/* Group 2 + 3: Client Communication & Return Information — flow in the right half */}
         <div className="space-y-6">
           <SectionTitle icon={<MessageSquare size={20} />} color="text-brand-purple" title="Client Communication" />
           <EngagementLetterManager 
@@ -280,10 +279,7 @@ export default async function ReviewReturnPage({ params }: { params: Promise<{ i
           />
           <DocumentRequestTool clientId={ret.clientId} returnId={ret.id} />
           <CommunicationLog logs={logs as any} />
-        </div>
 
-        {/* Group 3: Return Information */}
-        <div className="space-y-6 lg:col-span-2 xl:col-span-1">
           <SectionTitle icon={<FileText size={20} />} color="text-brand-orange" title="Return Information" />
           <SensitiveDataViewer clientId={ret.clientId} />
 
