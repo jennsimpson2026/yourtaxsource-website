@@ -57,8 +57,8 @@ export function CommunicationLog({ logs }: { logs: AuditLog[] }) {
             </div>
           ))
         ) : (
-          <div className="p-10 text-center">
-            <Mail className="mx-auto text-gray-200 mb-2" size={32} />
+          <div className="px-6 py-3 text-center flex items-center justify-center gap-2">
+            <Mail className="text-gray-300" size={16} />
             <p className="text-xs text-gray-400 font-medium uppercase tracking-widest">No communication history</p>
           </div>
         )}

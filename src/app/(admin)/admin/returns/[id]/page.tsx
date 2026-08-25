@@ -327,7 +327,7 @@ export default async function ReviewReturnPage({ params }: { params: Promise<{ i
                 )}
               </div>
             ) : (
-              <div className="p-12 text-center text-gray-400 font-medium italic">
+              <div className="px-6 py-3 text-center text-xs text-gray-400 font-medium italic">
                 No questionnaire data available.
               </div>
             )}

@@ -139,7 +139,7 @@ export function EngagementLetterManager({
             </div>
           </div>
         ) : (
-          <div className="text-center py-6 space-y-4">
+          <div className="text-center py-4 space-y-3">
             <div className="w-12 h-12 bg-orange-50 text-orange-400 rounded-full flex items-center justify-center mx-auto">
               <AlertCircle size={24} />
             </div>

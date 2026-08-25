@@ -127,8 +127,8 @@ export function SensitiveDataViewer({ clientId }: { clientId: string }) {
       )}
 
       {!show && (
-        <div className="p-12 text-center bg-gray-50/30">
-          <p className="text-sm text-gray-400 font-medium italic">Click the reveal button above to view secure information.</p>
+        <div className="px-6 py-3 text-center bg-gray-50/30">
+          <p className="text-xs text-gray-400 font-medium italic">Click the reveal button above to view secure information.</p>
         </div>
       )}
     </div>
