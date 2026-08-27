@@ -128,6 +128,16 @@ export const documents = sqliteTable("documents", {
   reviewedBy: text("reviewed_by").references(() => users.id),
   uploadedAt: integer("uploaded_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),
   deletedAt: integer("deleted_at", { mode: "timestamp" }),
+  // Phase 2: Categorization
+  aiCategory: text("ai_category"),      // raw label emitted by the model
+  aiConfidence: real("ai_confidence"),  // 0..1
+  categorySource: text("category_source"), // 'MANUAL' | 'AI' | 'FILENAME_RULE'
+  categorizationModel: text("categorization_model"),
+  categorizedAt: integer("categorized_at", { mode: "timestamp" }),
+  autoReviewed: integer("auto_reviewed", { mode: "boolean" }).default(false),
+  // Phase 2: QBO link
+  qboItemId: text("qbo_item_id"),       // resolved QBO Item.Id used for this doc
+  qboItemRef: text("qbo_item_ref"),
 }, (table) => ({
   userIdIdx: index("documents_user_id_idx").on(table.userId),
   returnIdIdx: index("documents_return_id_idx").on(table.returnId),
@@ -216,15 +226,23 @@ export const invoices = sqliteTable("invoices", {
   currency: text("currency").default("USD").notNull(),
   status: text("status").default("UNPAID").notNull(),
   paidAt: integer("paid_at", { mode: "timestamp" }),
+  // Phase 2: QBO Balance Sync
+  qboBalance: real("qbo_balance"),
+  qboLastCheckedAt: integer("qbo_last_checked_at", { mode: "timestamp" }),
   createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),
+  // Payment request tracking (admin sends "payment request" emails — does NOT affect payment/webhook logic)
+  paymentRequestCount: integer("payment_request_count").default(0).notNull(),
+  paymentRequestLastSentAt: integer("payment_request_last_sent_at", { mode: "timestamp" }),
+  paymentRequestRecipientEmail: text("payment_request_recipient_email"),
+  paymentRequestSentByUserId: text("payment_request_sent_by_user_id"),
 }, (table) => ({
   userIdIdx: index("invoices_user_id_idx").on(table.userId),
   returnIdIdx: index("invoices_return_id_idx").on(table.returnId),
   statusIdx: index("invoices_status_idx").on(table.status),
 }));
 
-export const invoicesRelations = relations(invoices, ({ one }) => ({
+export const invoicesRelations = relations(invoices, ({ one, many }) => ({
   user: one(users, {
     fields: [invoices.userId],
     references: [users.id],
@@ -233,6 +251,7 @@ export const invoicesRelations = relations(invoices, ({ one }) => ({
     fields: [invoices.returnId],
     references: [taxReturns.id],
   }),
+  lineItems: many(invoiceLineItems),
 }));
 
 export const engagementLetters = sqliteTable("engagement_letters", {
@@ -444,3 +463,68 @@ export const workflows = sqliteTable("workflows", {
   createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),
 });
+
+export const qboItems = sqliteTable("qbo_items", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  qboId: text("qbo_id").notNull().unique(),    // QBO Item.Id
+  name: text("name").notNull(),                // QBO DisplayName
+  type: text("type"),                          // 'Service' | 'NonInventory' | ...
+  fullyQualifiedName: text("fully_qualified_name"),
+  active: integer("active", { mode: "boolean" }).default(true),
+  unitPrice: real("unit_price"),
+  incomeAccountRef: text("income_account_ref"),// for mapping accuracy
+  syncStatus: text("sync_status").default("SYNCED"),
+  lastSyncedAt: integer("last_synced_at", { mode: "timestamp" }),
+});
+
+export const serviceItems = sqliteTable("service_items", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  name: text("name").notNull(),
+  description: text("description"),
+  category: text("category"), // e.g., 'TAX_PREP', 'BOOKKEEPING'
+  defaultQboItemId: text("default_qbo_item_id").references(() => qboItems.id),
+  basePrice: real("base_price"),
+  createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),
+});
+
+export const invoiceLineItems = sqliteTable("invoice_line_items", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  invoiceId: text("invoice_id").references(() => invoices.id).notNull(),
+  qboItemId: text("qbo_item_id").references(() => qboItems.id),
+  serviceItemId: text("service_item_id").references(() => serviceItems.id),
+  description: text("description"),
+  quantity: real("quantity").default(1),
+  unitAmount: real("unit_amount").notNull(),
+  amount: real("amount").notNull(),
+  taxCode: text("tax_code"),
+  createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`).notNull(),
+});
+
+export const qboItemsRelations = relations(qboItems, ({ many }) => ({
+  serviceItems: many(serviceItems),
+  invoiceLineItems: many(invoiceLineItems),
+}));
+
+export const serviceItemsRelations = relations(serviceItems, ({ one, many }) => ({
+  defaultQboItem: one(qboItems, {
+    fields: [serviceItems.defaultQboItemId],
+    references: [qboItems.id],
+  }),
+  invoiceLineItems: many(invoiceLineItems),
+}));
+
+export const invoiceLineItemsRelations = relations(invoiceLineItems, ({ one }) => ({
+  invoice: one(invoices, {
+    fields: [invoiceLineItems.invoiceId],
+    references: [invoices.id],
+  }),
+  qboItem: one(qboItems, {
+    fields: [invoiceLineItems.qboItemId],
+    references: [qboItems.id],
+  }),
+  serviceItem: one(serviceItems, {
+    fields: [invoiceLineItems.serviceItemId],
+    references: [serviceItems.id],
+  }),
+}));

@@ -17,14 +17,17 @@ import {
   Banknote,
   MinusCircle,
   Clock,
-  Shield
+  Shield,
+  Send,
+  Copy
 } from "lucide-react";
-import { 
-  toggleManualRelease, 
-  toggleSurcharge, 
-  applyFeeAdjustment, 
+import {
+  toggleManualRelease,
+  toggleSurcharge,
+  applyFeeAdjustment,
   recordManualPayment,
-  createOneOffInvoice
+  createOneOffInvoice,
+  sendPaymentRequest
 } from "@/actions/admin-payments";
 import { deleteInvoice } from "@/actions/invoices";
 import { toast } from "sonner";
@@ -38,17 +41,19 @@ interface PaymentCenterProps {
   isSurchargeEnabled: boolean;
   existingInvoices: any[];
   auditLogs?: any[];
+  portalPaymentUrl?: string;
 }
 
-export function PaymentCenter({ 
-  returnId, 
-  taxPrepFee, 
+export function PaymentCenter({
+  returnId,
+  taxPrepFee,
   waivedAmount,
-  paymentStatus, 
+  paymentStatus,
   manualRelease: initialManualRelease,
   isSurchargeEnabled: initialSurchargeEnabled,
   existingInvoices,
-  auditLogs = []
+  auditLogs = [],
+  portalPaymentUrl = "https://your-tax-source-main.vercel.app/portal#invoices"
 }: PaymentCenterProps) {
   const [loading, setLoading] = useState(false);
   const [showInvoiceForm, setShowForm] = useState(false);
@@ -63,6 +68,8 @@ export function PaymentCenter({
   const [adjustmentReason, setAdjustmentReason] = useState("");
   const [manualPayAmount, setManualPayAmount] = useState("");
   const [manualPayMethod, setManualPayMethod] = useState("CHECK");
+  const [billingLoadingId, setBillingLoadingId] = useState<string | null>(null);
+  const [copiedInvoiceId, setCopiedInvoiceId] = useState<string | null>(null);
 
   const totalPaid = existingInvoices
     .filter(inv => inv.status === 'PAID')
@@ -70,6 +77,38 @@ export function PaymentCenter({
   
   const adjustedFee = Math.max(0, taxPrepFee - waivedAmount);
   const balanceDue = Math.max(0, adjustedFee - totalPaid);
+
+  const handleSendPaymentRequest = async (invoice: any) => {
+    setBillingLoadingId(invoice.id);
+    try {
+      const res = await sendPaymentRequest(returnId, invoice.id);
+      toast.success(res?.resent ? "Payment request resent to client" : "Payment request sent to client");
+    } catch (e: any) {
+      toast.error(e.message || "Failed to send payment request");
+    } finally {
+      setBillingLoadingId(null);
+    }
+  };
+
+  const handleCopyPortalLink = async (invoiceId: string) => {
+    try {
+      await navigator.clipboard.writeText(portalPaymentUrl);
+      setCopiedInvoiceId(invoiceId);
+      toast.success("Portal payment link copied");
+      setTimeout(() => setCopiedInvoiceId(null), 2000);
+    } catch (e: any) {
+      toast.error(e.message || "Failed to copy link");
+    }
+  };
+
+  const formatSentTimestamp = (ts: any) => {
+    if (!ts) return "";
+    try {
+      const d = new Date(ts);
+      if (isNaN(d.getTime())) return "";
+      return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) + " at " + d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    } catch { return ""; }
+  };
 
   const handleToggleManualRelease = async () => {
     setLoading(true);
@@ -402,38 +441,79 @@ export function PaymentCenter({
           <div className="space-y-2">
             {existingInvoices.length > 0 ? (
               existingInvoices.map((invoice) => (
-                <div key={invoice.id} className="p-4 rounded-2xl border border-gray-50 bg-white flex items-center justify-between group hover:border-brand-purple/20 transition-all">
-                  <div className="flex items-center gap-4">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center border ${
-                      invoice.status === 'PAID' ? 'bg-green-50 border-green-100 text-green-600' : 'bg-gray-50 border-gray-100 text-gray-400'
-                    }`}>
-                      <CreditCard size={18} />
+                <div key={invoice.id} className="p-4 rounded-2xl border border-gray-50 bg-white group hover:border-brand-purple/20 transition-all">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center border ${
+                        invoice.status === 'PAID' ? 'bg-green-50 border-green-100 text-green-600' : 'bg-gray-50 border-gray-100 text-gray-400'
+                      }`}>
+                        <CreditCard size={18} />
+                      </div>
+                      <div>
+                        <p className="text-sm font-black text-brand-navy">${Number(invoice.amount).toFixed(2)}</p>
+                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">
+                          #{invoice.id.slice(0, 8)} • {new Date(invoice.createdAt || Date.now()).toLocaleDateString()}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-black text-brand-navy">${Number(invoice.amount).toFixed(2)}</p>
-                      <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">
-                        #{invoice.id.slice(0, 8)} • {new Date(invoice.createdAt || Date.now()).toLocaleDateString()}
-                      </p>
+                    <div className="flex items-center gap-2">
+                      {invoice.status === 'PAID' ? (
+                        <span className="text-[10px] font-black text-green-600 uppercase bg-green-50 px-2 py-1 rounded-md flex items-center gap-1">
+                          <CheckCircle2 size={12} /> Paid
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-black text-red-500 uppercase bg-red-50 px-2 py-1 rounded-md flex items-center gap-1">
+                          <AlertCircle size={12} /> Unpaid
+                        </span>
+                      )}
+                      <button 
+                        onClick={() => handleDeleteInvoice(invoice.id)}
+                        disabled={loading}
+                        className="p-1.5 text-gray-300 hover:text-red-500 transition-colors disabled:opacity-30"
+                      >
+                        <Trash2 size={14} />
+                      </button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    {invoice.status === 'PAID' ? (
-                      <span className="text-[10px] font-black text-green-600 uppercase bg-green-50 px-2 py-1 rounded-md flex items-center gap-1">
-                        <CheckCircle2 size={12} /> Paid
-                      </span>
-                    ) : (
-                      <span className="text-[10px] font-black text-red-500 uppercase bg-red-50 px-2 py-1 rounded-md flex items-center gap-1">
-                        <AlertCircle size={12} /> Unpaid
-                      </span>
-                    )}
-                    <button 
-                      onClick={() => handleDeleteInvoice(invoice.id)}
-                      disabled={loading}
-                      className="p-1.5 text-gray-300 hover:text-red-500 transition-colors disabled:opacity-30"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
+
+                  {invoice.status !== 'PAID' && (
+                    <div className="mt-3 pt-3 border-t border-gray-50 flex flex-wrap items-center gap-3">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleSendPaymentRequest(invoice)}
+                          disabled={billingLoadingId === invoice.id}
+                          className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider px-3 py-1.5 rounded-lg bg-brand-purple text-white hover:bg-opacity-90 transition-all disabled:opacity-40"
+                        >
+                          {billingLoadingId === invoice.id ? (
+                            <><Loader2 size={12} className="animate-spin" /> Sending...</>
+                          ) : (Number(invoice.paymentRequestCount || 0) > 0 ? (
+                            <><Send size={12} /> Resend Payment Request</>
+                          ) : (
+                            <><Send size={12} /> Send Payment Request</>
+                          ))}
+                        </button>
+                        <button
+                          onClick={() => handleCopyPortalLink(invoice.id)}
+                          disabled={billingLoadingId === invoice.id}
+                          className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider px-3 py-1.5 rounded-lg bg-brand-cloud text-brand-navy border border-gray-100 hover:bg-brand-navy hover:text-white transition-all disabled:opacity-40"
+                        >
+                          {copiedInvoiceId === invoice.id ? <CheckCircle2 size={12} /> : <Copy size={12} />}
+                          {copiedInvoiceId === invoice.id ? "Copied" : "Copy Portal Payment Link"}
+                        </button>
+                      </div>
+                      <div className="text-[10px] text-gray-400 font-medium">
+                        {Number(invoice.paymentRequestCount || 0) > 0 ? (
+                          <span>
+                            {Number(invoice.paymentRequestCount) === 1
+                              ? <>Payment Request: Sent {formatSentTimestamp(invoice.paymentRequestLastSentAt)} • 1 send</>
+                              : <>Last sent {formatSentTimestamp(invoice.paymentRequestLastSentAt)} • {Number(invoice.paymentRequestCount)} sends</>}
+                          </span>
+                        ) : (
+                          <span className="italic">No payment request sent yet</span>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))
             ) : (
@@ -452,14 +532,21 @@ export function PaymentCenter({
           Financial History
         </h3>
         <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
-          {auditLogs.filter(log => ['PAYMENT_RECORDED', 'ADJUSTMENT_APPLIED', 'DEPOSIT_APPLIED', 'MANUAL_RELEASE_TOGGLED'].includes(log.action)).length > 0 ? (
+          {auditLogs.filter(log => ['PAYMENT_RECORDED', 'ADJUSTMENT_APPLIED', 'DEPOSIT_APPLIED', 'MANUAL_RELEASE_TOGGLED', 'PAYMENT_REQUEST_SENT'].includes(log.action)).length > 0 ? (
             auditLogs
-              .filter(log => ['PAYMENT_RECORDED', 'ADJUSTMENT_APPLIED', 'DEPOSIT_APPLIED', 'MANUAL_RELEASE_TOGGLED'].includes(log.action))
+              .filter(log => ['PAYMENT_RECORDED', 'ADJUSTMENT_APPLIED', 'DEPOSIT_APPLIED', 'MANUAL_RELEASE_TOGGLED', 'PAYMENT_REQUEST_SENT'].includes(log.action))
               .map((log, idx) => (
                 <div key={idx} className="text-[10px] p-3 rounded-lg bg-gray-50 border border-gray-100 flex justify-between items-start">
                   <div>
                     <p className="font-bold text-brand-navy uppercase tracking-tight">{log.action.replace(/_/g, ' ')}</p>
-                    <p className="text-gray-500 mt-0.5">{log.details}</p>
+                    <p className="text-gray-500 mt-0.5">
+                      {log.action === 'PAYMENT_REQUEST_SENT' && log.metadata ? (() => {
+                        try {
+                          const m = JSON.parse(log.metadata);
+                          return `${m.resent ? 'Resent' : 'Sent'} payment request for ${(Number(m.amount)||0).toFixed(2)} to ${m.recipient} (send #${m.sendCount})`;
+                        } catch { return log.details; }
+                      })() : log.details}
+                    </p>
                   </div>
                   <p className="text-gray-300 font-medium whitespace-nowrap ml-4">
                     {new Date(log.createdAt).toLocaleDateString()}

@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { taxReturns, users, questionnaires, auditLogs, invoices, documents } from "@/lib/db/schema";
-import { eq, desc, and, isNull } from "drizzle-orm";
+import { eq, desc, and, isNull, inArray } from "drizzle-orm";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { 
@@ -72,6 +72,23 @@ export default async function ReviewReturnPage({ params }: { params: Promise<{ i
     where: eq(auditLogs.targetId, ret.clientId),
     orderBy: [desc(auditLogs.createdAt)],
   });
+
+  // Payment request logs are stored with targetId = invoice.id; merge them in so they
+  // appear in the Communication Log + Audit Log (Financial History) alongside client logs.
+  const invoiceIds = (ret.invoices || []).map(inv => inv.id);
+  let mergedLogs = logs;
+  if (invoiceIds.length > 0) {
+    const invoiceLogs = await db.query.auditLogs.findMany({
+      where: and(
+        eq(auditLogs.action, "PAYMENT_REQUEST_SENT"),
+        inArray(auditLogs.targetId, invoiceIds)
+      ),
+      orderBy: [desc(auditLogs.createdAt)],
+    });
+    mergedLogs = [...logs, ...invoiceLogs].sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  }
 
   const questionnaireData = ret.questionnaire?.data ? JSON.parse(ret.questionnaire.data) : null;
   const annualUpdateData = ret.annualUpdate?.taxInfo ? JSON.parse(ret.annualUpdate.taxInfo) : null;
@@ -265,7 +282,8 @@ export default async function ReviewReturnPage({ params }: { params: Promise<{ i
             manualRelease={ret.manualRelease}
             isSurchargeEnabled={ret.isSurchargeEnabled}
             existingInvoices={ret.invoices} 
-            auditLogs={logs as any}
+            auditLogs={mergedLogs as any}
+            portalPaymentUrl={`${(process.env.NEXTAUTH_URL || "https://your-tax-source-main.vercel.app").replace(/\/$/, "")}/portal#invoices`}
           />
         </div>
 
@@ -278,7 +296,7 @@ export default async function ReviewReturnPage({ params }: { params: Promise<{ i
             existingLetter={ret.engagementLetters[0]} 
           />
           <DocumentRequestTool clientId={ret.clientId} returnId={ret.id} />
-          <CommunicationLog logs={logs as any} />
+          <CommunicationLog logs={mergedLogs as any} />
 
           <SectionTitle icon={<FileText size={20} />} color="text-brand-orange" title="Return Information" />
           <SensitiveDataViewer clientId={ret.clientId} />
