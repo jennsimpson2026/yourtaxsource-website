@@ -33,7 +33,7 @@ export default function ContactPage() {
                 <ContactInfoItem
                   icon={<Phone className="w-6 h-6 text-brand-purple" />}
                   title="Call or Text"
-                  value="(980) 285-1495"
+                  value="(803) 371-5766"
                   description="Primary business number."
                 />
                 <ContactInfoItem

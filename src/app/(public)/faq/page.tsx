@@ -92,7 +92,7 @@ export default function FAQPage() {
                     <ul className="list-disc pl-5 space-y-1">
                       <li>Venmo (@Jennifer-Simpson-59)</li>
                       <li>Cash App ($YTSJenn)</li>
-                      <li>Zelle ((980) 285-1495)</li>
+                      <li>Zelle ((803) 371-5766)</li>
                       <li>Apple Pay</li>
                       <li>Bank Draft (eCheck)</li>
                       <li>Credit or Debit Card (3% processing fee)</li>
@@ -139,10 +139,10 @@ export default function FAQPage() {
                 Send Us a Message
               </Link>
               <a
-                href="tel:9802851495"
+                href="tel:8033715766"
                 className="inline-block bg-white text-brand-purple px-10 py-5 rounded-2xl font-black text-xl hover:bg-brand-lavender transition-all shadow-xl hover:scale-105 active:scale-95 uppercase tracking-wider"
               >
-                (980) 285-1495
+                (803) 371-5766
               </a>
             </div>
           </div>

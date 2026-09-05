@@ -1,6 +1,7 @@
 import React from "react";
-import { CreditCard, BadgeCheck, LockKeyhole, ReceiptText, ArrowRight } from "lucide-react";
+import { CreditCard, BadgeCheck, LockKeyhole, ReceiptText, ArrowRight, FileText } from "lucide-react";
 import Link from "next/link";
+import { FinalReturnDownloadButton } from "./FinalReturnDownloadButton";
 
 interface FinancialSummaryProps {
   /** The full, unadjusted tax preparation fee for this return. */
@@ -15,6 +16,10 @@ interface FinancialSummaryProps {
   documentsReleased: boolean;
   /** Optional label for the tax year being summarized. */
   taxYear?: number;
+  /** ID of the released final-return document, if any, to show a download CTA. */
+  finalReturnDocId?: string;
+  /** Display name of the released final-return document. */
+  finalReturnFileName?: string;
 }
 
 /**
@@ -31,6 +36,8 @@ export function FinancialSummary({
   surchargeEnabled,
   documentsReleased,
   taxYear,
+  finalReturnDocId,
+  finalReturnFileName,
 }: FinancialSummaryProps) {
   const numericAdjustedFee = Math.max(0, originalFee - waivedAmount);
   const numericBalance = Math.max(0, numericAdjustedFee - payments);
@@ -101,6 +108,27 @@ export function FinancialSummary({
             )}
           </div>
         </div>
+
+        {/* Released final-return download CTA */}
+        {documentsReleased && finalReturnDocId && (
+          <div className="mt-6 bg-white rounded-2xl border-2 border-brand-purple/20 px-6 py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+            <div className="flex items-start gap-3">
+              <div className="w-11 h-11 bg-brand-purple/10 rounded-xl flex items-center justify-center text-brand-purple shrink-0">
+                <FileText size={22} />
+              </div>
+              <div>
+                <p className="text-sm font-black text-brand-black uppercase tracking-wide">
+                  Final Tax Documents Ready
+                </p>
+                <p className="text-xs text-brand-charcoal/70 mt-0.5">
+                  {taxYear ? `Your ${taxYear} final tax return is available. ` : "Your final tax return is available. "}
+                  <span className="font-semibold">{finalReturnFileName || "2026_Final_Return.pdf"}</span>
+                </p>
+              </div>
+            </div>
+            <FinalReturnDownloadButton documentId={finalReturnDocId} fileName={finalReturnFileName} />
+          </div>
+        )}
 
         {/* Surcharge + document release notes */}
         <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">

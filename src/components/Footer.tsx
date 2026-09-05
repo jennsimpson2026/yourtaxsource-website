@@ -48,7 +48,7 @@ export const Footer = () => {
             <ul className="space-y-2 text-brand-charcoal/70 text-sm font-medium">
               <li>100 1/2 S Main St</li>
               <li>Belmont, NC 28012</li>
-              <li className="pt-2 font-bold text-brand-purple">(980) 285-1495</li>
+              <li className="pt-2 font-bold text-brand-purple">(803) 371-5766</li>
               <li>jsimpson@yourtaxsource.com</li>
             </ul>
           </div>

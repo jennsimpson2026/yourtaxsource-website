@@ -3,8 +3,8 @@ import { auth } from "@/lib/auth";
 
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { taxReturns, appointments, invoices, auditLogs, engagementLetters } from "@/lib/db/schema";
-import { eq, desc, and, gte, inArray, not } from "drizzle-orm";
+import { taxReturns, appointments, invoices, auditLogs, engagementLetters, documents } from "@/lib/db/schema";
+import { eq, desc, and, gte, inArray, not, isNull } from "drizzle-orm";
 import Link from "next/link";
 import { BookingButton } from "@/components/BookingButton";
 import { PayInvoiceButton } from "@/components/portal/PayInvoiceButton";
@@ -131,6 +131,46 @@ export default async function PortalDashboard({
       currentReturn?.manualRelease === true ||
       currentReturn?.isComplimentary === true;
 
+    // Payment step must derive from ACTUAL payment state (balance due $0), not the
+    // return's filing status. Filing status stays separate (never auto-advance).
+    const paymentComplete = documentsReleased;
+    const hasUnpaidInvoice = unpaidInvoices.some(inv => inv.returnId === currentReturn?.id);
+    const paymentStepStatus: 'completed' | 'current' | 'pending' =
+      paymentComplete ? 'completed' : hasUnpaidInvoice ? 'current' : 'pending';
+
+    // Derived display status: reflects BOTH payment and filing state accurately,
+    // without advancing the return to READY_TO_FILE.
+    const rawStatus = currentReturn?.status?.replace(/_/g, ' ') || null;
+    const derivedStatusText = !currentReturn
+      ? 'Starting Soon'
+      : paymentComplete
+        ? (() => {
+            switch (currentReturn.status) {
+              case 'COMPLETED': return 'Completed';
+              case 'READY_TO_FILE': return 'Ready to File';
+              case 'IN_PROCESS':
+              case 'READY_FOR_SIGNATURE': return 'Payment Complete — ' + rawStatus;
+              default: return 'Payment Complete — Awaiting Final Actions';
+            }
+          })()
+        : hasUnpaidInvoice
+          ? 'Awaiting Payment'
+          : rawStatus || 'Starting Soon';
+
+    // The final return document, when released, so the portal can offer a download CTA.
+    const releasedFinalDoc = currentReturn
+      ? await db.query.documents.findFirst({
+          where: and(
+            eq(documents.userId, userId),
+            eq(documents.returnId, currentReturn.id),
+            eq(documents.isLocked, false),
+            inArray(documents.category, ["Final Returns", "FINAL_RETURN", "FINAL_RETURNS"]),
+            isNull(documents.deletedAt)
+          ),
+          orderBy: [desc(documents.uploadedAt)],
+        })
+      : null;
+
     const openRequests = await db.query.auditLogs.findMany({
       where: and(
         eq(auditLogs.targetId, userId),
@@ -214,6 +254,8 @@ export default async function PortalDashboard({
           surchargeEnabled={surchargeEnabled}
           documentsReleased={documentsReleased}
           taxYear={currentReturn?.year}
+          finalReturnDocId={releasedFinalDoc?.id}
+          finalReturnFileName={releasedFinalDoc?.fileName}
         />
 
         {/* 6-Step Visual Timeline */}
@@ -221,7 +263,7 @@ export default async function PortalDashboard({
           <div className="flex flex-col md:flex-row justify-between items-center mb-12 gap-4">
             <h3 className="text-2xl font-heading font-bold text-brand-black">Your Tax Filing Journey</h3>
             <div className="text-sm font-bold text-brand-purple bg-brand-purple/5 px-4 py-2 rounded-full">
-              Status: {currentReturn?.status?.replace(/_/g, ' ') || 'Starting Soon'}
+              Status: {derivedStatusText}
             </div>
           </div>
           
@@ -251,7 +293,7 @@ export default async function PortalDashboard({
               <TimelineStep 
                 number={4} 
                 label="Payment" 
-                status={currentReturn?.status === 'AWAITING_PAYMENT' ? 'current' : (currentReturn && ['READY_TO_FILE', 'COMPLETED'].includes(currentReturn.status) ? 'completed' : 'pending')} 
+                status={paymentStepStatus}
                 icon={<CreditCard size={20} />}
               />
               <TimelineStep 
@@ -384,7 +426,7 @@ export default async function PortalDashboard({
                 <div className="flex flex-wrap gap-4 text-xs">
                   <div className="bg-white/50 px-3 py-1.5 rounded-full border border-brand-lavender text-brand-purple font-bold">Venmo: @Jennifer-Simpson-59</div>
                   <div className="bg-white/50 px-3 py-1.5 rounded-full border border-brand-lavender text-brand-purple font-bold">Cash App: $YTSJenn</div>
-                  <div className="bg-white/50 px-3 py-1.5 rounded-full border border-brand-lavender text-brand-purple font-bold">Zelle: (980) 285-1495</div>
+                  <div className="bg-white/50 px-3 py-1.5 rounded-full border border-brand-lavender text-brand-purple font-bold">Zelle: (803) 371-5766</div>
                 </div>
               </div>
             </section>
@@ -424,7 +466,7 @@ export default async function PortalDashboard({
                    Zelle
                  </div>
                  <div className="text-sm font-bold text-brand-purple flex flex-col items-center gap-1">
-                   <span>(980) 285-1495</span>
+                   <span>(803) 371-5766</span>
                    <span className="text-[10px] text-gray-400 uppercase">Jenn Simpson</span>
                  </div>
               </div>
@@ -461,7 +503,7 @@ export default async function PortalDashboard({
                 </div>
                 <div className="p-4 rounded-xl bg-gray-50 border border-gray-100 flex items-center gap-3">
                   <div className="w-2 h-2 rounded-full bg-brand-purple"></div>
-                  <span className="font-bold text-brand-black text-sm">Zelle ((980) 285-1495)</span>
+                  <span className="font-bold text-brand-black text-sm">Zelle ((803) 371-5766)</span>
                 </div>
                 <div className="p-4 rounded-xl bg-gray-50 border border-gray-100 flex items-center gap-3">
                   <div className="w-2 h-2 rounded-full bg-brand-purple"></div>
