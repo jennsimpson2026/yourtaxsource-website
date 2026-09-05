@@ -12,6 +12,8 @@ import { PayWithStripeButton } from "@/components/portal/PayWithStripeButton";
 import { FinancialSummary } from "@/components/portal/FinancialSummary";
 import { OpenRequests } from "@/components/portal/OpenRequests";
 import { DownloadEngagementLetterButton } from "@/components/portal/DownloadEngagementLetterButton";
+import { StripeReturnBanner } from "@/components/portal/StripeReturnBanner";
+import { verifyStripeCheckoutSession } from "@/actions/stripe";
 import { 
   FileText, 
   ClipboardCheck, 
@@ -31,7 +33,11 @@ import {
   Clock,
 } from "lucide-react";
 
-export default async function PortalDashboard() {
+export default async function PortalDashboard({
+  searchParams,
+}: {
+  searchParams: Promise<{ stripe?: string; session_id?: string }>;
+}) {
   const session = await auth();
 
   if (!session?.user) {
@@ -44,6 +50,23 @@ export default async function PortalDashboard() {
   }
 
   const userId = (session.user as any).id;
+
+  // If the user just returned from Stripe Checkout, verify the returned session
+  // with Stripe BEFORE showing any success/pending state. We never trust the
+  // query string alone — Stripe (and only Stripe) is the source of truth, and
+  // invoices are only ever marked paid by the webhook.
+  const params = await searchParams;
+  const stripeKind =
+    params.stripe === "success"
+      ? "success"
+      : params.stripe === "cancelled"
+        ? "cancelled"
+        : "none";
+  const checkoutSessionId = stripeKind === "success" ? params.session_id || null : null;
+  const stripeVerify =
+    stripeKind === "success" && checkoutSessionId
+      ? await verifyStripeCheckoutSession(checkoutSessionId)
+      : null;
 
   try {
     const returns = await db.query.taxReturns.findMany({
@@ -157,6 +180,24 @@ export default async function PortalDashboard() {
             </div>
           </div>
         </div>
+
+        {/* Stripe Checkout return banner — only renders from server-verified session state */}
+        {stripeKind === "success" && stripeVerify !== null && (
+          <StripeReturnBanner kind="success" verify={stripeVerify} />
+        )}
+        {stripeKind === "cancelled" && (
+          <StripeReturnBanner
+            kind="cancelled"
+            verify={{
+              status: "cancelled",
+              payment_status: null,
+              paid: false,
+              expired: false,
+              asyncPending: false,
+              error: null,
+            }}
+          />
+        )}
 
         {/* Open Requests */}
         <OpenRequests 

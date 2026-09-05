@@ -104,3 +104,66 @@ export async function createStripeCheckoutSession(invoiceId: string) {
 
   return { url: checkout.url, mode: "TEST MODE" };
 }
+
+/**
+ * Verify a Stripe Checkout Session returned via the success_url and return its
+ * true payment state. This is the ONLY thing the portal success page may rely on
+ * to show a "paid" state — it is read directly from Stripe, never from client
+ * claims or from our own DB (which is updated exclusively by the webhook).
+ *
+ * Returns a normalized, PII-safe result:
+ *  - status: session.status ('open' | 'complete' | 'expired' | 'unknown')
+ *  - payment_status: session.payment_status when available
+ *  - paid: true only when Stripe says payment_status === 'paid' (card captured)
+ *    or 'no_payment_required' (nothing owed). For async (ACH/bank) payments the
+ *    session often remains payment_status 'unpaid' until the bank draft clears;
+ *    we surface that distinctly as a pending state, never as success.
+ *  - expired: true when Stripe says status === 'expired'
+ */
+export async function verifyStripeCheckoutSession(sessionId: string) {
+  const stripe = getStripe();
+  let session: Stripe.Checkout.Session;
+  try {
+    session = await stripe.checkout.sessions.retrieve(sessionId);
+  } catch (err: any) {
+    logger.error("Stripe Checkout session verify failed", {
+      sessionId,
+      error: err?.message,
+    });
+    return {
+      status: "unknown",
+      payment_status: null,
+      paid: false,
+      expired: false,
+      asyncPending: false,
+      error: "Could not verify Checkout Session",
+    };
+  }
+
+  const status = session.status ?? "unknown";
+  const paymentStatus = session.payment_status ?? null;
+  const paid =
+    paymentStatus === "paid" || paymentStatus === "no_payment_required";
+  const expired = status === "expired";
+  const asyncPending =
+    status === "complete" && paymentStatus === "unpaid"; // ACH / bank draft still clearing
+
+  logger.info("Stripe Checkout session verified", {
+    sessionId: session.id,
+    status,
+    payment_status: paymentStatus,
+    paid,
+    expired,
+    asyncPending,
+    mode: "TEST",
+  });
+
+  return {
+    status,
+    payment_status: paymentStatus,
+    paid,
+    expired,
+    asyncPending,
+    error: null,
+  };
+}
